@@ -5,18 +5,17 @@ all written in TypeScript
 
 Functionality implemented so far.
 
-Primitives
 * Very simple Procedural language with syntax similar to TypeScript or Go. 
 * Parsing
-* A Full syntax Tree, representing every typed character in the input program, commentsm whitespace and errors included
+* A full Syntax tree, representing every typed character in the input program, comments, whitespace and errors included.
 * Type Checking produces a Bound tree. This strips lexical details and includes symantic details and type information.
-* The Lowerer is based on a generit Tree Rewriter, it reimplements language constructs in terms of simpler ones.
-for loops become while loops, then while loops and if statements become gotos and conditional jumps to labels.
+* The Lowerer is based on a generic Tree Rewriter, it reimplements language constructs in terms of simpler ones.
+For loops become While loops, then While loops and If statements become gotos and conditional jumps to labels.
 * Optimisation. The same tree rewriter base can also be used to build optimisation passes. The only one available
-at the moment is precomputing the output of expressions involving literals.
+at the moment precomputes the output of expressions involving literals.
 * There are Interpreters at various abstration levels, Parse Tree, Bound Tree, Lowered Tree. These execute the trees at full fidelity, supporting all features and data types.
 * Code Generation (ASM)
-* A Toy assembly language
+* An assembly language
 * Assembler
 * Binary Machine Code
 * Virtual Machine to execute the binaries.
