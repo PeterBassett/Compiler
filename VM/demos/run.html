@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Jasmine Spec Runner v2.0.0</title>
+
+  <link rel="shortcut icon" type="image/png" href="../node_modules/jasmine-core/images/jasmine_favicon.png">
+  <link rel="stylesheet" href="../node_modules/jasmine-core/lib/jasmine-core/jasmine.css">
+  <link rel="stylesheet" href="../node_modules/codemirror/lib/codemirror.css" >
+  <link rel="stylesheet" href="../node_modules/codemirror/addon/lint/lint.css" >
+
+  <script src="../jquery-1.10.2.min.js"></script>
+  <script src="../require.js"></script>  
+  <script src="../js/demos/demos/Loader.js"></script>
+
+  <style type="text/css">
+    #header { grid-area: header; background-color: aqua }
+    #registers { grid-area: registers; background-color: blueviolet }
+    #memory { grid-area: memory; background-color:brown}    
+    #footer { grid-area: footer; background-color:coral}
+
+    html, body {
+      height:100hv; width:100vw;
+      overflow: hidden;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-areas:
+        'header header'
+        'registers memory'
+        'footer footer';
+    } 
+
+    .CodeMirror
+    {
+      height:100vh;
+    }
+
+    .selected-tree-view-node
+    {
+      background-color:rgb(215, 215, 240);
+    }
+
+    .tabStyle
+    {
+      border: solid 1px grey;
+      font-family: Verdana, Geneva, Tahoma, sans-serif;
+      margin-left: 1em;
+    }
+</style>
+  
+  <script type="text/javascript">
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
+
+    function load(appName, props)
+    {
+      Loader.LoadApp("container", appName, props);
+    }
+
+    $(function () {
+      var content = atob( getParameterByName('asm') );
+      //var content = decodeURI( getParameterByName('asm') );
+      load('AsmExecutor/AsmExecutor', { asm : content});
+    });
+  </script>
+</head>
+<body>
+  
+  <div id="container">
+    <div style="padding:20px">
+      <span>Loading Module</span>&nbsp;<span id="moduleCount"></span><br />
+      <span id="elapsedTime"></span><br/>
+      <div id="loadErrorContainer" style="display:none;height: 600px; border:solid 1px grey;" >
+        <div>Error Loading</div>
+        <span>Error Type</span>&nbsp;<strong><span id="errorType"></span></strong>
+        <div id="errorModules" style="overflow: auto;height: 550px;"></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

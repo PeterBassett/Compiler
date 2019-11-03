@@ -1,0 +1,22 @@
+﻿{
+  "TestHarnessReferenceMode": "AMD",
+  "TestHarnessLocationMode": "SettingsFileAdjacent",
+  "TypeScriptModuleKind": "AMD",   
+  "Compile": {
+    "Mode": "External",
+    "Extensions": [ ".ts" ],
+    "ExtensionsWithNoOutput": [ ".d.ts" ]
+  },
+  "References": [
+    { "Path": "require.js" },
+    { "Path": "jquery-1.10.2.min.js" },
+    {
+      "Includes": [ "/src/*.ts" ],
+      "Excludes": [ "*.d.ts" ],
+      "IncludeInTestHarness": false
+    }
+  ],
+  "Tests": [
+    { "Path": ".", "Includes": [ "*.Tests.ts" ], "Excludes": [ "*.tests.d.ts" ] }
+  ]
+}
