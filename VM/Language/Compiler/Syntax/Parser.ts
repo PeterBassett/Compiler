@@ -563,6 +563,10 @@ export default class Parser
             case SyntaxType.StringLiteral :
                 return this.parseStringLiteral();
             case SyntaxType.Identifier:
+            case SyntaxType.StringKeyword:
+            case SyntaxType.IntKeyword:
+            case SyntaxType.FloatKeyword:
+            case SyntaxType.BoolKeyword:
                 return this.parseCallExpression();
             default :
                 return this.parseNameExpression();
@@ -597,7 +601,16 @@ export default class Parser
     }
     
     private parseCallExpression(): AST.ExpressionNode {        
-        let expr = this.parseNameExpression();
+        
+        let identifier = this.matchAny(
+            SyntaxType.Identifier,
+            SyntaxType.IntKeyword,
+            SyntaxType.FloatKeyword,
+            SyntaxType.BoolKeyword,
+            SyntaxType.StringKeyword
+        );
+
+        let expr : AST.ExpressionNode = AST.NameExpressionSyntax(identifier);
 
         let lastTokenPosition : number = -1;        
 

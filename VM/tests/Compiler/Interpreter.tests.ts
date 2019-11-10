@@ -347,9 +347,25 @@ func main() : int
     }
     return i;
 }`, 1024
-]    
+],
+[`func main() : int {
+    return int(5.5);
+}`,
+5],
+[`func main() : string {
+    return string(3.14159);
+}`,
+`3.14159`],
+[`func main() : string {
+    return string(true);
+}`,
+`true`],
+[`func main() : string {
+    return string(1==2);
+}`,
+`false`]
     ].forEach((item) => {
-        it(`should execute an AST correctly`, () => {  
+        it(`should execute an AST correctly : ` + item[0], () => {  
             let text = item[0] as string;
             let expected = item[1];
             test(text, expected);

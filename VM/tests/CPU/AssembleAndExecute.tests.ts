@@ -879,6 +879,20 @@ describe("Assemble and execute", () => {
         expect(registers.R1).toEqual(2);
     });
 
+    it("an integer division program", () => {
+        execute(`
+    .data
+    .text
+    .global start:
+        start:
+        mvi r1 5
+        mvi r2 2
+        div r1 r2
+        halt`);
+
+        expect(registers.R1).toEqual(2);
+    });
+
     it("a simple division with floating point result", () => {
         execute(`
     .data

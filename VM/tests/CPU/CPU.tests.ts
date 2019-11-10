@@ -451,7 +451,7 @@ describe("A CPU", () => {
         expect(registers.R2).toEqual(2);
     });
 
-    it("has an DIV instruction which divides a source register (R1) by a destination register (R2) " +
+    it("has a DIVf instruction which divides a source register (R1) by a destination register (R2) " +
        "and stores the result in the destination register. Floating Point Test", () => {
         instruction(Op.MVI, 0, Reg.R1, 2);
         instruction(Op.MVI, 0, Reg.R2, 13);
@@ -464,6 +464,20 @@ describe("A CPU", () => {
         expect(registers.R1).toEqual(2);
         expect(registers.R2).toEqual(6.5); // NOTE THE DECIMAL NUMBER HERE IN THE REGISTER
         // TODO FLOATING POINT MATH OPS
+    });
+
+    it("has an DIV instruction which divides a source register (R1) by a destination register (R2) " +
+        "and stores the result in the destination register. Floating Point Test", () => {
+        instruction(Op.MVI, 0, Reg.R1, 2);
+        instruction(Op.MVI, 0, Reg.R2, 13);
+        instruction(Op.DIV, Reg.R1, Reg.R2, 0); 
+
+        cpu.step();
+        cpu.step();
+        cpu.step();
+
+        expect(registers.R1).toEqual(2);
+        expect(registers.R2).toEqual(6); // NOTE THE RESULT IS NOT 6.5. INTEGER MATH.
     });
 
     it("has an NEG instruction which numerically negates the destination register (R1) " +

@@ -130,16 +130,17 @@ export class Type
         return this.type == targetType.type;
     }
 
-    constructor(type: ValueType, name? : string, func? : FunctionDetails)
+    constructor(type: ValueType, name? : string, func? : FunctionDetails, isPredefined? : boolean)
     {
         this.type = type;
         this.name = name;
         this.isClass = type == ValueType.Class;
-
         this.function = func;
+        this.isPredefined = isPredefined || false;
     }
 
     public type: ValueType
     public name? : string;
     public isClass : boolean;    
+    public isPredefined : boolean;
 }

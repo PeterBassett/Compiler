@@ -268,7 +268,37 @@ func main() : int {
 func main() : int {
     let n : int = 13;
     return fib(n);
-}`, 233]
+}`, 233],
+[`func main() : int {
+    // integer division
+    return 5 / 2;
+}`, 2],
+
+/*
+[`func main() : float {
+    // floating point division
+    return 5.0 / 2;
+}`, 2.5],
+[`func main() : int {
+    return 5 / 2;
+}`,
+2],
+[`func main() : int {
+    return int(5.5);
+}`,
+5],
+[`func main() : string {
+    return string(3.14159);
+}`,
+`3.14159`],
+[`func main() : string {
+    return string(true);
+}`,
+`true`],
+[`func main() : string {
+    return string(1==2);
+}`,
+`false`] */
     ].forEach((item) => {
         it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
             let text = item[0] as string;

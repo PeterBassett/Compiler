@@ -206,3 +206,11 @@ export function isDeclaration(type : SyntaxType) : boolean
             type == SyntaxType.LetKeyword ||
             type == SyntaxType.VarKeyword;
 }
+
+export function isPredefinedType(type : SyntaxType) : boolean
+{
+    return type == SyntaxType.StringKeyword ||
+        type == SyntaxType.FloatKeyword ||
+        type == SyntaxType.IntKeyword ||
+        type == SyntaxType.BoolKeyword;
+}

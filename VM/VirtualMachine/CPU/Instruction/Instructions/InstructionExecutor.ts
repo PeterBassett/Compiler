@@ -302,42 +302,69 @@ export function RET(cpu : CPU, instruction:Instruction, memory: Memory, register
 }
 
 export function ADD(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    binaryMathOP(cpu, instruction, memory, registers, flags, 4, (a, b) => a+b);
+    binaryMathOP(cpu, instruction, memory, registers, flags, (a, b) => a+b, IntegerMath);
 }
 
 export function SUB(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {    
-    binaryMathOP(cpu, instruction, memory, registers, flags, 4, (a, b) => b-a);
+    binaryMathOP(cpu, instruction, memory, registers, flags, (a, b) => b-a, IntegerMath);
 }
 
 export function MUL(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    binaryMathOP(cpu, instruction, memory, registers, flags, 4, (a, b) => b*a);
+    binaryMathOP(cpu, instruction, memory, registers, flags, (a, b) => b*a, IntegerMath);
 }
 
 export function DIV(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    binaryMathOP(cpu, instruction, memory, registers, flags, 4, (a, b) => b/a);
+    binaryMathOP(cpu, instruction, memory, registers, flags, (a, b) => b/a, IntegerMath);
 }
 
 export function ADDf(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    binaryMathOP(cpu, instruction, memory, registers, flags, 8, (a, b) => a+b);
+    binaryMathOP(cpu, instruction, memory, registers, flags, (a, b) => a+b, DoubleMath);
 }
 
 export function SUBf(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {    
-    binaryMathOP(cpu, instruction, memory, registers, flags, 8, (a, b) => b-a);
+    binaryMathOP(cpu, instruction, memory, registers, flags, (a, b) => b-a, DoubleMath);
 }
 
 export function MULf(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    binaryMathOP(cpu, instruction, memory, registers, flags, 8, (a, b) => b*a);
+    binaryMathOP(cpu, instruction, memory, registers, flags, (a, b) => b*a, DoubleMath);
 }
 
 export function DIVf(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    binaryMathOP(cpu, instruction, memory, registers, flags, 8, (a, b) => b/a);
+    binaryMathOP(cpu, instruction, memory, registers, flags, (a, b) => b/a, DoubleMath);
 }
 
-function binaryMathOP(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags, size :number, op : (source :number, destination :number)=>number): void {    
+const IntegerMath :MathOptions = {
+    integerMath :true, 
+    size : 4
+};
+
+const DoubleMath :MathOptions = {
+    integerMath : false, 
+    size : 8
+};
+
+class MathOptions
+{
+    public integerMath : boolean = true;
+    public size : number = 0;
+}
+
+function binaryMathOP(cpu : CPU, 
+    instruction:Instruction, 
+    memory: Memory, 
+    registers: RegisterBank, 
+    flags : Flags,  
+    op : (source :number, destination :number)=>number,
+    options : MathOptions): void {
+
+    let size = options.size;
     let a = getValue(instruction, Endpoint.Source, instruction.sourceRegister, memory, registers, size);
     let b = getValue(instruction, Endpoint.Destination, instruction.destinationRegister, memory, registers, size);
 
     let result = op(a, b);
+
+    if(options.integerMath)
+        result = Math.floor(result);
 
     storeValue(instruction, Endpoint.Destination, instruction.destinationRegister, memory, registers, result, size);
     

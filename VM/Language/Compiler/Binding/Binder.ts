@@ -13,6 +13,7 @@ import TypeQuery from "../../Types/TypeInspection";
 import { Token } from "../Syntax/Lexer";
 import TextSpan from "../Syntax/Text/TextSpan";
 import BuiltinFunctions from "../BuiltinFunctions";
+import Conversion from "./Conversion";
 
 // responsible for transforming a SyntaxTree into a BoundTree
 // this discards syntax detail complexity and enforces semantic rules.
@@ -31,6 +32,7 @@ export default class Binder
     private _globalVariablesDefined : boolean = false;
     private _incompleteCallSites: { call : Nodes.BoundCallExpression, syntax : AST.CallExpressionSyntax }[] = [];
     private _callSitePlaceholdersValid: boolean = false;
+    private _function!: Nodes.BoundFunctionDeclaration|null;
 
     public Bind(compilationUnit : CompilationUnit) : Nodes.BoundGlobalScope
     {
@@ -162,7 +164,10 @@ export default class Binder
     BindReturnStatement(syntax: AST.ReturnStatementSyntax): Nodes.BoundStatement {
         let expression  : Nodes.BoundExpression | null = null;
         if(syntax.expression)
+        {
             expression = this.BindExpression(syntax.expression);
+            expression = this.BindConversion(syntax.expression.span(), expression, this._function!.returnType);
+        }
             
         let rs = new Nodes.BoundReturnStatement(expression, syntax.span());
 
@@ -313,10 +318,17 @@ export default class Binder
 
         let initialiser : Nodes.BoundExpression | null = null;        
         if(syntax.initialiserExpression)
+        {
             initialiser = this.BindExpression(syntax.initialiserExpression);
+
+            // if we have a declared type
+            if(type)
+                // checkto make sure we can convert the initialiser to that type.
+                initialiser = this.BindConversion(syntax.initialiserExpression.span(), initialiser, type);
+        }
         else
-            initialiser = this.BindDefaultExpressionForType(syntax.typeName!);
-        
+            initialiser = this.BindDefaultExpressionForType(syntax.typeName!);            
+
         if(!type)
             type = initialiser.type
 
@@ -397,6 +409,8 @@ export default class Binder
 
         declaration = new Nodes.BoundFunctionDeclaration(identifier.lexeme, parameters, returnType, undefined);
 
+        this._function = declaration;
+
         this.scope.DefineFunction(identifier.lexeme, declaration);
 
         using(this.scope.PushArguments(parameters.map(p => p.name), parameters.map(p => p.type), parameters.map(p => p.variable)), () => {
@@ -421,6 +435,8 @@ export default class Binder
 
             declaration.defineBody(boundBody);            
         });
+
+        this._function = null;
 
         return declaration!;
     }
@@ -519,6 +535,8 @@ export default class Binder
     private BindExpressionAndTypeCheck(syntax : AST.ExpressionNode, targetType : Type) : Nodes.BoundExpression
     {
         let result = this.BindExpression(syntax);
+
+        result = this.BindConversion(syntax.span(), result, targetType);
         
         if (!result.type.isAssignableTo(targetType))
             this.diagnostics.reportCannotConvert(syntax.span(), result.type, targetType);
@@ -625,7 +643,15 @@ export default class Binder
         let name = syntax.nameExpression.identifierToken.lexeme;
         let variableFound = this.BindExpression(syntax.nameExpression) as Nodes.BoundVariableExpression;
         let declaration = this.functionMap[name];
+        
+        let typeConversionCall = TypeQuery.getTypeFromName(syntax.nameExpression.identifierToken.lexeme, this.scope, true);
 
+        if (syntax.callArguments.length == 1 && typeConversionCall.type != ValueType.Unit && typeConversionCall.isPredefined)
+        {
+            const argument = this.BindExpression(syntax.callArguments[0]);
+            return this.BindConversion(syntax.callArguments[0].span(), argument, typeConversionCall, true);
+        }
+            
         let variable : Identifier | null = null;
         
         if(variableFound && variableFound.variable != Identifier.Undefined)
@@ -866,11 +892,40 @@ export default class Binder
             // we dont error here. An undefined identifier shouldnt stop up from type checking.            
         }
 
-        return new Nodes.BoundAssignmentExpression(identifier, expression);
+        const convertedExpression = this.BindConversion(syntax.expression.span(), expression, identifier.type);
+
+        return new Nodes.BoundAssignmentExpression(identifier, convertedExpression);
     }
 
     private BindErrorStatement() : Nodes.BoundStatement
     {
         return new Nodes.BoundExpressionStatement(new Nodes.BoundErrorExpression());
+    }
+
+    
+    private BindConversion(diagnosticSpan : TextSpan, expression : Nodes.BoundExpression, type : Type, allowExplicit : boolean = false) : Nodes.BoundExpression
+    {
+        var conversion = Conversion.classifyConversion(expression.type, type);
+
+        if (!conversion.Exists)
+        {
+            this.diagnostics.reportCannotConvert(diagnosticSpan, expression.type, type);
+            return new Nodes.BoundErrorExpression();
+        }
+
+        if (!allowExplicit && conversion.IsExplicit)
+        {
+            this.diagnostics.reportCannotConvertImplicitly(diagnosticSpan, expression.type, type);
+        }
+
+        if (conversion.IsIdentity)
+            return expression;
+
+        if(conversion.IsImplicit)
+        {
+            return new Nodes.BoundConversionExpression(conversion.ConvertTo, expression);
+        }
+
+        return new Nodes.BoundConversionExpression(type, expression);
     }
 }

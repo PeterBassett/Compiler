@@ -269,7 +269,41 @@ export default class Interpreter
 
         var func = this.scope.FindIdentifier(node.nameExpression.identifierToken.lexeme);
 
-        return this.executeFunction(this.scope, func.Value.ToCallable(), args);
+        if(func.Value.IsFunction)
+            return this.executeFunction(this.scope, func.Value.ToCallable(), args);
+
+        return this.ConvertionExpression(node, args[0]);
+    }
+
+    ConvertionExpression(node : AST.CallExpressionSyntax, argument : Value) : Value
+    {
+        const type = node.nameExpression.identifierToken.lexeme;
+
+        switch(type)
+        {
+            case "int":
+                return new Value(ValueType.Int, parseInt(argument.ToObject()));
+            case "float":
+                return new Value(ValueType.Float, parseFloat(argument.ToObject()));                
+            case "string":
+                return new Value(ValueType.String, argument.ToObject().toString());
+            case "bool":
+            {
+                switch(argument.Type)
+                {
+                    case ValueType.Int:
+                        return new Value(ValueType.Boolean, argument.ToObject() !== 0);
+                    case ValueType.Float:
+                        return new Value(ValueType.Boolean, argument.ToObject() !== 0);
+                    case ValueType.String:
+                        return new Value(ValueType.Boolean, argument.ToObject() !== 0);
+                    case ValueType.Boolean:
+                        return argument;
+                }    
+            }                                
+        }
+
+        throw new Error ("Unexpected");
     }
 
     VisitParenthesizedExpressionSyntax(node : AST.ParenthesizedExpressionSyntax): Value {

@@ -420,7 +420,66 @@ func main() : int
                 CallExpression<add>
                     LiteralExpression<1:int>
                     LiteralExpression<2:int>
-` ]
+` ],
+[`func main() : float {
+    return 5.0 / float(2);
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:float>
+        ParameterDeclarationList
+        BlockStatement
+            ReturnStatement
+                BinaryExpression</>
+                    LiteralExpression<5:float>
+                    ConversionExpression<float>
+                        LiteralExpression<2:int>
+`],
+[`func main() : int {
+    return int(5.5);
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            ReturnStatement
+                ConversionExpression<int>
+                    LiteralExpression<5.5:float>
+`],
+[`func main() : string {
+    return string(3.14159);
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:string>
+        ParameterDeclarationList
+        BlockStatement
+            ReturnStatement
+                ConversionExpression<string>
+                    LiteralExpression<3.14159:float>
+`],
+[`func main() : string {
+    return string(true);
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:string>
+        ParameterDeclarationList
+        BlockStatement
+            ReturnStatement
+                ConversionExpression<string>
+                    LiteralExpression<true:bool>
+`],
+[`func main() : string {
+    return string(1==2);
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:string>
+        ParameterDeclarationList
+        BlockStatement
+            ReturnStatement
+                ConversionExpression<string>
+                    BinaryExpression<==>
+                        LiteralExpression<1:int>
+                        LiteralExpression<2:int>
+`]
 /*,[`
 class test
 {
@@ -565,7 +624,7 @@ func main() : int
 [`func main() :int 
 {
     return "string";
-}`, [DiagnosticType.NotAssignableToType]],
+}`, [DiagnosticType.CannotConvertType]],
 [`func main() : int 
 {
     return 1 + true;

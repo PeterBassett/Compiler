@@ -7,7 +7,7 @@ import { BoundFunctionDeclaration, BoundClassDeclaration, BoundVariableDeclarati
 
 export default class TypeQuery
 {
-    public static getTypeFromName(name : string, scope:IScope<ScopeInfo>) : Type
+    public static getTypeFromName(name : string, scope:IScope<ScopeInfo>, returnUnitOnFailure:boolean = false) : Type
     {
         switch(name)
         {
@@ -24,10 +24,16 @@ export default class TypeQuery
                 let identifier = scope.scope.info.Find(scope.scope, name);
 
                 if(identifier == Identifier.Undefined)
-                    throw new Error("Undefined Type");
+                    if(returnUnitOnFailure)
+                        return PredefinedValueTypes.Unit;
+                    else
+                        throw new Error("Undefined Type");
 
                 if(!identifier.type.isClass)
-                    throw new Error("Undefined Type");
+                    if(returnUnitOnFailure)
+                        return PredefinedValueTypes.Unit;
+                    else
+                        throw new Error("Undefined Type");
 
                 return identifier.type;
             }

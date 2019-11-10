@@ -544,6 +544,19 @@ func main() : int
                                 IntegerLiteralExpressionSyntax<1>
             ReturnStatementSyntax
                 NameExpressionSyntax<n>
+`],
+[`func main() : string {
+    return string(3.14159);
+}`,
+`CompilationUnitSyntax
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        TypeNameSyntax
+        BlockStatementSyntax
+            ReturnStatementSyntax
+                CallExpressionSyntax
+                    NameExpressionSyntax<string>
+                    FloatLiteralExpressionSyntax<3.14159>
 `]
     ].forEach((item) => {
         it(`should parse source : ` + item[0], () => {

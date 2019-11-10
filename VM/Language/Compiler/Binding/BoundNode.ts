@@ -5,6 +5,7 @@ import { Diagnostics } from "../Diagnostics/Diagnostics";
 import { Identifier } from "../../Scope/DefinitionScope";
 import TextSpan from "../Syntax/Text/TextSpan";
 import { IBoundNodeVisitor } from "./IBoundNodeVisitor";
+import { ValueType } from "../../Types/ValueType";
 
 export enum BoundNodeKind {
     VariableDeclaration,
@@ -26,7 +27,8 @@ export enum BoundNodeKind {
     CallExpression,
     LabelStatement,
     GotoStatement,
-    ConditionalGotoStatement
+    ConditionalGotoStatement,
+    ConversionExpression
 }
 
 export enum BoundBinaryOperatorKind {
@@ -631,4 +633,17 @@ export class BoundConditionalGotoStatement extends BoundStatement
     public readonly label: BoundLabel;
     public readonly condition: BoundExpression;
     public readonly jumpIfTrue : boolean;
+}
+
+export class BoundConversionExpression extends BoundExpression
+{
+    public constructor(
+        public readonly type : Type, 
+        public readonly expression : BoundExpression)
+    {
+        super();
+    }
+
+    //public get type() : Type { return this.operator.type; }
+    public get kind(): BoundNodeKind { return BoundNodeKind.ConversionExpression; }
 }

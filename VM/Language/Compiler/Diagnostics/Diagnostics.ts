@@ -120,6 +120,10 @@ export class Diagnostics
         this.report(`Cannot convert type '{fromType}' to '{targetType}'`, DiagnosticType.CannotConvertType, span);
     }        
  
+    public reportCannotConvertImplicitly(span: TextSpan, type: Type, targetType: Type) {
+        this.report(`Cannot implicitly convert type '{fromType}' to '{targetType}'`, DiagnosticType.CannotConvertType, span);
+    }
+
     public reportUndefinedBinaryOperator(span: TextSpan, operator: string, leftType: Type, rightType: Type): void {
         this.report(`Binary operator '${operator}' is not defined for types '${leftType.name}' and '${rightType.name}'.`, DiagnosticType.UndefinedBinaryOperator, span);
     }
