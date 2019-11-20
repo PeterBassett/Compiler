@@ -4,18 +4,6 @@ import { Scope, ScopeLevel } from "./Scope";
 import { BoundFunctionDeclaration } from "../Compiler/Binding/BoundNode";
 import { ValueType } from "../Types/ValueType";
 
-/*
-export enum ValueType
-{
-    Unit,
-    Function,
-    Boolean,
-    Int,
-    Float,
-    String,
-    Class
-}*/
-
 export class Value
 {
     ToCallable(): AST.CallableExpressionNode {
@@ -155,8 +143,7 @@ export class ScopeInfo
         if(scope == null)
             throw RangeError(name); 
 
-        //if (_values[name].Type != value.Type)
-        //    throw new InvalidCastException();
+        // TODO : If the type of the variable doesnt match the type of the value, throw.
 
         scope.info.values[name] = new Identifier(value, scope.info.values[name].Type);
     }

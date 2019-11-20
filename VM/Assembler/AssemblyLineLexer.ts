@@ -161,14 +161,25 @@ export class AssemblyLineLexer
     }
 
     numberToken(): boolean {
-        var start = this._currentPosition;
+        let start = this._currentPosition;
 
         while(!this.end && this.isDigit(this.currentChar))
             this._currentPosition++;
 
-        let lexeme = this._source.substring(start, this._currentPosition);
+        let isFloat = false;
+        if(this.currentChar == ".")
+        {
+            isFloat = true;
 
-        this.current = new Token(lexeme, start, OperandToken.NUMBER, parseInt(lexeme, 10));
+            this._currentPosition++;
+
+            while(!this.end && this.isDigit(this.currentChar))
+                this._currentPosition++;                    
+        }
+
+        let lexeme = this._source.substring(start, this._currentPosition);
+        let value = isFloat ? parseFloat(lexeme) : parseInt(lexeme, 10);
+        this.current = new Token(lexeme, start, OperandToken.NUMBER, value);
         return true;
     }
 

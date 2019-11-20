@@ -10,10 +10,10 @@ import { exhaustiveCheck } from "../../../misc/exhaustive";
 import { DefinitionScope, Identifier } from "../../Scope/DefinitionScope";
 import * as Nodes from "./BoundNode";
 import TypeQuery from "../../Types/TypeInspection";
-import { Token } from "../Syntax/Lexer";
 import TextSpan from "../Syntax/Text/TextSpan";
 import BuiltinFunctions from "../BuiltinFunctions";
 import Conversion from "./Conversion";
+import Token from "../Syntax/Token";
 
 // responsible for transforming a SyntaxTree into a BoundTree
 // this discards syntax detail complexity and enforces semantic rules.
@@ -24,9 +24,7 @@ export default class Binder
     private scope!: DefinitionScope;
     
     private functionMap : { [index:string] : AST.CallableExpressionNode } = {};
-
-    private returnStatementsInFunction! : Nodes.BoundReturnStatement[];
-    //private Stack<(BoundLabel BreakLabel, BoundLabel ContinueLabel)> _loopStack = new Stack<(BoundLabel BreakLabel, BoundLabel ContinueLabel)>();
+    private returnStatementsInFunction! : Nodes.BoundReturnStatement[];    
     private _loopStack! : { breakLabel : Nodes.BoundLabel, continueLabel: Nodes.BoundLabel}[];
     private _labelCounter! : number;
     private _globalVariablesDefined : boolean = false;
@@ -48,7 +46,7 @@ export default class Binder
         return new Nodes.BoundGlobalScope(this.diagnostics, declarations.variables, declarations.classes, declarations.functions);
     } 
     
-    public BindDeclarations(declarations : AST.DeclarationSyntax[]) : { 
+    private BindDeclarations(declarations : AST.DeclarationSyntax[]) : { 
         variables : Nodes.BoundVariableDeclaration[],
         classes : Nodes.BoundClassDeclaration[],
         functions : Nodes.BoundFunctionDeclaration[],
@@ -84,9 +82,6 @@ export default class Binder
 
         this.StoreCallableDeclarations(callables as AST.CallableExpressionNode[]);        
 
-   ////     this.BindCallExpression
-   ////     BuiltinFunctions.rnd
-
         this._incompleteCallSites = [];
         this._callSitePlaceholdersValid = true;
         let functions : Nodes.BoundFunctionDeclaration[] = this.BindCallableDeclarations(
@@ -106,7 +101,7 @@ export default class Binder
         };
     }
 
-    FinaliseCallSites(): void {
+    private FinaliseCallSites(): void {
         this._incompleteCallSites.forEach( cs => {
             let func = this.scope.FindVariable(cs.call.name);
             
@@ -161,7 +156,7 @@ export default class Binder
         }
     }
 
-    BindReturnStatement(syntax: AST.ReturnStatementSyntax): Nodes.BoundStatement {
+    private BindReturnStatement(syntax: AST.ReturnStatementSyntax): Nodes.BoundStatement {
         let expression  : Nodes.BoundExpression | null = null;
         if(syntax.expression)
         {
@@ -176,7 +171,7 @@ export default class Binder
         return rs;
     }
 
-    BindForStatementSyntax(syntax: AST.ForStatementSyntax): Nodes.BoundStatement {
+    private BindForStatementSyntax(syntax: AST.ForStatementSyntax): Nodes.BoundStatement {
         var lowerBound = this.BindExpressionAndTypeCheck(syntax.lowerBound, PredefinedValueTypes.Integer);
         var upperBound = this.BindExpressionAndTypeCheck(syntax.upperBound, PredefinedValueTypes.Integer);
 
@@ -201,24 +196,16 @@ export default class Binder
         return new Nodes.BoundForStatement(variable, lowerBound, upperBound, statement, breakLabel, continueLabel);
     }
 
-    BindWhileStatementSyntax(syntax: AST.WhileStatementSyntax): Nodes.BoundStatement {
+    private BindWhileStatementSyntax(syntax: AST.WhileStatementSyntax): Nodes.BoundStatement {
         
         var condition = this.BindExpressionAndTypeCheck(syntax.condition, PredefinedValueTypes.Boolean);
         
         let { breakLabel, continueLabel, statement } = this.BindLoopBody(syntax.body);
 
         return new Nodes.BoundWhileStatement(condition, statement, breakLabel, continueLabel);
-
-        /*
-        using(this.scope.PushScope(), () => {     
-            body = this.BindStatement(syntax.body);
-        });*/
-
-        //return new Nodes.BoundWhileStatement(condition, statement, breakLabel, continueLabel);
     }
-
     
-    BindBreakStatement(syntax : AST.BreakStatementSyntax) : Nodes.BoundStatement
+    private BindBreakStatement(syntax : AST.BreakStatementSyntax) : Nodes.BoundStatement
     {
         if (this._loopStack.length == 0)
         {
@@ -230,7 +217,7 @@ export default class Binder
         return new Nodes.BoundGotoStatement(breakLabel);
     }
 
-    BindContinueStatement(syntax : AST.ContinueStatementSyntax) : Nodes.BoundStatement
+    private BindContinueStatement(syntax : AST.ContinueStatementSyntax) : Nodes.BoundStatement
     {
         if (this._loopStack.length == 0)
         {
@@ -242,7 +229,7 @@ export default class Binder
         return new Nodes.BoundGotoStatement(continueLabel);
     }
 
-    BindLoopBody(body : AST.StatementNode) : { breakLabel : Nodes.BoundLabel, continueLabel : Nodes.BoundLabel, statement : Nodes.BoundStatement }
+    private BindLoopBody(body : AST.StatementNode) : { breakLabel : Nodes.BoundLabel, continueLabel : Nodes.BoundLabel, statement : Nodes.BoundStatement }
     {
         this._labelCounter++;
         let breakLabel = new Nodes.BoundLabel(`break${this._labelCounter}`);
@@ -263,23 +250,23 @@ export default class Binder
         return { breakLabel, continueLabel, statement };
     }
 
-    BindExpressionStatement(syntax: AST.ExpressionStatementSyntax): Nodes.BoundStatement {
+    private BindExpressionStatement(syntax: AST.ExpressionStatementSyntax): Nodes.BoundStatement {
         let expression = this.BindExpression(syntax.expression);
         return new Nodes.BoundExpressionStatement(expression);
     }
 
-    BindIfStatement(syntax: AST.IfStatementSyntax): Nodes.BoundStatement {
+    private BindIfStatement(syntax: AST.IfStatementSyntax): Nodes.BoundStatement {
         var condition = this.BindExpressionAndTypeCheck(syntax.condition, PredefinedValueTypes.Boolean);
         var trueStatement = this.BindStatement(syntax.trueBranch);
         var falseStatement = syntax.falseBranch == null ? null : this.BindStatement(syntax.falseBranch.body);
         return new Nodes.BoundIfStatement(condition, trueStatement, falseStatement);
     }
 
-    BindClassDeclarations(declarations: AST.ClassDeclarationStatementSyntax[]): Nodes.BoundClassDeclaration[] {
+    private BindClassDeclarations(declarations: AST.ClassDeclarationStatementSyntax[]): Nodes.BoundClassDeclaration[] {
         return declarations.map(d => this.BindClassDeclaration(d));
     }
 
-    BindClassDeclaration(declaration: AST.ClassDeclarationStatementSyntax): Nodes.BoundClassDeclaration {
+    private BindClassDeclaration(declaration: AST.ClassDeclarationStatementSyntax): Nodes.BoundClassDeclaration {
         let name = declaration.identifier.lexeme;
 
         let type = new Type(ValueType.Class);
@@ -294,12 +281,12 @@ export default class Binder
             boundDeclarations.functions);
     }
     
-    BindGlobalVariableDeclarations(declarations: AST.VariableDeclarationSyntax[]): Nodes.BoundVariableDeclaration[]
+    private BindGlobalVariableDeclarations(declarations: AST.VariableDeclarationSyntax[]): Nodes.BoundVariableDeclaration[]
     {
         return declarations.map(d => this.BindGlobalVariableDeclaration(d));
     }
 
-    BindGlobalVariableDeclaration(declaration: AST.VariableDeclarationSyntax): Nodes.BoundVariableDeclaration
+    private BindGlobalVariableDeclaration(declaration: AST.VariableDeclarationSyntax): Nodes.BoundVariableDeclaration
     {
         return this.BindVariableDeclaration(declaration);
     }
@@ -344,14 +331,14 @@ export default class Binder
         return node;
     }
 
-    BindDefaultExpressionForType(typeName: AST.TypeNameSyntax): Nodes.BoundExpression {        
+    private BindDefaultExpressionForType(typeName: AST.TypeNameSyntax): Nodes.BoundExpression {        
         let type = TypeQuery.getTypeFromName(typeName.identifier.lexeme, this.scope);
         let value = TypeQuery.getDefaultValueForType(type, this.scope);
 
         return new Nodes.BoundLiteralExpression(value, type);
     }
 
-    BindBlockStatement(syntax: AST.BlockStatementSyntax): Nodes.BoundBlockStatement {
+    private BindBlockStatement(syntax: AST.BlockStatementSyntax): Nodes.BoundBlockStatement {
         var statements : Nodes.BoundStatement[] = [];
         
         using(this.scope.PushScope(), () => {
@@ -441,12 +428,12 @@ export default class Binder
         return declaration!;
     }
 
-    StoreCallableDeclaration(lexeme: string, node: AST.CallableExpressionNode) : void
+    private StoreCallableDeclaration(lexeme: string, node: AST.CallableExpressionNode) : void
     {
         this.functionMap[lexeme] = node;
     }
 
-    StoreIncompleteCallSite(call : Nodes.BoundCallExpression, syntax : AST.CallExpressionSyntax) : void
+    private StoreIncompleteCallSite(call : Nodes.BoundCallExpression, syntax : AST.CallExpressionSyntax) : void
     {
         this._incompleteCallSites.push( { call, syntax } );
     }
@@ -576,7 +563,7 @@ export default class Binder
         }
     }
     
-    BindGetExpression(syntax: AST.GetExpressionSyntax) : Nodes.BoundExpression {
+    private BindGetExpression(syntax: AST.GetExpressionSyntax) : Nodes.BoundExpression {
         let left = this.BindExpression(syntax.left);
         
         if(!left.type.isClass)
@@ -638,7 +625,7 @@ export default class Binder
         return new Nodes.BoundVariableExpression(identifier);
     }
 
-    BindCallExpression(syntax: AST.CallExpressionSyntax): Nodes.BoundExpression 
+    private BindCallExpression(syntax: AST.CallExpressionSyntax): Nodes.BoundExpression 
     {
         let name = syntax.nameExpression.identifierToken.lexeme;
         let variableFound = this.BindExpression(syntax.nameExpression) as Nodes.BoundVariableExpression;
@@ -670,8 +657,7 @@ export default class Binder
             {
                 builtin = func.type;
                 callName = name;
-                returnType = builtin;//.function!.returnType;
-                //returnType = TypeQuery.getTypeFromName(builtin.name!, this.scope); ;
+                returnType = builtin
             }
             else
             {
@@ -693,9 +679,6 @@ export default class Binder
         } // if we have not found a definition and we are currently allowed to make placeholders
         else if(this._callSitePlaceholdersValid && (!variable || variable == Identifier.Undefined) && !builtin)
         {
-            // lets make a placeholder!
-            //let returnType = TypeQuery.getTypeFromName(declaration.returnValue.identifier.lexeme, this.scope);
-
             let callExpression = new Nodes.BoundCallExpression(name /*declaration.identifier.lexeme*/, returnType);
 
             this.StoreIncompleteCallSite(callExpression, syntax);
@@ -705,7 +688,6 @@ export default class Binder
         } // if we found a definition then lets just get on with it.       
         else if(variable != Identifier.Undefined || !!builtin)
         {
-            //let returnType : Type = (variable != Identifier.Undefined) ? variable!.type.function!.returnType : builtin!.function!.returnType;
             let declaredParameters : Type[] = (!!variable && variable != Identifier.Undefined) ? variable!.type.function!.parameterTypes : builtin!.function!.parameterTypes || [];
 
             if(declaredParameters.length != syntax.callArguments.length)
@@ -747,104 +729,8 @@ export default class Binder
 
         throw new Error("");
     }
-    /*
-    // this one works but doesnt include buildin functions
-    BindCallExpression(syntax: AST.CallExpressionSyntax): Nodes.BoundExpression 
-    {
-        let name = syntax.nameExpression.identifierToken.lexeme;
-        let variable = this.BindExpression(syntax.nameExpression) as Nodes.BoundVariableExpression;
-        let declaration = this.functionMap[name];
 
-        // if we have not found a definition and we are currently NOT allowed to make placeholders we have an error
-        if (!this._callSitePlaceholdersValid && variable.variable == Identifier.Undefined)
-        {
-            this.diagnostics.reportUndefinedName(syntax.nameExpression.span(), name);
-            return new Nodes.BoundErrorExpression();
-        } // if we have not found a definition and we are currently allowed to make placeholders
-        else if(this._callSitePlaceholdersValid && variable.variable == Identifier.Undefined)
-        {
-            // lets make a placeholder!
-            let returnType = TypeQuery.getTypeFromName(declaration.returnValue.identifier.lexeme, this.scope);
-
-            let callExpression = new Nodes.BoundCallExpression(declaration.identifier.lexeme, returnType);
-
-            this.StoreIncompleteCallSite(callExpression, syntax);
-
-            return callExpression;
-
-        } // if we found a definition then lets just get on with it.       
-        else if(variable.variable != Identifier.Undefined)
-        {
-            let returnType : Type = variable.type.function!.returnType;
-            let declaredParameters : Type[] = variable.type.function!.parameterTypes || [];
-
-            if(declaredParameters.length != syntax.callArguments.length)
-            {
-                this.diagnostics.reportIncorrectArgumentCount(declaredParameters.length, syntax.callArguments.length, syntax.span());
-            }
-
-            let parameters = syntax.callArguments.map( node => {
-                return {
-                    expression : this.BindExpression(node),
-                    span : node.span
-                };
-            });        
-
-            for(let i = 0; i < Math.min(parameters.length, declaredParameters.length); i++)
-            {
-                if(!parameters[i].expression.type.isAssignableTo( declaredParameters[i] ))
-                {
-                    this.diagnostics.reportCannotConvertParameter(parameters[i].expression.type, declaredParameters[i], parameters[i].span());
-                }
-            }
-
-            let callExpression = new Nodes.BoundCallExpression(syntax.nameExpression.identifierToken.lexeme, returnType);
-            callExpression.populate(variable.variable, parameters.map( p => p.expression ));
-            // no need to store this one as it is complete as is.
-            return callExpression;
-        }
-
-        throw new Error("");
-    }
-
-*/
-    /*
-    if(!this._callSitePlaceholdersValid)
-        {
-            if (variable.variable == Identifier.Undefined)
-            {
-                
-                this.diagnostics.reportUndefinedName(syntax.nameExpression.span(), name);
-                return new Nodes.BoundErrorExpression();
-            }
-
-            let returnType : Type = variable.type.function!.returnType;
-            let declaredParameters : Type[] = variable.type.function!.parameterTypes || [];
-
-            if(declaredParameters.length != syntax.callArguments.length)
-            {
-                this.diagnostics.reportIncorrectArgumentCount(declaredParameters.length, syntax.callArguments.length, syntax.span());
-            }
-
-            let parameters = syntax.callArguments.map( node => {
-                return {
-                    expression : this.BindExpression(node),
-                    span : node.span
-                };
-            });        
-
-            for(let i = 0; i < Math.min(parameters.length, declaredParameters.length); i++)
-            {
-                if(!parameters[i].expression.type.isAssignableTo( declaredParameters[i] ))
-                {
-                    this.diagnostics.reportCannotConvertParameter(parameters[i].expression.type, declaredParameters[i], parameters[i].span());
-                }
-            }
-
-            return new Nodes.BoundCallExpression(variable.variable, parameters.map( p => p.expression ), returnType);
-        }*/
-
-    validateCallsiteParameters(parameters : Type[], callArguments : Type[], span : TextSpan) 
+    private validateCallsiteParameters(parameters : Type[], callArguments : Type[], span : TextSpan) 
     {
 
     }

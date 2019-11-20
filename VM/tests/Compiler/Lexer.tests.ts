@@ -1,7 +1,8 @@
 import { SyntaxType } from "../../Language/Compiler/Syntax/SyntaxType";
-import { Lexer, Token } from "../../Language/Compiler/Syntax/Lexer";
 import * as SyntaxFacts from "../../Language/Compiler/Syntax/SyntaxFacts";
 import SourceText from "../../Language/Compiler/Syntax/Text/SourceText";
+import Lexer from "../../Language/Compiler/Syntax/Lexer";
+import Token from "../../Language/Compiler/Syntax/Token";
 
 describe("A Lexer object", () => {
     let target : Lexer;

@@ -1,4 +1,4 @@
-import { Lexer } from "../../Language/Compiler/Syntax/Lexer";
+import Lexer from "../../Language/Compiler/Syntax/Lexer";
 
 export default class mode 
 {

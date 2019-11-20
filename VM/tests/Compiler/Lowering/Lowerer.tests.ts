@@ -378,6 +378,7 @@ func main() : int
                     BinaryExpression<+>
                         VariableExpression<n:int>
                         VariableExpression<i:int>
+            LabelStatement<continue1>
             ExpressionStatement
                 AssignmentExpression<i:int>
                     BinaryExpression<+>
@@ -432,6 +433,7 @@ func main() : int
                     BinaryExpression<+>
                         VariableExpression<n:int>
                         VariableExpression<i:int>
+            LabelStatement<continue1>
             ExpressionStatement
                 AssignmentExpression<i:int>
                     BinaryExpression<+>
@@ -459,6 +461,7 @@ func main() : int
                     BinaryExpression<+>
                         VariableExpression<n:int>
                         VariableExpression<i:int>
+            LabelStatement<continue2>
             ExpressionStatement
                 AssignmentExpression<i:int>
                     BinaryExpression<+>
@@ -516,6 +519,7 @@ func main() : int
                             VariableExpression<n:int>
                             VariableExpression<x:int>
                         VariableExpression<y:int>
+            LabelStatement<continue2>
             ExpressionStatement
                 AssignmentExpression<y:int>
                     BinaryExpression<+>
@@ -527,6 +531,7 @@ func main() : int
                     VariableExpression<y:int>
                     VariableExpression<upperBound2:int>
             LabelStatement<break2>
+            LabelStatement<continue1>
             ExpressionStatement
                 AssignmentExpression<x:int>
                     BinaryExpression<+>
@@ -594,6 +599,7 @@ func main() : int
                             VariableExpression<x:int>
                         VariableExpression<y:int>
             LabelStatement<Label6>
+            LabelStatement<continue2>
             ExpressionStatement
                 AssignmentExpression<y:int>
                     BinaryExpression<+>
@@ -606,6 +612,7 @@ func main() : int
                     VariableExpression<upperBound2:int>
             LabelStatement<break2>
             LabelStatement<Label3>
+            LabelStatement<continue1>
             ExpressionStatement
                 AssignmentExpression<x:int>
                     BinaryExpression<+>

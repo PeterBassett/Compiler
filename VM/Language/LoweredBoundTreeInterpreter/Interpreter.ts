@@ -12,14 +12,7 @@ export default class Evaluator
     private _lastValue : Value;
     private _program! : Nodes.BoundGlobalScope;
     
-    /*
-    private Dictionary<VariableSymbol, object> _globals;
-    private Stack<Dictionary<VariableSymbol, object>> _locals = new Stack<Dictionary<VariableSymbol, object>>();
-    private Random _random;
-
-    */
-
-    constructor() //BoundProgram program, Dictionary<VariableSymbol, object> variables)
+    constructor()
     {
         this._lastValue = Value.Unit;
         this._globals = {};
@@ -38,7 +31,6 @@ export default class Evaluator
         }
 
         let main = root.functions.filter( v => v.identifier == "main")[0];
-        //let call = new Nodes.BoundCallExpression(new Identifier(main.identifier, main.returnType), [], main.returnType);
         let call = new Nodes.BoundCallExpression(main.identifier, main.returnType);
         call.populate(new Identifier(main.identifier, main.returnType), []);
         return this.EvaluateCallExpression(call);
@@ -227,9 +219,6 @@ export default class Evaluator
                     return new Value(ValueType.String, left.toString() + right.toString());                    
                 else
                     throw new Error("Unexpected Type");
-                    
-                  //  return new Value(ValueType.String, left.toString() + right.());
-                    //return (string)left + (string)right;
             case Nodes.BoundBinaryOperatorKind.Subtraction:
                 return new Value(ValueType.Int, left.ToInt() - right.ToInt());
             case Nodes.BoundBinaryOperatorKind.Multiplication:
@@ -322,59 +311,34 @@ export default class Evaluator
 
     private EvaluateCallExpression(node : Nodes.BoundCallExpression) : Value
     {
-        /*
-        if (node.identifier.name == BuiltinFunctions.Input)
+        let func = this._program.functionMap[node.identifier.name];
+        let locals : { [index:string] : Value } = {};
+        for (let i = 0; i < node.callArguments.length; i++)
         {
-            return Console.ReadLine();
+            var parameter = func.parameters[i];
+            var value = this.EvaluateExpression(node.callArguments[i]);
+            locals[parameter.name] = value;
         }
-        else if (node.Function == BuiltinFunctions.Print)
-        {
-            var message = (string)EvaluateExpression(node.Arguments[0]);
-            Console.WriteLine(message);
-            return null;
-        }
-        else if (node.Function == BuiltinFunctions.Rnd)
-        {
-            var max = (int)this.EvaluateExpression(node.Arguments[0]);
-            if (_random == null)
-                _random = new Random();
 
-            return _random.Next(max);
-        }
-        else
-        {*/
+        this._locals.push(locals);
 
-            let func = this._program.functionMap[node.identifier.name];
-            let locals : { [index:string] : Value } = {};
-            for (let i = 0; i < node.callArguments.length; i++)
-            {
-                var parameter = func.parameters[i];
-                var value = this.EvaluateExpression(node.callArguments[i]);
-                locals[parameter.name] = value;
-            }
+        var result = this.EvaluateStatement(func.blockBody);
 
-            this._locals.push(locals);
+        this._locals.pop();
 
-            var result = this.EvaluateStatement(func.blockBody);
-
-            this._locals.pop();
-
-            return result;
-        //}
+        return result;
     }
 
-    /*
     private EvaluateConversionExpression(node : Nodes.BoundConversionExpression) : Value
     {
-        var value = this.EvaluateExpression(node.Expression);
-        if (node.Type == PredefinedValueTypes.Boolean)
+        var value = this.EvaluateExpression(node.expression);
+        if (node.type == PredefinedValueTypes.Boolean)
             return new Value(ValueType.Boolean, value.ToBoolean());
-        else if (node.Type == PredefinedValueTypes.Integer)
+        else if (node.type == PredefinedValueTypes.Integer)
             return new Value(ValueType.Int, value.ToInt());
-        else if (node.Type == PredefinedValueTypes.String)
+        else if (node.type == PredefinedValueTypes.String)
             return new Value(ValueType.String, value.toString());
         else
-            throw new Error(`Unexpected type {node.type}`);
+            throw new Error(`Unexpected type ${node.type}`);
     }
-    */
 }

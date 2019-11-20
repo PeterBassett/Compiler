@@ -93,4 +93,16 @@ describe("The AssemblyLineParser class ", () => {
     it("parses a line of assembly with a pointer destination register and literal source", () => {
         test("STR [R4+5] 100", new Instruction(OpCodes.STR,0b1010,0,4,(5<<8)+100));
     }); 
+
+    it("parses a line of assembly with floating point number", () => {
+        test("mvi R0 3.14159", new Instruction(OpCodes.MVI,0b1000,0,0,3.14159));
+    });
+
+    it("parses a line of assembly with hex integer", () => {
+        test("mvi R0 0xdeadbeef", new Instruction(OpCodes.MVI,0b1000,0,0,0xdeadbeef));
+    });
+
+    it("parses a line of assembly with binary integer", () => {
+        test("mvi R0 0b101110011", new Instruction(OpCodes.MVI,0b1000,0,0,0b101110011));
+    });
 });

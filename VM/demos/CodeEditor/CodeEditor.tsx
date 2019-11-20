@@ -1,6 +1,6 @@
 import * as React from "react";
 import Parser from "../../Language/Compiler/Syntax/Parser";
-import { Lexer, Token, SyntaxTrivia } from "../../Language/Compiler/Syntax/Lexer";
+import Lexer from "../../Language/Compiler/Syntax/Lexer";
 import SourceText from "../../Language/Compiler/Syntax/Text/SourceText";
 import CompilationUnit from "../../Language/Compiler/Syntax/CompilationUnit";
 import { Diagnostic, Diagnostics } from "../../Language/Compiler/Diagnostics/Diagnostics";

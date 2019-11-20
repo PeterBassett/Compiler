@@ -1,11 +1,11 @@
 import * as React from "react";
 import Parser from "../../Language/Compiler/Syntax/Parser";
-import { Lexer, Token, SyntaxTrivia } from "../../Language/Compiler/Syntax/Lexer";
 import SourceText from "../../Language/Compiler/Syntax/Text/SourceText";
 import CompilationUnit from "../../Language/Compiler/Syntax/CompilationUnit";
 import TextSpan from "../../Language/Compiler/Syntax/Text/TextSpan";
 import StringDiagnosticsPrinter from "../../Language/Compiler/Diagnostics/StringDiagnosticsPrinter";
 import { LosslessParseTreeView,  DiagnosticViewer } from "../DiagnosticDisplay/DiagnosticViewer";
+import Lexer from "../../Language/Compiler/Syntax/Lexer";
 
 interface PlainCodeEditorState
 {

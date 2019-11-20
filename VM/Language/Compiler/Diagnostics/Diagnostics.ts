@@ -1,9 +1,9 @@
 import TextSpan from "../Syntax/Text/TextSpan";
 import { SyntaxType } from "../Syntax/SyntaxType";
-import { Token } from "../Syntax/Lexer";
 import SourceText from "../Syntax/Text/SourceText";
 import { Type } from "../../Types/TypeInformation";
 import { ValueType } from "../../Types/ValueType";
+import Token from "../Syntax/Token";
 
 export enum DiagnosticType {
     UnexpectedCharacter,

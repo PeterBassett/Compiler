@@ -149,7 +149,7 @@ export default class Lowerer extends BoundTreeTransformBase
             new Nodes.BoundVariableExpression(new Identifier(upperBoundSymbol.name, upperBoundSymbol.type, upperBoundSymbol))
         );
 
-        //let continueLabelStatement = new BoundLabelStatement(node.ContinueLabel);
+        let continueLabelStatement = new Nodes.BoundLabelStatement(forStatement.continueLabel);
         let increment = new Nodes.BoundExpressionStatement(
             new Nodes.BoundAssignmentExpression(
                 new Identifier(forStatement.variable.name, forStatement.variable.type, forStatement.variable),
@@ -164,6 +164,7 @@ export default class Lowerer extends BoundTreeTransformBase
         let whileBody = new Nodes.BoundBlockStatement(
             [
                 forStatement.body,
+                continueLabelStatement,
                 increment
             ]
         );

@@ -1,5 +1,6 @@
 import { Type } from "./TypeInformation";
 import { ValueType } from "./ValueType";
+
 export class PredefinedValueTypes {
     public static Integer: Type = new Type(ValueType.Int, "int", undefined, true);
     public static Float: Type = new Type(ValueType.Float, "float", undefined, true);

@@ -1,4 +1,3 @@
-import { Lexer, Token, SyntaxTrivia } from "./Lexer";
 import SourceText from "./Text/SourceText";
 import CompilationUnit from "./CompilationUnit";
 import { SyntaxType } from "./SyntaxType";
@@ -8,14 +7,15 @@ import { Diagnostics, DiagnosticType } from "../Diagnostics/Diagnostics";
 import { symbol } from "prop-types";
 import TextSpan from "./Text/TextSpan";
 import { Identifier } from "../../Scope/DefinitionScope";
+import Token from "./Token";
+import Lexer from "./Lexer";
+import SyntaxTrivia from "./SyntaxTrivia";
 
 class ExpectedEofException extends Error
 {
-    public value:Token;
-    constructor(value:Token)
+    constructor(public readonly value : Token)
     {
         super("Unexpected EOF encountered");
-        this.value = value;
     }
 }
 
@@ -57,7 +57,7 @@ export default class Parser
                 continue;
             
             this.tokens.push(token);
-        }while(token.kind!= SyntaxType.Eof);   
+        }while(token.kind != SyntaxType.Eof);   
         
         this._diagnostics = new Diagnostics(source, this.lexer.diagnostics);
     }
@@ -118,7 +118,7 @@ export default class Parser
         this._diagnostics.reportUnexpectedToken(type, this.current.kind, this.current.span);
 
         let text = SyntaxFacts.GetText(type) || "";
-        // fabricate a synthetic token matching what we expect.
+
         return new Token(type, text, this.current.position, this.current.line, this.current.character, [], []);
     }
 
@@ -131,7 +131,7 @@ export default class Parser
         this._diagnostics.reportUnexpectedToken(types, this.current.kind, this.current.span);
 
         let text = SyntaxFacts.GetText(types[0]);
-        // fabricate a synthetic token matching what we expect.
+
         return new Token(types[0], text, this.current.position, this.current.line, this.current.character, [], []);    
     } 
 
@@ -351,7 +351,7 @@ export default class Parser
 
         let previousParam : AST.ParameterDeclarationSyntax | null = null;
 
-        if(this.current.kind!= SyntaxType.RightParen)
+        if(this.current.kind != SyntaxType.RightParen)
         {
             let p = this.parseParameterDeclaration();
             previousParam = p;
@@ -359,14 +359,14 @@ export default class Parser
         }
         
         let lastTokenPosition : number = -1;        
-        while(this.current.kind!= SyntaxType.RightParen)
+        while(this.current.kind != SyntaxType.RightParen)
         {        
             let d = this.isMakingProgress(lastTokenPosition);
             if(!d.progress)            
                 throw new Error("NO PROGRESS");   
             lastTokenPosition = d.newPosition;
 
-            if(this.current.kind== SyntaxType.Eof)
+            if(this.current.kind == SyntaxType.Eof)
                 throw new ExpectedEofException(this.current);    
             
             let commaToken = this.match(SyntaxType.Comma);
@@ -422,7 +422,7 @@ export default class Parser
 
         let typeDeclaration : AST.TypeNameSyntax | undefined = undefined;
         let colonToken : Token | undefined = undefined;
-        if(this.current.kind== SyntaxType.Colon)
+        if(this.current.kind == SyntaxType.Colon)
         {
             colonToken = this.match(SyntaxType.Colon);
             // we have a type declaration
@@ -444,7 +444,7 @@ export default class Parser
     parseReturnStatement(): AST.StatementNode {
         let returnToken = this.match(SyntaxType.ReturnKeyword);
         
-        if(this.current.kind== SyntaxType.SemiColon)
+        if(this.current.kind == SyntaxType.SemiColon)
         {
             let semiColonToken = this.match(SyntaxType.SemiColon);
             return AST.ReturnStatementSyntax(returnToken, undefined, semiColonToken);
@@ -461,8 +461,8 @@ export default class Parser
         let openBraceToken = this.match(SyntaxType.LeftBrace);
         let lastTokenPosition : number = -1;        
         
-        while(this.current.kind!= SyntaxType.Eof &&
-              this.current.kind!= SyntaxType.RightBrace)
+        while(this.current.kind != SyntaxType.Eof &&
+              this.current.kind != SyntaxType.RightBrace)
         {
             let d = this.isMakingProgress(lastTokenPosition);
             if(!d.progress)            
@@ -497,8 +497,8 @@ export default class Parser
     }
 
     private parseAssignmentExpression(): AST.ExpressionNode {
-        if(this.peek(0).kind== SyntaxType.Identifier && 
-           this.peek(1).kind== SyntaxType.Equals)
+        if(this.peek(0).kind == SyntaxType.Identifier && 
+           this.peek(1).kind == SyntaxType.Equals)
         {
             let identifierToken = this.next();
             let operatorToken = this.next();
@@ -668,7 +668,7 @@ export default class Parser
     }
 
     private parseElseClause(): AST.ElseStatementSyntax | null {
-        if(this.current.kind!= SyntaxType.ElseKeyword)
+        if(this.current.kind != SyntaxType.ElseKeyword)
             return null;
 
         let keyword = this.next();

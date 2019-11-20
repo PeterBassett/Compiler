@@ -332,7 +332,12 @@ export default class CodeGenerator
                 let exp = expression as Nodes.BoundAssignmentExpression;
                 this.writeExpression(exp.expression);
 
-                if(exp.identifier.variable && exp.identifier.variable!.isGlobal)
+                if(exp.identifier.variable!.isParameter)
+                {
+                    let offset = this.variableMap.peek()[exp.identifier.name]; //find location of variable on the stack                    
+                    this.instruction(`MOV [R6+${offset+4}] R1`, `assignt to parameter ${exp.identifier.name} on the stack`);
+                }
+                else if(exp.identifier.variable && exp.identifier.variable!.isGlobal)
                 {
                     this.instruction(`MOV ${exp.identifier.name}: R1`, "assign to global variable");
                 }

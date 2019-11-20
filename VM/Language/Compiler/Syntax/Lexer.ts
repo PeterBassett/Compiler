@@ -6,74 +6,10 @@ import { Diagnostics } from "../Diagnostics/Diagnostics";
 import TextSpan from "../Syntax/Text/TextSpan";
 import { char, Char } from "./CharType";
 import SyntaxTreeVisitor from "../Binding/BindingVisitor";
+import SyntaxTrivia from "./SyntaxTrivia"; 
+import Token from "./Token";
 
-export class Token
-{    
-    public readonly kind : SyntaxType;
-    public readonly lexeme : string;
-    public readonly position : number;
-    public readonly line : number;
-    public readonly character :number;
-    public readonly leadingTrivia:SyntaxTrivia[];
-    public readonly trailingTrivia:SyntaxTrivia[];
-
-    constructor(kind : SyntaxType, lexeme: string, 
-        position:number, line: number, character: number, 
-        leadingTrivia?:SyntaxTrivia[], trailingTrivia?:SyntaxTrivia[]) 
-    {
-        //if(lexeme == null)
-        //console.log();
-        this.kind = kind;
-        this.lexeme = lexeme;
-        this.position = position;
-		this.line = line;
-        this.character = character;
-        this.leadingTrivia = leadingTrivia || [];
-        this.trailingTrivia = trailingTrivia || [];
-    }
-
-    public get span() : TextSpan
-    {
-        return new TextSpan(this.position, this.lexeme.length);
-    }
-
-    public withLeadingTrivia(trivia : SyntaxTrivia[]) : Token
-    {
-        if (trivia == null || trivia.length == 0)
-            return this;
-
-        return new Token(this.kind,
-            this.lexeme,
-            this.position,
-            this.line,
-            this.character,
-            trivia.concat(this.leadingTrivia),
-            this.trailingTrivia);
-    }
-}   
-
-export class SyntaxTrivia
-{
-    public readonly kind : SyntaxType;
-    public readonly lexeme : string;
-    public readonly start : number;
-    public readonly length : number;
-
-    public get span(): TextSpan
-    {
-        return new TextSpan(this.start, this.length);
-    }
-
-    constructor(kind : SyntaxType, lexeme : string, start : number, length : number)
-    {
-        this.kind = kind;
-        this.lexeme = lexeme;
-        this.start = start;
-        this.length = length;
-    }
-}
-
-export class Lexer implements ILexer
+export default class Lexer implements ILexer
 {
     private readonly _diagnostics : Diagnostics;
     private readonly source : SourceText;
@@ -112,10 +48,6 @@ export class Lexer implements ILexer
 
         lexeme = this.amendLexeme(lexeme, syntaxType);
 
-        //var span = TextSpan.FromBounds(_start, end);
-        //var text = _text.GetText(span);
-        //var diagnostics = _diagnostics.ToImmutableArray();
-
         this.start = this.position;
         let trailingTrivia = this.readTrailingTrivia();
 
@@ -129,8 +61,7 @@ export class Lexer implements ILexer
         return lexeme;
     }
 
-    //public readToken() : Token
-    public readToken() : SyntaxType
+    readToken() : SyntaxType
     {
         this.start = this.position;
 
@@ -139,7 +70,6 @@ export class Lexer implements ILexer
         switch(c)
         {
             case '\0':
-                //return new Token(SyntaxType.Eof, "", this.position, this.line, this.character);
                 return SyntaxType.Eof;
             case '\r':
             case '\n':
@@ -148,10 +78,8 @@ export class Lexer implements ILexer
             case ' ':                
                 return this.whitespace();
             case '+' :
-                //return this.token(this.match(char("+")) ? SyntaxType.PlusPlus : SyntaxType.Plus);
                 return this.match(char("+")) ? SyntaxType.PlusPlus : SyntaxType.Plus;
             case '-' :
-                //return this.token(this.match(char("-")) ? SyntaxType.MinusMinus : SyntaxType.Minus);
                 return this.match(char("-")) ? SyntaxType.MinusMinus : SyntaxType.Minus;
             case '*' :
                 return SyntaxType.Star;
@@ -172,19 +100,14 @@ export class Lexer implements ILexer
                             SyntaxType.Equals
                         );
             case '>' :
-                //return this.token(this.match(char("=")) ? SyntaxType.GreaterThanOrEqual : SyntaxType.GreaterThan);
                 return this.match(char("=")) ? SyntaxType.GreaterThanOrEqual : SyntaxType.GreaterThan;
             case '<' :
-                //return this.token(this.match(char("=")) ? SyntaxType.LessThanOrEqual : SyntaxType.LessThan);
                 return this.match(char("=")) ? SyntaxType.LessThanOrEqual : SyntaxType.LessThan;
             case '!' :
-                //return this.token(this.match(char("=")) ? SyntaxType.BangEquals : SyntaxType.Bang);    
                 return this.match(char("=")) ? SyntaxType.BangEquals : SyntaxType.Bang;    
             case '&' :
-                //return this.token(this.match(char("&")) ? SyntaxType.AmpersandAmpersand : SyntaxType.Ampersand);
                 return this.match(char("&")) ? SyntaxType.AmpersandAmpersand : SyntaxType.Ampersand;
             case '|' :
-                //return this.token(this.match(char("|")) ? SyntaxType.PipePipe : SyntaxType.Pipe);                         
                 return this.match(char("|")) ? SyntaxType.PipePipe : SyntaxType.Pipe;                         
             case '1': case '2': case '3': case '4' : case '5' : case '6' : case '7': case '8' : case '9' : case '0':
                 return this.number();    
@@ -420,7 +343,7 @@ export class Lexer implements ILexer
         return (letter >= 'A' && letter <= 'Z');
     }
 
-    private advance() : Char
+    advance() : Char
     {
         let c = this.char;
         this.position++;
@@ -428,7 +351,7 @@ export class Lexer implements ILexer
         return c;
     }
 
-    private match(expected : Char) : boolean
+    match(expected : Char) : boolean
     {
         if(this.char != expected)
             return false;

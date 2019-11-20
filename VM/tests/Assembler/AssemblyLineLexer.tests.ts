@@ -34,6 +34,10 @@ describe("The AssemblyLineLexer class ", () => {
         test("0b101110011", [ OperandToken.NUMBER ]);
     });
 
+    it("lexes a float", () => {
+        test("3.14159", [ OperandToken.NUMBER ]);
+    });
+
     it("lexes a plus", () => {
         test("+", [ OperandToken.PLUS ]);
     });

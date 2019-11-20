@@ -1,4 +1,4 @@
-import { Token } from "../Lexer";
+import Token from "../Token";
 import TextSpan from "../Text/TextSpan";
 import { exhaustiveCheck } from "../../../../misc/exhaustive";
 import { ClassDeclaration } from "estree";

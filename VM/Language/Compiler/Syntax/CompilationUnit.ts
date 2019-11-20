@@ -1,4 +1,3 @@
-import {Token} from "./Lexer"
 import * as AST from "./AST/ASTNode";
 import { Diagnostics } from "../Diagnostics/Diagnostics";
 

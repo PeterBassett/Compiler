@@ -273,6 +273,16 @@ func main() : int {
     // integer division
     return 5 / 2;
 }`, 2],
+[`func main() : float {
+    return 3.14159;
+}`, 3.14159],
+[`func a(n:int):int {
+    n = 5;
+    return n;
+}
+func main() : int {
+    return a(1);
+}`, 5],
 
 /*
 [`func main() : float {

@@ -1,9 +1,10 @@
 import * as React from "react";
-import { SyntaxTrivia, Token } from "../../Language/Compiler/Syntax/Lexer";
 import TextSpan from "../../Language/Compiler/Syntax/Text/TextSpan";
 import * as AST from "../../Language/Compiler/Syntax/AST/ASTNode";
 import { SyntaxType } from "../../Language/Compiler/Syntax/SyntaxType";
 import { Diagnostic } from "../../Language/Compiler/Diagnostics/Diagnostics";
+import SyntaxTrivia from "../../Language/Compiler/Syntax/SyntaxTrivia";
+import Token from "../../Language/Compiler/Syntax/Token";
 
 interface DiagnosticViewerProps
 {
