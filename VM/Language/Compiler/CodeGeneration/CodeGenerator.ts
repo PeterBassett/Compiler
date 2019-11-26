@@ -11,10 +11,11 @@ export default class CodeGenerator
     private diagnostics! : Diagnostics;
     private lines : string[] = [];
     private stackIndex : number = 0;
-    private variableMap! : Stack< { [index:string] : number} >;
+    private variableMap! : Stack< { [index:string] : { offset:number, size:number } } >;
     private labelCount:number = 0;
     private writeComments : boolean;
     private writeBlankLines : boolean;
+    private readonly stackOffset : number = 8;
 
     constructor( options? : { comments:boolean, blankLines:boolean} )
     {
@@ -31,7 +32,7 @@ export default class CodeGenerator
     public generate(root : Nodes.BoundGlobalScope) : GeneratedCode
     {
         this.stackIndex=0;
-        this.variableMap = new Stack<{ [index:string] : number}>();
+        this.variableMap = new Stack<{ [index:string] : { offset:number, size:number } }>();
         this.lines = [];    
         this.labelCount = 0;
         this.diagnostics = new Diagnostics(root.diagnostics.text, root.diagnostics);
@@ -51,23 +52,6 @@ export default class CodeGenerator
             let line = "    ." + v.variable.name + " " + slotType;
             this.lines.push(line);
         });
-    }
-
-    mnemonicForType(type: ValueType) : string
-    {
-        switch(type) {
-            case ValueType.Boolean:
-                return "byte";
-            case ValueType.Int:
-                return "long";
-            case ValueType.Float:
-                return "float";
-            case ValueType.String:
-                return "string";
-            default:
-                this.diagnostics.reportUnsupportedType(type);
-                return "INVALIDTYPE_" + ValueTypeNameMap[type];
-        }
     }
 
     writeFunctions(functionMap: { [index: string]: Nodes.BoundFunctionDeclaration; }) 
@@ -109,31 +93,33 @@ export default class CodeGenerator
         this.variableMap.push(current);
     }
 
-    popVariableMap() {
-        let items = this.calculateVariablesDefinedAtThisLevel();
+    popVariableMap() {    
+        const level = this.variableMap.peek();
+        let size = Object.keys(level).reduce(
+            (prev, curr) => {
+                return prev + level[curr].size;
+            }, 0
+        );
         this.variableMap.pop();
-        this.stackIndex -= items * 4;
+        this.stackIndex -= size;
     }
 
     writeFunction(func: Nodes.BoundFunctionDeclaration) {
         this.blankLine();
         this.label(func.identifier);
-    
-        let start = this.calculateVariablesDefinedAtThisLevel();
+            
         this.writeStackFramePrelude();
         this.pushVariableMap();
 
-        let params = [...func.parameters].reverse();
-        let total = 4 * params.length;
-        params.forEach( p => {
-            this.variableMap.peek()[p.name] = total;
-            total -= 4;
+        let offset = 0;
+        func.parameters.forEach( p => {
+            const size = this.typeSize(p.type.type);
+            this.variableMap.peek()[p.name] = { offset:offset, size:size };            
+            offset += size;
         })
         
         this.writeStatement(func.blockBody);
-        this.popVariableMap();       
-
-        let end = this.calculateVariablesDefinedAtThisLevel();        
+        this.popVariableMap();               
     }
 
     writeStatement(statement: Nodes.BoundStatement) {
@@ -144,11 +130,9 @@ export default class CodeGenerator
                 let stmt = statement as Nodes.BoundBlockStatement;            
 
                 if(stmt.statements.length > 0)
-                {
-                    let start = this.calculateVariablesDefinedAtThisLevel();
+                {                    
                     stmt.statements.forEach( s => this.writeStatement(s) );
-                    let end = this.calculateVariablesDefinedAtThisLevel();
-                
+                 
                     // lexical scoping variable deallocation magic to be injected here
                    // console.log(end-start);
                    // let bytesToDeallocate = 4 * (end-start);
@@ -167,9 +151,6 @@ export default class CodeGenerator
                 if(stmt.expression)
                     this.writeExpression(stmt.expression);
 
-                //this.writeStackFrameEpilogue();
-                // we need to undo the stack, back to where it was when we started this function
-               // this.popDeclaredVariables();
                 this.writeStackFrameEpilogue();
                 this.instruction("RET");                
                 break;
@@ -221,38 +202,92 @@ export default class CodeGenerator
                     this.instruction("MOV R1 0")
                 }
             
-                this.instruction("PUSH R1", `reserve space on stack for variable ${stmt.variable.name}`);
-                
-                this.variableMap.peek()[stmt.variable.name] = this.stackIndex;
+                const size = this.typeSize(stmt.variable.type.type);
+                this.variableMap.peek()[stmt.variable.name] = { offset:this.stackIndex, size:size };
+                this.stackIndex += size;                
 
-                this.stackIndex += 4;                
+                this.comment(`reserve space on stack for variable ${stmt.variable.name}`);                            
+
+                const push = this.typedMnemonic(stmt.variable.type.type, "PUSH");
+                const type = this.mnemonicForType(stmt.variable.type.type);
+                this.instruction(`${push} R1`, `reserve space for a ${type} variable ${stmt.variable.name}`);                
                 break;
             }                  
         }
     }
     
     popDeclaredVariables() {
-        let count = this.calculateVariablesDefinedAtThisLevel();
-
         this.instruction("MOV SP R6", "unwind the stack for variables declared in this function");
     }
     
+    typeSize(type : ValueType) : number {
+
+        //return 4;
+
+        switch(type)
+        {
+            case ValueType.Int :
+                return 4;
+            case ValueType.Float :
+                return 8;
+            case ValueType.Boolean :
+                return 1;
+            default : 
+                this.diagnostics.reportUnsupportedType(type);
+                return 4;                       
+        }
+    }
+
+    mnemonicForType(type: ValueType) : string
+    {
+        switch(type) {
+            case ValueType.Boolean:
+                return "byte";
+            case ValueType.Int:
+                return "long";
+            case ValueType.Float:
+                return "float";
+            case ValueType.String:
+                return "string";
+            default:
+                this.diagnostics.reportUnsupportedType(type);
+                return "INVALIDTYPE_" + ValueTypeNameMap[type];
+        }
+    }
+
+    typedMnemonic(type: ValueType, op : string) : string
+    {
+        switch(type) {
+            case ValueType.Boolean:
+                return op + "b";
+            case ValueType.Int:
+                return op;
+            case ValueType.Float:
+                return op + "f";
+            default                                     :
+                this.diagnostics.reportUnsupportedType(type);
+                return op;
+        }
+    }
+
     writeExpression(expression: Nodes.BoundExpression) {
         switch(expression.kind)
         {    
             case Nodes.BoundNodeKind.LiteralExpression:
             {
                 let exp = expression as Nodes.BoundLiteralExpression;           
+                let mvi = this.typedMnemonic(exp.type.type, "MVI");
+                
                 switch(exp.type.type)
                 {
                     case ValueType.Int :
-                        this.instruction("MVI R1 " + exp.value, "Loading literal int");
+                        this.instruction(`${mvi} R1 ${exp.value}`, "Loading literal int");
                         break;
                     case ValueType.Float :
-                        this.instruction("MVI R1 " + exp.value, "Loading literal float");                        
+                        this.instruction(`${mvi} R1 ${exp.value}`, "Loading literal float");    
                         break;
                     case ValueType.Boolean :
-                        this.instruction("MVI R1 " + (exp.value ? "1" : "0"), "Loading literal boolean");                        
+                        this.instruction(`${mvi} R1 ${ (exp.value ? "1" : "0") }`, "Loading literal boolean");                    
                         break;
                     default : 
                         this.diagnostics.reportUnsupportedType(exp.type.type);
@@ -273,7 +308,8 @@ export default class CodeGenerator
                 this.comment(`Pushing ${args.length} arguments onto the stack`);
                 args.forEach( arg => {
                     this.writeExpression( arg );
-                    this.instruction("PUSH R1") 
+                    const push = this.typedMnemonic(arg.type.type, "PUSH");
+                    this.instruction(`${push} R1`); 
                 });
 
                 if(!!exp.type.function && exp.type.function.isBuiltin)
@@ -300,30 +336,39 @@ export default class CodeGenerator
                 }
 
                 this.comment(`Removing arguments from stack`);
-                let bytesToRemove = 4 * args.length;
-                for (let index = 0; index < args.length; index++) {
-                    this.instruction(`POP R3`);    
-                }
+                args.forEach( arg => {
+                    const pop = this.typedMnemonic(arg.type.type, "POP");
+                    this.instruction(`${pop} R3`);    
+                });
 
                 break;
             }                    
             case Nodes.BoundNodeKind.VariableExpression:
             {
-                let exp = expression as Nodes.BoundVariableExpression;
+                const exp = expression as Nodes.BoundVariableExpression;
+
+                const mov = this.typedMnemonic(exp.variable.type.type, "MOV");
 
                 if(exp.variable.variable!.isParameter)
-                {
-                    let offset = this.variableMap.peek()[exp.variable.name]; //find location of variable on the stack                    
-                    this.instruction(`MOV R1 [R6+${offset+4}]`, `read parameter ${exp.variable.name} from the stack`);
+                {                    
+                    const spec = this.variableMap.peek()[exp.variable.name];
+                    // find location of variable on the stack.
+                    // skip over the RETurn IP and the previous base pointer
+                    let offset = this.stackOffset + spec.offset;                     
+                    this.instruction(`${mov} R1 [R6+${offset}]`, `read parameter ${exp.variable.name} from the stack`);
                 }
                 else if(exp.variable.variable!.isGlobal)
                 {
-                    this.instruction(`MOV R1 ${exp.variable.name}:`, "read global variable");    
+                    this.instruction(`${mov} R1 ${exp.variable.name}:`, "read global variable");    
                 }
                 else
                 {
-                    let offset = this.variableMap.peek()[exp.variable.name]; //find location of variable on the stack
-                    this.instruction(`MOV R1 [R6-${offset+4}]`, `read variable ${exp.variable.name} from the stack`);
+                    const spec = this.variableMap.peek()[exp.variable.name];
+                    // find the variable on the stack.
+                    // since we are going down the stack below the base pointer
+                    // we need to use both the offset and the size of the variable
+                    let offset = spec.offset + spec.size; 
+                    this.instruction(`${mov} R1 [R6-${offset}]`, `read variable ${exp.variable.name} from the stack`);
                 }
                 break;
             }
@@ -332,19 +377,23 @@ export default class CodeGenerator
                 let exp = expression as Nodes.BoundAssignmentExpression;
                 this.writeExpression(exp.expression);
 
+                const mov = this.typedMnemonic(exp.type.type, "MOV");
+
                 if(exp.identifier.variable!.isParameter)
                 {
-                    let offset = this.variableMap.peek()[exp.identifier.name]; //find location of variable on the stack                    
-                    this.instruction(`MOV [R6+${offset+4}] R1`, `assignt to parameter ${exp.identifier.name} on the stack`);
+                    let spec = this.variableMap.peek()[exp.identifier.name];
+                    let offset = this.stackOffset + spec.offset;
+                    this.instruction(`${mov} [R6+${offset}] R1`, `assignt to parameter ${exp.identifier.name} on the stack`);
                 }
                 else if(exp.identifier.variable && exp.identifier.variable!.isGlobal)
                 {
-                    this.instruction(`MOV ${exp.identifier.name}: R1`, "assign to global variable");
+                    this.instruction(`${mov} ${exp.identifier.name}: R1`, "assign to global variable");
                 }
                 else
                 {
-                    let offset = this.variableMap.peek()[exp.identifier.name];
-                    this.instruction(`MOV [R6-${offset+4}] R1`, `assign to variable ${exp.identifier.name} on the stack`);
+                    let spec = this.variableMap.peek()[exp.identifier.name];
+                    let offset = spec.offset + spec.size;
+                    this.instruction(`${mov} [R6-${offset}] R1`, `assign to variable ${exp.identifier.name} on the stack`);
                 }
                 break;
             }      
@@ -365,15 +414,6 @@ export default class CodeGenerator
     
     }
     
-    calculateVariablesDefinedAtThisLevel() : number {
-        if(this.variableMap.length == 0)
-            return 0;
-
-        let i = Object.keys(this.variableMap.peek()).length;
-
-        return i;
-    }
-
     writeUnaryExpression(expression: Nodes.BoundUnaryExpression) : void
     {
         switch(expression.operator.kind)

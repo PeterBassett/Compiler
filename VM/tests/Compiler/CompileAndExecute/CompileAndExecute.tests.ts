@@ -19,24 +19,24 @@ describe("Complie Assemble and Execute", () => {
 
     function run(text : string) : number 
     {
-        let code = compile(text);
-        let assemblyStream = assemble(code.text);
-        let result = execute(assemblyStream);
+        const code = compile(text);
+        const assemblyStream = assemble(code.text);
+        const result = execute(assemblyStream);
 
         return result;
     }
 
     function compile(text : string) : GeneratedCode
     {
-        let source = new SourceText(text);        
-        let parser = new Parser(source);
-        let compilationUnit = parser.parse();
-        let binder = new Binder();
-        let boundTree = binder.Bind(compilationUnit);
-        let lowerer = new Lowerer();
-        let newBoundTree = lowerer.lower(boundTree);
-        let codeGenerator = new CodeGenerator();
-        let result = codeGenerator.generate(newBoundTree);
+        const source = new SourceText(text);        
+        const parser = new Parser(source);
+        const compilationUnit = parser.parse();
+        const binder = new Binder();
+        const boundTree = binder.Bind(compilationUnit);
+        const lowerer = new Lowerer();
+        const newBoundTree = lowerer.lower(boundTree);
+        const codeGenerator = new CodeGenerator();
+        const result = codeGenerator.generate(newBoundTree);
         
         if(!result.success)
             throw new Error(result.diagnostics.get(0).message);
@@ -46,9 +46,9 @@ describe("Complie Assemble and Execute", () => {
 
     function assemble(assemblyCode : string) : ArrayBuffer
     {
-        let logger : Logger = (lineNumber : number, characterNumber : number, message : string) => {};
-        let instructionCoder = new InstructionCoder32Bit();
-        let assembler = new Assembler(logger, AssemblyParser, defaultPreprocessor, instructionCoder, 0);
+        const logger : Logger = (lineNumber : number, characterNumber : number, message : string) => {};
+        const instructionCoder = new InstructionCoder32Bit();
+        const assembler = new Assembler(logger, AssemblyParser, defaultPreprocessor, instructionCoder, 0);
 
         return assembler.assemble(assemblyCode)
     }
@@ -60,7 +60,7 @@ describe("Complie Assemble and Execute", () => {
         let flags : Flags;
         let registers : RegisterBank;
         let instructionCoder : InstructionCoder;
-        let ramSize = 1 << 10;
+        const ramSize = 1 << 10;
         let cpu : CPU;
         let ip : number;
 
@@ -276,6 +276,13 @@ func main() : int {
 [`func main() : float {
     return 3.14159;
 }`, 3.14159],
+[`func main() : int {
+    let f : bool = true;
+    if f
+        return 45;
+    
+    return 123;
+}`, 45],
 [`func a(n:int):int {
     n = 5;
     return n;
@@ -283,7 +290,63 @@ func main() : int {
 func main() : int {
     return a(1);
 }`, 5],
+[`func f(flag:bool):bool {
+    return flag;
+}
+func main() : int {
+    if f(true)
+        return 45;
+    
+    return 123;
+}`, 45],
+[`func iif(n:int, flag:bool, n2:int):int {
+    if flag    
+        return n;
+    else
+        return n2;
+}
+func main() : int {
+    return iif(45, true, 123);
+}`, 45],
+[`func iif(n:int, flag:bool, n2:int):int {
+    if flag    
+        return n;
+    else
+        return n2;
+}
+func main() : int {
+    return iif(45, false, 123);
+}`, 123],
+[`func three(n1:int, n2:int, n3:int):int {
+    return n2;
+}
+func main() : int {
+    return three(1, 2, 3);
+}`, 2],
+[`func three(n1:int, n2:int, n3:int):int {
+    return (n3*n2)/n1;
+}
+func main() : int {
+    return three(1, 2, 3);
+}`, 6],
+[`func test(
+	a : int, 
+	b : bool, 
+    c : int, 
+    d : bool) : int 
+{ 
+	return c;
+}
 
+func main() : int 
+{
+    let a : int = 5;
+    let b : bool = true;
+    let c : int = 15;
+    let d : bool = false;
+
+	return test(a, b, c, d);
+}`, 15]
 /*
 [`func main() : float {
     // floating point division
@@ -311,10 +374,10 @@ func main() : int {
 `false`] */
     ].forEach((item) => {
         it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
-            let text = item[0] as string;
-            let expected = item[1] as number;
+            const text = item[0] as string;
+            const expected = item[1] as number;
 
-            let result = run(text);
+            const result = run(text);
             
             expect(result).toEqual(expected);
         });

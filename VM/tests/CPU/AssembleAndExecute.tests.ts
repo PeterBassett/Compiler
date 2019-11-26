@@ -1165,6 +1165,71 @@ describe("Assemble and execute", () => {
         expect(registers.R5).toEqual(0b11110000);
     });
 
+    it("an example function with a variety parameter types", () => {
+        execute(`
+    .data
+    .text
+    .global __entrypoint:
+    __entrypoint:
+        MOV R6 SP				; Initialise Base Pointer
+        CALL main:
+        HALT
+    
+    main:
+        PUSH R6				; save old value of stack pointer
+        MOV R6 SP				; R6 is bottom of stack. Make current top of stack the bottom of the new stack frame
+    ; declare variable a
+    ; calculate initialisation value for variable a
+        MVI R1 5				; Loading literal int
+    ; reserve space on stack for variable a
+        PUSH R1				; reserve space for a long variable a
+    ; declare variable b
+    ; calculate initialisation value for variable b
+        MVIb R1 1				; Loading literal boolean
+    ; reserve space on stack for variable b
+        PUSHb R1				; reserve space for a byte variable b
+    ; declare variable c
+    ; calculate initialisation value for variable c
+        MVI R1 15				; Loading literal int
+    ; reserve space on stack for variable c
+        PUSH R1				; reserve space for a long variable c
+    ; declare variable d
+    ; calculate initialisation value for variable d
+        MVIb R1 0				; Loading literal boolean
+    ; reserve space on stack for variable d
+        PUSHb R1				; reserve space for a byte variable d
+    ; Preparing to call test
+    ; Pushing 4 arguments onto the stack
+        MOVb R1 [R6-10]				; read variable d from the stack
+        PUSHb R1
+        MOV R1 [R6-9]				; read variable c from the stack
+        PUSH R1
+        MOVb R1 [R6-5]				; read variable b from the stack
+        PUSHb R1
+        MOV R1 [R6-4]				; read variable a from the stack
+        PUSH R1
+    ; Calling test
+        CALL test:				; call function
+    ; Removing arguments from stack
+        POPb R3
+        POP R3
+        POPb R3
+        POP R3
+        MOV SP R6				; restore SP; now it points to old R6
+        POP R6				; restore old R6; now SP is where it was before prologue
+        RET
+    
+    test:
+        PUSH R6				; save old value of stack pointer
+        MOV R6 SP				; R6 is bottom of stack. Make current top of stack the bottom of the new stack frame
+        MOV R1 [R6+13]				; read parameter c from the stack
+        MOV SP R6				; restore SP; now it points to old R6
+        POP R6				; restore old R6; now SP is where it was before prologue
+        RET`, 500);
+
+        expect(registers.R1).toEqual(15);
+    });
+
     it("a fibonaci calculator", () => {
         execute(`
     .data

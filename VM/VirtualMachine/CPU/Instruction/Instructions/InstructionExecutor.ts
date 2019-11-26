@@ -91,7 +91,7 @@ function getValue(instruction : Instruction,
         if(isPointer(instruction.opcodeMode, endpoint))
         {            
             let offset = decodeInstructionOperandToValue(instruction.memoryAddress, endpoint, isTwoRelativeAddressed(instruction));
-            return memory.readNumber(value + offset, size);
+            return memory.readNumber(value + offset, size);             
         }        
     }
     else
@@ -127,6 +127,21 @@ function setFlags(flags : Flags, result : number)
 
 export function MVI(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
     const hardCodedValue = instruction.memoryAddress;
+    registers.set(instruction.destinationRegister, hardCodedValue);    
+}
+
+export function MVIb(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
+    const hardCodedValue = instruction.memoryAddress & 0xff;
+    registers.set(instruction.destinationRegister, hardCodedValue);    
+}
+
+export function MVIw(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
+    const hardCodedValue = instruction.memoryAddress & 0xffff;
+    registers.set(instruction.destinationRegister, hardCodedValue);    
+}
+
+export function MVIf(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
+    const hardCodedValue = instruction.memoryAddress & 0xffffffff;
     registers.set(instruction.destinationRegister, hardCodedValue);    
 }
 

@@ -196,7 +196,14 @@ function MapOpCodeToExecutor(opcode : number) : Executors.InstructionExecutor {
 
     const funcName = names.filter(name => name.toLowerCase() === mnemonic.toLowerCase())[0];
 
-    return (Executors as any)[funcName];
+    const executor = (Executors as any)[funcName];
+
+    if(typeof(executor) != "function")
+    {
+        throw new Error(`${funcName} is not a valid instruction mnemonic`);
+    }
+
+    return executor;
 }
 
 export {

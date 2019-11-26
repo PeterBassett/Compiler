@@ -423,6 +423,7 @@ export default class Binder
             declaration.defineBody(boundBody);            
         });
 
+        this.returnStatementsInFunction = [];
         this._function = null;
 
         return declaration!;
