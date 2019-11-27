@@ -41,7 +41,7 @@ export default class Binder
         this.scope = new DefinitionScope();
         this.diagnostics = new Diagnostics(compilationUnit.diagnostics.text, compilationUnit.diagnostics);
 
-        let declarations = this.BindDeclarations(compilationUnit.compilationUnit.declarations);
+        const declarations = this.BindDeclarations(compilationUnit.compilationUnit.declarations);
 
         return new Nodes.BoundGlobalScope(this.diagnostics, declarations.variables, declarations.classes, declarations.functions);
     } 
@@ -54,14 +54,14 @@ export default class Binder
     {
         this.returnStatementsInFunction = [];
         this._globalVariablesDefined = false;
-        let variables : Nodes.BoundVariableDeclaration[] = this.BindGlobalVariableDeclarations(
+        const variables : Nodes.BoundVariableDeclaration[] = this.BindGlobalVariableDeclarations(
             declarations.filter(d => {
                 return d.kind == "VariableDeclarationSyntax";
             } ) as AST.VariableDeclarationSyntax[]
         );
         this._globalVariablesDefined = true;
 
-        let classes : Nodes.BoundClassDeclaration[] = this.BindClassDeclarations(
+        const classes : Nodes.BoundClassDeclaration[] = this.BindClassDeclarations(
             declarations.filter(d => {
                 return d.kind == "ClassDeclarationStatementSyntax"
             } ) as AST.ClassDeclarationStatementSyntax[]
@@ -75,7 +75,7 @@ export default class Binder
         // have been bound and will just need their BoundCallExpressions updating with the 
         // correct details.
         
-        let callables = declarations.filter(d => {
+        const callables = declarations.filter(d => {
             return d.kind == "FunctionDeclarationStatementSyntax" ||
                    d.kind == "LambdaDeclarationStatementSyntax"
         });
@@ -84,7 +84,7 @@ export default class Binder
 
         this._incompleteCallSites = [];
         this._callSitePlaceholdersValid = true;
-        let functions : Nodes.BoundFunctionDeclaration[] = this.BindCallableDeclarations(
+        const functions : Nodes.BoundFunctionDeclaration[] = this.BindCallableDeclarations(
             declarations.filter(d => {
                 return d.kind == "FunctionDeclarationStatementSyntax" ||
                        d.kind == "LambdaDeclarationStatementSyntax"
@@ -103,10 +103,10 @@ export default class Binder
 
     private FinaliseCallSites(): void {
         this._incompleteCallSites.forEach( cs => {
-            let func = this.scope.FindVariable(cs.call.name);
+            const func = this.scope.FindVariable(cs.call.name);
             
-            let callArguments = cs.syntax.callArguments.map(a => {
-                let exp = this.BindExpression(a);
+            const callArguments = cs.syntax.callArguments.map(a => {
+                const exp = this.BindExpression(a);
                 return exp;
             });
 
@@ -164,7 +164,7 @@ export default class Binder
             expression = this.BindConversion(syntax.expression.span(), expression, this._function!.returnType);
         }
             
-        let rs = new Nodes.BoundReturnStatement(expression, syntax.span());
+        const rs = new Nodes.BoundReturnStatement(expression, syntax.span());
 
         this.returnStatementsInFunction.push(rs);
 
@@ -172,8 +172,8 @@ export default class Binder
     }
 
     private BindForStatementSyntax(syntax: AST.ForStatementSyntax): Nodes.BoundStatement {
-        var lowerBound = this.BindExpressionAndTypeCheck(syntax.lowerBound, PredefinedValueTypes.Integer);
-        var upperBound = this.BindExpressionAndTypeCheck(syntax.upperBound, PredefinedValueTypes.Integer);
+        const lowerBound = this.BindExpressionAndTypeCheck(syntax.lowerBound, PredefinedValueTypes.Integer);
+        const upperBound = this.BindExpressionAndTypeCheck(syntax.upperBound, PredefinedValueTypes.Integer);
 
         let variable! : Nodes.VariableSymbol;
         let statement! : Nodes.BoundStatement;
@@ -181,7 +181,7 @@ export default class Binder
         let continueLabel! : Nodes.BoundLabel;
 
         using(this.scope.PushScope(), () => {
-            let name = syntax.identifier.lexeme;
+            const name = syntax.identifier.lexeme;
 
             variable = new Nodes.VariableSymbol(name, true, PredefinedValueTypes.Integer, false);
             
@@ -196,11 +196,10 @@ export default class Binder
         return new Nodes.BoundForStatement(variable, lowerBound, upperBound, statement, breakLabel, continueLabel);
     }
 
-    private BindWhileStatementSyntax(syntax: AST.WhileStatementSyntax): Nodes.BoundStatement {
+    private BindWhileStatementSyntax(syntax: AST.WhileStatementSyntax): Nodes.BoundStatement {        
+        const condition = this.BindExpressionAndTypeCheck(syntax.condition, PredefinedValueTypes.Boolean);
         
-        var condition = this.BindExpressionAndTypeCheck(syntax.condition, PredefinedValueTypes.Boolean);
-        
-        let { breakLabel, continueLabel, statement } = this.BindLoopBody(syntax.body);
+        const { breakLabel, continueLabel, statement } = this.BindLoopBody(syntax.body);
 
         return new Nodes.BoundWhileStatement(condition, statement, breakLabel, continueLabel);
     }
@@ -213,7 +212,7 @@ export default class Binder
             return this.BindErrorStatement();
         }
 
-        var breakLabel = this._loopStack[this._loopStack.length-1].breakLabel;
+        const breakLabel = this._loopStack[this._loopStack.length-1].breakLabel;
         return new Nodes.BoundGotoStatement(breakLabel);
     }
 
@@ -225,15 +224,15 @@ export default class Binder
             return this.BindErrorStatement();
         }
 
-        var continueLabel = this._loopStack[this._loopStack.length-1].continueLabel;
+        const continueLabel = this._loopStack[this._loopStack.length-1].continueLabel;
         return new Nodes.BoundGotoStatement(continueLabel);
     }
 
     private BindLoopBody(body : AST.StatementNode) : { breakLabel : Nodes.BoundLabel, continueLabel : Nodes.BoundLabel, statement : Nodes.BoundStatement }
     {
         this._labelCounter++;
-        let breakLabel = new Nodes.BoundLabel(`break${this._labelCounter}`);
-        let continueLabel = new Nodes.BoundLabel(`continue${this._labelCounter}`);
+        const breakLabel = new Nodes.BoundLabel(`break${this._labelCounter}`);
+        const continueLabel = new Nodes.BoundLabel(`continue${this._labelCounter}`);
 
         this._loopStack.push({ breakLabel, continueLabel });
         let statement : Nodes.BoundStatement|null = null; 
@@ -251,14 +250,14 @@ export default class Binder
     }
 
     private BindExpressionStatement(syntax: AST.ExpressionStatementSyntax): Nodes.BoundStatement {
-        let expression = this.BindExpression(syntax.expression);
+        const expression = this.BindExpression(syntax.expression);
         return new Nodes.BoundExpressionStatement(expression);
     }
 
     private BindIfStatement(syntax: AST.IfStatementSyntax): Nodes.BoundStatement {
-        var condition = this.BindExpressionAndTypeCheck(syntax.condition, PredefinedValueTypes.Boolean);
-        var trueStatement = this.BindStatement(syntax.trueBranch);
-        var falseStatement = syntax.falseBranch == null ? null : this.BindStatement(syntax.falseBranch.body);
+        const condition = this.BindExpressionAndTypeCheck(syntax.condition, PredefinedValueTypes.Boolean);
+        const trueStatement = this.BindStatement(syntax.trueBranch);
+        const falseStatement = syntax.falseBranch == null ? null : this.BindStatement(syntax.falseBranch.body);
         return new Nodes.BoundIfStatement(condition, trueStatement, falseStatement);
     }
 
@@ -267,13 +266,13 @@ export default class Binder
     }
 
     private BindClassDeclaration(declaration: AST.ClassDeclarationStatementSyntax): Nodes.BoundClassDeclaration {
-        let name = declaration.identifier.lexeme;
+        const name = declaration.identifier.lexeme;
 
-        let type = new Type(ValueType.Class);
+        const type = new Type(ValueType.Class);
 
         this.scope.DefineType(name, new Type(ValueType.Class, name));
 
-        let boundDeclarations = this.BindDeclarations(declaration.declarations);        
+        const boundDeclarations = this.BindDeclarations(declaration.declarations);        
 
         return new Nodes.BoundClassDeclaration(name,
             boundDeclarations.variables,
@@ -293,8 +292,8 @@ export default class Binder
 
     private BindVariableDeclaration(syntax : AST.VariableDeclarationSyntax) : Nodes.BoundVariableDeclaration
     {
-        var name = syntax.identifier.lexeme;
-        var isReadOnly = syntax.declarationTypeToken.kind == SyntaxType.LetKeyword;
+        const name = syntax.identifier.lexeme;
+        const isReadOnly = syntax.declarationTypeToken.kind == SyntaxType.LetKeyword;
 
         let type : Type | null = null;
 
@@ -319,9 +318,9 @@ export default class Binder
         if(!type)
             type = initialiser.type
 
-        var variable = new Nodes.VariableSymbol(name, isReadOnly, type, !this._globalVariablesDefined);
+        const variable = new Nodes.VariableSymbol(name, isReadOnly, type, !this._globalVariablesDefined);
 
-        let node = new Nodes.BoundVariableDeclaration(variable, initialiser);
+        const node = new Nodes.BoundVariableDeclaration(variable, initialiser);
 
         if (this.scope.FindVariable(variable.name) != Identifier.Undefined)
             this.diagnostics.reportVariableAlreadyDeclared(syntax.identifier.span, name);
@@ -332,19 +331,19 @@ export default class Binder
     }
 
     private BindDefaultExpressionForType(typeName: AST.TypeNameSyntax): Nodes.BoundExpression {        
-        let type = TypeQuery.getTypeFromName(typeName.identifier.lexeme, this.scope);
-        let value = TypeQuery.getDefaultValueForType(type, this.scope);
+        const type = TypeQuery.getTypeFromName(typeName.identifier.lexeme, this.scope);
+        const value = TypeQuery.getDefaultValueForType(type, this.scope);
 
         return new Nodes.BoundLiteralExpression(value, type);
     }
 
     private BindBlockStatement(syntax: AST.BlockStatementSyntax): Nodes.BoundBlockStatement {
-        var statements : Nodes.BoundStatement[] = [];
+        let statements : Nodes.BoundStatement[] = [];
         
         using(this.scope.PushScope(), () => {
             for(let statementSyntax of syntax.statements)
             {
-                var statement = this.BindStatement(statementSyntax);
+                const statement = this.BindStatement(statementSyntax);
                 statements.push(statement);
             }
         });
@@ -360,7 +359,7 @@ export default class Binder
 
     private BindCallableDeclarations(nodes: AST.CallableExpressionNode[]): Nodes.BoundFunctionDeclaration[] 
     {
-        let declarations : Nodes.BoundFunctionDeclaration[] = [];
+        const declarations : Nodes.BoundFunctionDeclaration[] = [];
 
         for(let n of nodes)
         {
@@ -388,11 +387,11 @@ export default class Binder
     private BindFunction(identifier : Token, parameterList : AST.ParameterDeclarationListSyntax,
         body : AST.BlockStatementSyntax, returnValue : AST.TypeNameSyntax) : Nodes.BoundFunctionDeclaration
     {
-        let parameters = this.BindFunctionParameterList(parameterList);
+        const parameters = this.BindFunctionParameterList(parameterList);
 
         let declaration : Nodes.BoundFunctionDeclaration;
 
-        let returnType = TypeQuery.getTypeFromName(returnValue.identifier.lexeme, this.scope);
+        const returnType = TypeQuery.getTypeFromName(returnValue.identifier.lexeme, this.scope);
 
         declaration = new Nodes.BoundFunctionDeclaration(identifier.lexeme, parameters, returnType, undefined);
 
@@ -401,9 +400,9 @@ export default class Binder
         this.scope.DefineFunction(identifier.lexeme, declaration);
 
         using(this.scope.PushArguments(parameters.map(p => p.name), parameters.map(p => p.type), parameters.map(p => p.variable)), () => {
-            let boundBody = this.BindBlockStatement(body);
+            const boundBody = this.BindBlockStatement(body);
             
-            let returns = this.returnStatementsInFunction.slice();
+            const returns = this.returnStatementsInFunction.slice();
 
             returns.map( rs => {
                 if(rs.expression == null)
@@ -441,25 +440,25 @@ export default class Binder
 
     private BindLambdaDeclaration(node: AST.LambdaDeclarationStatementSyntax): Nodes.BoundFunctionDeclaration 
     {        
-        let parameters = this.BindFunctionParameterList(node.parameterList);
+        const parameters = this.BindFunctionParameterList(node.parameterList);
 
-        let returnType = TypeQuery.getTypeFromName(node.returnValue.identifier.lexeme, this.scope);
+        const returnType = TypeQuery.getTypeFromName(node.returnValue.identifier.lexeme, this.scope);
 
-        let declaration = new Nodes.BoundFunctionDeclaration(node.identifier.lexeme,
+        const declaration = new Nodes.BoundFunctionDeclaration(node.identifier.lexeme,
             parameters,          
             returnType,      
             undefined);
 
-        let definition = this.scope.DefineFunction(node.identifier.lexeme, declaration);
+        const definition = this.scope.DefineFunction(node.identifier.lexeme, declaration);
 
         using(this.scope.PushArguments(parameters.map(p => p.name), parameters.map(p => p.type), parameters.map(p => p.variable)), () => {
-            let body = this.BindExpression(node.body);
+            const body = this.BindExpression(node.body);
                  
             if(!body.type.isAssignableTo(returnType))
                 this.diagnostics.reportNotAssignableToType(body.type, returnType, node.body.span());
 
-            let returnStatement = new Nodes.BoundReturnStatement(body, node.body.span());
-            let block = new Nodes.BoundBlockStatement([returnStatement]);
+            const returnStatement = new Nodes.BoundReturnStatement(body, node.body.span());
+            const block = new Nodes.BoundBlockStatement([returnStatement]);
             
             declaration.defineBody(block);            
         });
@@ -469,39 +468,9 @@ export default class Binder
         return declaration!;
     }
 
-    /*
-    private BindLambdaDeclaration(node: AST.LambdaDeclarationStatementSyntax): Nodes.BoundFunctionDeclaration 
-    {        
-        let parameters = this.BindFunctionParameterList(node.parameterList);
-
-        let declaration : Nodes.BoundFunctionDeclaration;
-
-        using(this.scope.PushArguments(parameters.map(p => p.name), parameters.map(p => p.type), parameters.map(p => p.variable)), () => {
-
-            declaration = new Nodes.BoundFunctionDeclaration(node.identifier.lexeme,
-                parameters,          
-                PredefinedValueTypes.Unit,      
-                undefined);
-    
-            this.scope.DefineFunction(node.identifier.lexeme, declaration);
-
-            let body = this.BindExpression(node.body);
-            
-            let returnType = body.type;
-            this.scope.DefineFunctionType(node.identifier.lexeme, returnType);
-
-            let returnStatement = new Nodes.BoundReturnStatement(body, node.body.span());
-            let block = new Nodes.BoundBlockStatement([returnStatement]);
-            
-            declaration.defineBody(block, returnType);
-        });
-        
-        return declaration!;
-    }    
-*/
     private BindFunctionParameterList(parameters : AST.ParameterDeclarationListSyntax) : Nodes.ParameterDeclaration[]
     {
-        var declarations : Nodes.ParameterDeclaration[] = [];
+        let declarations : Nodes.ParameterDeclaration[] = [];
 
         for(let p of parameters.params)
             declarations.push(this.BindFunctionParameter(p));
@@ -511,20 +480,19 @@ export default class Binder
 
     private BindFunctionParameter(parameter : AST.ParameterDeclarationSyntax) : Nodes.ParameterDeclaration
     {    
-        var name = parameter.identifier.lexeme;        
+        const name = parameter.identifier.lexeme;        
         
-        let type = TypeQuery.getTypeFromName(parameter.typeName.identifier.lexeme, this.scope);
+        const type = TypeQuery.getTypeFromName(parameter.typeName.identifier.lexeme, this.scope);
 
-        var variable = new Nodes.VariableSymbol(name, false, type, false, true);
+        const variable = new Nodes.VariableSymbol(name, false, type, false, true);
 
         return new Nodes.ParameterDeclaration(name, type, variable);
     }
 
     private BindExpressionAndTypeCheck(syntax : AST.ExpressionNode, targetType : Type) : Nodes.BoundExpression
     {
-        let result = this.BindExpression(syntax);
-
-        result = this.BindConversion(syntax.span(), result, targetType);
+        const exp = this.BindExpression(syntax);
+        const result = this.BindConversion(syntax.span(), exp, targetType);
         
         if (!result.type.isAssignableTo(targetType))
             this.diagnostics.reportCannotConvert(syntax.span(), result.type, targetType);
@@ -539,7 +507,7 @@ export default class Binder
             case "FloatLiteralExpressionSyntax":
                 return new Nodes.BoundLiteralExpression(parseFloat(syntax.literalToken.lexeme), PredefinedValueTypes.Float);
             case "BooleanLiteralExpressionSyntax":
-                let boolLiteral = syntax.literalToken.lexeme === "true";
+                const boolLiteral = syntax.literalToken.lexeme === "true";
                 return new Nodes.BoundLiteralExpression(boolLiteral, PredefinedValueTypes.Boolean);
             case "StringLiteralExpressionSyntax":
                 return new Nodes.BoundLiteralExpression(syntax.literalToken.lexeme, PredefinedValueTypes.String);
@@ -565,7 +533,7 @@ export default class Binder
     }
     
     private BindGetExpression(syntax: AST.GetExpressionSyntax) : Nodes.BoundExpression {
-        let left = this.BindExpression(syntax.left);
+        const left = this.BindExpression(syntax.left);
         
         if(!left.type.isClass)
         {
@@ -573,9 +541,9 @@ export default class Binder
             return new Nodes.BoundErrorExpression();
         }
 
-        let classDetails = left.type.classDetails!;
+        const classDetails = left.type.classDetails!;
 
-        let result = classDetails.get(syntax.name.lexeme);
+        const result = classDetails.get(syntax.name.lexeme);
 
         if(result)
         {
@@ -583,7 +551,7 @@ export default class Binder
             {
                 case Nodes.BoundNodeKind.VariableDeclaration:
                 {
-                    let variable = result as Nodes.BoundVariableDeclaration;
+                    const variable = result as Nodes.BoundVariableDeclaration;
                     return new Nodes.BoundVariableExpression(new Identifier(variable.variable.name, variable.variable.type, variable.variable));
                 }
          /*       case Nodes.BoundNodeKind.ClassDeclaration:
@@ -606,7 +574,7 @@ export default class Binder
 
     BindNameExpression(syntax: AST.NameExpressionSyntax): Nodes.BoundExpression 
     {
-        let name = syntax.identifierToken.lexeme;
+        const name = syntax.identifierToken.lexeme;
 
         if (!name && name.length == 0)
         {
@@ -615,7 +583,7 @@ export default class Binder
             return new Nodes.BoundLiteralExpression(0, PredefinedValueTypes.Unit);
         }
 
-        let identifier = this.scope.FindVariable(name);
+        const identifier = this.scope.FindVariable(name);
 
         if (!identifier)
         {
@@ -628,11 +596,11 @@ export default class Binder
 
     private BindCallExpression(syntax: AST.CallExpressionSyntax): Nodes.BoundExpression 
     {
-        let name = syntax.nameExpression.identifierToken.lexeme;
-        let variableFound = this.BindExpression(syntax.nameExpression) as Nodes.BoundVariableExpression;
-        let declaration = this.functionMap[name];
+        const name = syntax.nameExpression.identifierToken.lexeme;
+        const variableFound = this.BindExpression(syntax.nameExpression) as Nodes.BoundVariableExpression;
+        const declaration = this.functionMap[name];
         
-        let typeConversionCall = TypeQuery.getTypeFromName(syntax.nameExpression.identifierToken.lexeme, this.scope, true);
+        const typeConversionCall = TypeQuery.getTypeFromName(syntax.nameExpression.identifierToken.lexeme, this.scope, true);
 
         if (syntax.callArguments.length == 1 && typeConversionCall.type != ValueType.Unit && typeConversionCall.isPredefined)
         {
@@ -653,7 +621,7 @@ export default class Binder
 
         if(!declaration)
         {
-            let func = BuiltinFunctions.find(name);
+            const func = BuiltinFunctions.find(name);
             if(!!func)
             {
                 builtin = func.type;
@@ -680,7 +648,7 @@ export default class Binder
         } // if we have not found a definition and we are currently allowed to make placeholders
         else if(this._callSitePlaceholdersValid && (!variable || variable == Identifier.Undefined) && !builtin)
         {
-            let callExpression = new Nodes.BoundCallExpression(name /*declaration.identifier.lexeme*/, returnType);
+            const callExpression = new Nodes.BoundCallExpression(name, returnType);
 
             this.StoreIncompleteCallSite(callExpression, syntax);
 
@@ -689,14 +657,14 @@ export default class Binder
         } // if we found a definition then lets just get on with it.       
         else if(variable != Identifier.Undefined || !!builtin)
         {
-            let declaredParameters : Type[] = (!!variable && variable != Identifier.Undefined) ? variable!.type.function!.parameterTypes : builtin!.function!.parameterTypes || [];
+            const declaredParameters : Type[] = (!!variable && variable != Identifier.Undefined) ? variable!.type.function!.parameterTypes : builtin!.function!.parameterTypes || [];
 
             if(declaredParameters.length != syntax.callArguments.length)
             {
                 this.diagnostics.reportIncorrectArgumentCount(declaredParameters.length, syntax.callArguments.length, syntax.span());
             }
 
-            let parameters = syntax.callArguments.map( node => {
+            const parameters = syntax.callArguments.map( node => {
                 return {
                     expression : this.BindExpression(node),
                     span : node.span
@@ -711,8 +679,7 @@ export default class Binder
                 }
             }
 
-            let callExpression = new Nodes.BoundCallExpression(syntax.nameExpression.identifierToken.lexeme, returnType);
-
+            const callExpression = new Nodes.BoundCallExpression(syntax.nameExpression.identifierToken.lexeme, returnType);
             
             if(variable && variable != Identifier.Undefined)
             {            
@@ -720,7 +687,7 @@ export default class Binder
             }
             else
             {
-                let variableIdentifier = new Identifier(name, builtin!);
+                const variableIdentifier = new Identifier(name, builtin!);
                 callExpression.populate(variableIdentifier, parameters.map( p => p.expression ));
             }
 
@@ -738,10 +705,10 @@ export default class Binder
 
     private BindBinaryExpression(syntax : AST.BinaryExpressionSyntax) : Nodes.BoundExpression
     {
-        var boundLeft =  this.BindExpression(syntax.left);
-        var boundRight = this.BindExpression(syntax.right);
+        const boundLeft =  this.BindExpression(syntax.left);
+        const boundRight = this.BindExpression(syntax.right);
 
-        var boundOperator = Nodes.BoundBinaryOperator.Bind(syntax.operatorToken.kind, boundLeft.type, boundRight.type);
+        const boundOperator = Nodes.BoundBinaryOperator.Bind(syntax.operatorToken.kind, boundLeft.type, boundRight.type);
 
         if (boundOperator == null)
         {
@@ -756,8 +723,8 @@ export default class Binder
 
     private BindUnaryExpression(syntax : AST.UnaryExpressionSyntax) : Nodes.BoundExpression
     {
-        var boundOperand = this.BindExpression(syntax.operand);
-        var boundOperator = Nodes.BoundUnaryOperator.Bind(syntax.operatorToken.kind, boundOperand.type);
+        const boundOperand = this.BindExpression(syntax.operand);
+        const boundOperator = Nodes.BoundUnaryOperator.Bind(syntax.operatorToken.kind, boundOperand.type);
 
         if (boundOperator == null)
         {
@@ -770,9 +737,9 @@ export default class Binder
 
     private BindAssignmentExpression(syntax : AST.AssignmentExpressionSyntax) : Nodes.BoundAssignmentExpression
     {
-        let identifier = this.scope.FindVariable(syntax.identifierToken.lexeme);
+        const identifier = this.scope.FindVariable(syntax.identifierToken.lexeme);
         
-        let expression = this.BindExpression(syntax.expression);
+        const expression = this.BindExpression(syntax.expression);
         if(identifier == Identifier.Undefined)
         {
             this.diagnostics.reportUndefinedName(syntax.identifierToken.span, syntax.identifierToken.lexeme);
@@ -792,7 +759,7 @@ export default class Binder
     
     private BindConversion(diagnosticSpan : TextSpan, expression : Nodes.BoundExpression, type : Type, allowExplicit : boolean = false) : Nodes.BoundExpression
     {
-        var conversion = Conversion.classifyConversion(expression.type, type);
+        const conversion = Conversion.classifyConversion(expression.type, type);
 
         if (!conversion.Exists)
         {

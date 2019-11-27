@@ -36,20 +36,18 @@ export default class Lexer implements ILexer
     {
         this.start = this.position;
 
-        let leadingTrivia = this.readLeadingTrivia();
+        const leadingTrivia = this.readLeadingTrivia();
+        const syntaxType = this.readToken();
 
-        let syntaxType = this.readToken();
+        const start = this.start;
+        const position = this.position;
+        const line = this.line
+        const character = this.character;
 
-        let lexeme = this.currentLexeme;
-        let start = this.start;
-        let position = this.position;
-        let line = this.line
-        let character = this.character;
-
-        lexeme = this.amendLexeme(lexeme, syntaxType);
+        const lexeme = this.amendLexeme(this.currentLexeme, syntaxType);
 
         this.start = this.position;
-        let trailingTrivia = this.readTrailingTrivia();
+        const trailingTrivia = this.readTrailingTrivia();
 
         return new Token(syntaxType, lexeme, start, line, character, leadingTrivia, trailingTrivia);
     }
@@ -148,7 +146,7 @@ export default class Lexer implements ILexer
 
     readTrivia(isTrailing:boolean) : SyntaxTrivia[]
     {
-        let target : SyntaxTrivia[] = [];
+        const target : SyntaxTrivia[] = [];
         while (true)
         {
             switch (this.char)
@@ -194,10 +192,10 @@ export default class Lexer implements ILexer
     }
   
     addTrivia(target: SyntaxTrivia[], type: SyntaxType): void {    
-        var start = this.start;
-        var end = this.position;
-        var lexeme = this.currentLexeme;
-        var trivia = new SyntaxTrivia(type, lexeme, start, end - start);
+        const start = this.start;
+        const end = this.position;
+        const lexeme = this.currentLexeme;
+        const trivia = new SyntaxTrivia(type, lexeme, start, end - start);
 
         target.push(trivia);
         this.start = this.position;        
@@ -210,7 +208,7 @@ export default class Lexer implements ILexer
         
         while (true)
         {
-            let c = this.advance();
+            const c = this.advance();
             switch (c)
             {
                 case '\0':
@@ -233,7 +231,7 @@ export default class Lexer implements ILexer
         
         while (true)
         {
-            let c = this.char;
+            const c = this.char;
                         
             switch (c)
             {
@@ -345,7 +343,7 @@ export default class Lexer implements ILexer
 
     advance() : Char
     {
-        let c = this.char;
+        const c = this.char;
         this.position++;
         this.character++;
         return c;

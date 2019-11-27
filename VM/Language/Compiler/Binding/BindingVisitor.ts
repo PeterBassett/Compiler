@@ -34,7 +34,7 @@ export default class SyntaxTreeVisitor
 
     public Visit(node : AST.SyntaxNode) : void 
     {
-        var keys = Object.keys(node);
+        const keys = Object.keys(node);
 
         this.write(node);
 

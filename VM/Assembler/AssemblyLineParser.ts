@@ -17,7 +17,7 @@ export class AssemblyLineParser
     private ConsumeAny() : Token
     {
         // Make sure we've read the token.
-        var token = this.LookAhead();
+        const token = this.LookAhead();
 
         this.tokens.slice(1);
 
@@ -26,7 +26,7 @@ export class AssemblyLineParser
 
     public Consume(expected : OperandToken) : void
     {        
-        var token = this.LookAhead();
+        const token = this.LookAhead();
         if (token.token != expected)
             throw RangeError("Expected token " + expected + " and found " + token.token + " at " + token.position);
 
@@ -35,7 +35,7 @@ export class AssemblyLineParser
 
     public ConsumeOptional(expected : OperandToken) : boolean
     {
-        var token = this.LookAhead();
+        const token = this.LookAhead();
 
         if (token.token == expected)
         {
@@ -51,7 +51,7 @@ export class AssemblyLineParser
         // Read in as many as needed.
         while (distance >= this.tokens.length)
         {
-            var tokenFound = this.lexer.advance();
+            const tokenFound = this.lexer.advance();
 
             if(tokenFound)
                 this.tokens.push(this.lexer.current);
@@ -80,9 +80,9 @@ export class AssemblyLineParser
         // MNEMONIC CONST
 
         this.Consume(OperandToken.IDENTIFIER);
-        var mnemonic = this.current;
+        const mnemonic = this.current;
 
-        var instruction = InstructionMap[mnemonic.lexeme.toUpperCase()];
+        const instruction = InstructionMap[mnemonic.lexeme.toUpperCase()];
 
         if(instruction.operandCount == 0)
         {
@@ -91,9 +91,9 @@ export class AssemblyLineParser
 
         if(instruction.operandCount == 1)
         {
-            let operand = this.parseOperand();
+            const operand = this.parseOperand();
             
-            let code = operandCode(operand, 0);
+            const code = operandCode(operand, 0);
 
             return new Instruction(instruction.opcode, 
                                    code,                                                                   
@@ -103,14 +103,14 @@ export class AssemblyLineParser
         }
         else if(instruction.operandCount == 2)
         {
-            var op1 = this.parseOperand();
-            var op2 = this.parseOperand();
+            const op1 = this.parseOperand();
+            const op2 = this.parseOperand();
 
-            var code = 0;
+            let code = 0;
             code |= operandCode(op2, 0);
             code |= operandCode(op1, 1);
            
-            var operandValue = encodeInstructionOperand(op1.value, op2.value, op1.isPointer && op2.isPointer);
+            const operandValue = encodeInstructionOperand(op1.value, op2.value, op1.isPointer && op2.isPointer);
 
             return new Instruction(instruction.opcode, 
                 code,
@@ -124,7 +124,7 @@ export class AssemblyLineParser
 
     parseOperand() : ValueOrRegister
     {
-        var ok = this.lexer.advance();
+        const ok = this.lexer.advance();
         
         if(!this.lexer.current || !ok)
             throw RangeError("Failed to find a value, register or relative address");
@@ -147,17 +147,17 @@ export class AssemblyLineParser
 
     parseRelative() : ValueOrRegister
     {
-        let skipWhitepace = () => {
+        const skipWhitepace = () => {
             if(this.lexer.current.token == OperandToken.WHITESPACE)        
                 this.lexer.advance();
         };
 
-        let ensure = (expected:OperandToken) : void => {        
+        const ensure = (expected:OperandToken) : void => {        
             if(!this.lexer.current || this.lexer.current.token != expected)
                 throw RangeError("Failed to find a expected token");
         };
 
-        let consume = (expected:OperandToken) : void => {        
+        const consume = (expected:OperandToken) : void => {        
             this.lexer.advance();
             
             if(!this.lexer.current || this.lexer.current.token != expected)
@@ -169,7 +169,7 @@ export class AssemblyLineParser
         skipWhitepace();
         ensure(OperandToken.REGISTER);
 
-        var register = this.lexer.current;
+        const register = this.lexer.current;
 
         this.lexer.advance();
         skipWhitepace();
@@ -183,7 +183,7 @@ export class AssemblyLineParser
                 skipWhitepace();
                 ensure(OperandToken.MINUS);
                 this.lexer.advance();
-                let value = new ValueOrRegister(register.lexeme, true, -this.lexer.current.value);            
+                const value = new ValueOrRegister(register.lexeme, true, -this.lexer.current.value);            
 
                 this.lexer.advance();
                 ensure(OperandToken.RIGHT_SQUARE_BRACKET);
@@ -194,7 +194,7 @@ export class AssemblyLineParser
                 skipWhitepace();
                 ensure(OperandToken.PLUS);
                 this.lexer.advance();
-                let value = new ValueOrRegister(register.lexeme, true, this.lexer.current.value);
+                const value = new ValueOrRegister(register.lexeme, true, this.lexer.current.value);
 
                 this.lexer.advance();
                 ensure(OperandToken.RIGHT_SQUARE_BRACKET);
@@ -256,7 +256,7 @@ export function encodeInstructionOperand(destinationRegisterOffset : number | un
     if(sourceRegisterOffset < 0)
         sourceRegisterOffset = Math.abs(sourceRegisterOffset) | 128;
 
-    var value = sourceRegisterOffset | destinationRegisterOffset << 8;
+    const value = sourceRegisterOffset | destinationRegisterOffset << 8;
     return value;
 }
 
@@ -281,7 +281,7 @@ function operandCode(value : ValueOrRegister, scale : number) : number
 
 export function opCodeMode(isPointer : boolean, isRegister : boolean, scale : number) : number
 {
-    var code = 0;
+    let code = 0;
 
     if(isPointer)
         code |= 1;    

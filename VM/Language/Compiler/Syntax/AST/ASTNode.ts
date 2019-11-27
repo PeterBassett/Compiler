@@ -11,10 +11,8 @@ function getSyntaxNodeFromPosition(root:SyntaxNode, line: number, ch: number) : 
 function spanCalculator(this:any) : TextSpan
 {
     let node : any = this;
-    var keys = Object.keys(node);
-
-    var start : number = 999999999;
-    var end : number = 0;
+    let start : number = 999999999;
+    let end : number = 0;
 
     for (const key in node) {
         if (node.hasOwnProperty(key)) {

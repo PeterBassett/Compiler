@@ -99,7 +99,7 @@ export class AssemblyLineLexer
         {
             this.identifierToken();
             
-            var lexeme = this.current.lexeme;
+            const lexeme = this.current.lexeme;
 
             if(this.isRegister(lexeme))
                 this.current = new Token(lexeme, this.current.position, OperandToken.REGISTER);
@@ -133,7 +133,7 @@ export class AssemblyLineLexer
         // skip the 0b;
         this._currentPosition += 2;
         
-        var start = this._currentPosition;
+        const start = this._currentPosition;
 
         while(!this.end && (this.currentChar == '0' || this.currentChar == '1'))
             this._currentPosition++;
@@ -149,7 +149,7 @@ export class AssemblyLineLexer
         // skip the 0x;
         this._currentPosition += 2;
         
-        var start = this._currentPosition;
+        const start = this._currentPosition;
 
         while(!this.end && (this.isDigit(this.currentChar) || (this.currentChar.toLowerCase() >= 'a' && this.currentChar.toLowerCase() <= 'f')))
             this._currentPosition++;
@@ -186,7 +186,7 @@ export class AssemblyLineLexer
     registerToken(): boolean {
         this._currentPosition++;
 
-        var number = this.numberToken();
+        const number = this.numberToken();
         if(number)
         {
             this.current = new Token("R" + this.current.lexeme, this.current.position - 1, OperandToken.REGISTER);
@@ -198,7 +198,7 @@ export class AssemblyLineLexer
     }    
 
     identifierToken(): boolean {
-        var start = this._currentPosition;
+        const start = this._currentPosition;
 
         while(!this.end && (this.isAlpha(this.currentChar) || this.isDigit(this.currentChar)))
             this._currentPosition++;
@@ -208,7 +208,7 @@ export class AssemblyLineLexer
     }
 
     consumeWhiteSpace(): boolean {
-        var start = this._currentPosition;
+        const start = this._currentPosition;
         
         while(!this.end && this.isWhiteSpace(this.currentChar))
             this._currentPosition++;

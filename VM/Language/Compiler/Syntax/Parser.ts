@@ -49,7 +49,7 @@ export default class Parser
 
             if(badTokens.length > 0)
             {
-                var trivia = this.createSkippedTokensTrivia(badTokens);
+                const trivia = this.createSkippedTokensTrivia(badTokens);
                 token = token.withLeadingTrivia(trivia);
             }
 
@@ -83,14 +83,14 @@ export default class Parser
 
     private next() : Token
     {
-        let current = this.tokens[this.position];
+        const current = this.tokens[this.position];
         this.position++;
         return current;
     }
 
     private peek(ahead:number) : Token
     {
-        let index = this.position + ahead;
+        const index = this.position + ahead;
 
         if(index >= this.tokens.length)
             return this.tokens[index - 1];
@@ -100,7 +100,7 @@ export default class Parser
 
     private peekType(ahead:number = 0) : SyntaxType
     {
-        let token = this.peek(ahead);
+        const token = this.peek(ahead);
         return token.kind
     }
 
@@ -117,7 +117,7 @@ export default class Parser
         this.isErrorRecovery = true;
         this._diagnostics.reportUnexpectedToken(type, this.current.kind, this.current.span);
 
-        let text = SyntaxFacts.GetText(type) || "";
+        const text = SyntaxFacts.GetText(type) || "";
 
         return new Token(type, text, this.current.position, this.current.line, this.current.character, [], []);
     }
@@ -130,7 +130,7 @@ export default class Parser
         this.isErrorRecovery = true;
         this._diagnostics.reportUnexpectedToken(types, this.current.kind, this.current.span);
 
-        let text = SyntaxFacts.GetText(types[0]);
+        const text = SyntaxFacts.GetText(types[0]);
 
         return new Token(types[0], text, this.current.position, this.current.line, this.current.character, [], []);    
     } 
@@ -139,10 +139,10 @@ export default class Parser
     {
         try
         {
-            let declarations = this.parseDeclarations(false);
-            let eofToken = this.match(SyntaxType.Eof);
+            const declarations = this.parseDeclarations(false);
+            const eofToken = this.match(SyntaxType.Eof);
             
-            let compilationUnitSyntax = AST.CompilationUnitSyntax(declarations, eofToken);
+            const compilationUnitSyntax = AST.CompilationUnitSyntax(declarations, eofToken);
 
             return new CompilationUnit(compilationUnitSyntax, this._diagnostics);
         }        
@@ -159,20 +159,20 @@ export default class Parser
 
     private synchronise(...expectedTokenTypes : SyntaxType[]) : Token[]
     {
-        let skippedTokens : Token[] = [];
+        const skippedTokens : Token[] = [];
 
         while(expectedTokenTypes.filter( t => t == this.current.kind).length === 0 )
         {
             this._diagnostics.reportUnexpectedToken(expectedTokenTypes, this.current.kind, this.current.span );
 
-            let skippedToken = this.next();
+            const skippedToken = this.next();
             skippedTokens.push(skippedToken);
         }
 
         if(skippedTokens.length > 0)
         {
             
-            var trivia = this.createSkippedTokensTrivia(skippedTokens);
+            const trivia = this.createSkippedTokensTrivia(skippedTokens);
             this.tokens[this.position] = this.current.withLeadingTrivia(trivia);            
         }
 
@@ -183,7 +183,7 @@ export default class Parser
     
     private parseStructMemberDeclarations() : AST.StructMemberDeclarationStatementSyntax[]
     {
-        let members : AST.StructMemberDeclarationStatementSyntax[] = [];
+        const members : AST.StructMemberDeclarationStatementSyntax[] = [];
         while(!this.peekType(SyntaxType.SemiColon))
         {
             members.push(this.parseStructMemberDeclaration());
@@ -193,31 +193,31 @@ export default class Parser
 
     private parseStructMemberDeclaration() : AST.StructMemberDeclarationStatementSyntax
     {
-        let identifier = this.match(SyntaxType.Identifier);
+        const identifier = this.match(SyntaxType.Identifier);
 
-        let colonToken = this.match(SyntaxType.Colon);
+        const colonToken = this.match(SyntaxType.Colon);
         
-        let typeDeclaration = this.parsePredefinedTypeOrIdentifier();
+        const typeDeclaration = this.parsePredefinedTypeOrIdentifier();
 
-        let semiColon = this.match(SyntaxType.SemiColon);
+        const semiColon = this.match(SyntaxType.SemiColon);
 
         return AST.StructMemberDeclarationStatementSyntax(identifier, colonToken, typeDeclaration, semiColon);
     }
 
     private parseDeclarations(insideClass : boolean) : AST.DeclarationSyntax[]
     {
-        let declarations : AST.DeclarationSyntax[] = [];
+        const declarations : AST.DeclarationSyntax[] = [];
 
         let lastTokenPosition : number = -1;
         
         while(true)
         {
-            let d = this.isMakingProgress(lastTokenPosition);
+            const d = this.isMakingProgress(lastTokenPosition);
             if(!d.progress)            
                 throw new Error("NO PROGRESS");   
             lastTokenPosition = d.newPosition;
 
-            let expectedTokens = [SyntaxType.Eof, /*SyntaxType.StructKeyword,*/ SyntaxType.ClassKeyword, SyntaxType.FuncKeyword, SyntaxType.LetKeyword, SyntaxType.VarKeyword];
+            const expectedTokens = [SyntaxType.Eof, /*SyntaxType.StructKeyword,*/ SyntaxType.ClassKeyword, SyntaxType.FuncKeyword, SyntaxType.LetKeyword, SyntaxType.VarKeyword];
             if(insideClass)
                 expectedTokens.push(SyntaxType.RightBrace);
             this.synchronise(...expectedTokens);
@@ -245,13 +245,13 @@ export default class Parser
 
     parseClassDeclaration(): AST.ClassDeclarationStatementSyntax {
         
-        let classKeyword = this.match(SyntaxType.ClassKeyword);
-        let name = this.match(SyntaxType.Identifier);
-        let leftBrace = this.match(SyntaxType.LeftBrace);
+        const classKeyword = this.match(SyntaxType.ClassKeyword);
+        const name = this.match(SyntaxType.Identifier);
+        const leftBrace = this.match(SyntaxType.LeftBrace);
         
-        let declarations : AST.DeclarationSyntax[] = this.parseDeclarations(true);
+        const declarations : AST.DeclarationSyntax[] = this.parseDeclarations(true);
         
-        let rightBrace = this.match(SyntaxType.RightBrace);
+        const rightBrace = this.match(SyntaxType.RightBrace);
         
         return AST.ClassDeclarationStatementSyntax(classKeyword, name, leftBrace, declarations, rightBrace);
     }
@@ -260,36 +260,36 @@ export default class Parser
     {        
         throw new Error("Not implemented");
         /*
-        let structKeyword = this.match(SyntaxType.StructKeyword);
-        let name = this.match(SyntaxType.Identifier);
-        let leftBrace = this.match(SyntaxType.LeftBrace);
+        const structKeyword = this.match(SyntaxType.StructKeyword);
+        const name = this.match(SyntaxType.Identifier);
+        const leftBrace = this.match(SyntaxType.LeftBrace);
         
-        let declarations : AST.DeclarationSyntax[] = this.parseStructMemberDeclarations();
+        const declarations : AST.DeclarationSyntax[] = this.parseStructMemberDeclarations();
         
-        let rightBrace = this.match(SyntaxType.RightBrace);
+        const rightBrace = this.match(SyntaxType.RightBrace);
         
         return AST.StructDeclarationStatementSyntax(structKeyword, name, leftBrace, declarations, rightBrace); */
     }
 
     private parseFunctionDeclaration() : AST.DeclarationSyntax
     {
-        let funcKeyword = this.match(SyntaxType.FuncKeyword);
-        let name = this.match(SyntaxType.Identifier);
-        let parameterList = this.parseFuncionParameterList();
+        const funcKeyword = this.match(SyntaxType.FuncKeyword);
+        const name = this.match(SyntaxType.Identifier);
+        const parameterList = this.parseFuncionParameterList();
 
-        let colonToken = this.match(SyntaxType.Colon);
-        let returnType = this.parsePredefinedTypeOrIdentifier();
+        const colonToken = this.match(SyntaxType.Colon);
+        const returnType = this.parsePredefinedTypeOrIdentifier();
 
         if(this.current.kind == SyntaxType.LeftBrace)
         {
-            let body = this.parseBlockStatement();
+            const body = this.parseBlockStatement();
             return AST.FunctionDeclarationStatementSyntax(funcKeyword, name, parameterList, colonToken, returnType, body );
         }
         else if(this.current.kind == SyntaxType.FatArrow)        
         {
-            let fatArrow = this.match(SyntaxType.FatArrow);
-            let expression = this.parseExpression();
-            let semiColon = this.match(SyntaxType.SemiColon);
+            const fatArrow = this.match(SyntaxType.FatArrow);
+            const expression = this.parseExpression();
+            const semiColon = this.match(SyntaxType.SemiColon);
 
             return AST.LambdaDeclarationStatementSyntax(funcKeyword, name, parameterList, colonToken, returnType, fatArrow, expression );
         }
@@ -319,7 +319,7 @@ export default class Parser
     }
 
     parsePredefinedTypeOrIdentifier() : AST.TypeNameSyntax {
-        let token = this.peek(0);
+        const token = this.peek(0);
 
         switch(token.kind)
         {
@@ -345,15 +345,15 @@ export default class Parser
     }
 
     parseFuncionParameterList(): AST.ParameterDeclarationListSyntax {
-        let leftParen = this.match(SyntaxType.LeftParen);
+        const leftParen = this.match(SyntaxType.LeftParen);
 
-        let parameters : AST.ParameterDeclarationSyntax[] = [];
+        const parameters : AST.ParameterDeclarationSyntax[] = [];
 
         let previousParam : AST.ParameterDeclarationSyntax | null = null;
 
         if(this.current.kind != SyntaxType.RightParen)
         {
-            let p = this.parseParameterDeclaration();
+            const p = this.parseParameterDeclaration();
             previousParam = p;
             parameters.push(p);
         }
@@ -361,7 +361,7 @@ export default class Parser
         let lastTokenPosition : number = -1;        
         while(this.current.kind != SyntaxType.RightParen)
         {        
-            let d = this.isMakingProgress(lastTokenPosition);
+            const d = this.isMakingProgress(lastTokenPosition);
             if(!d.progress)            
                 throw new Error("NO PROGRESS");   
             lastTokenPosition = d.newPosition;
@@ -369,24 +369,24 @@ export default class Parser
             if(this.current.kind == SyntaxType.Eof)
                 throw new ExpectedEofException(this.current);    
             
-            let commaToken = this.match(SyntaxType.Comma);
+            const commaToken = this.match(SyntaxType.Comma);
             if(!!previousParam)
                 previousParam.comma = commaToken;
 
-            let parameterDeclaration = this.parseParameterDeclaration();
+            const parameterDeclaration = this.parseParameterDeclaration();
             parameters.push(parameterDeclaration);
             previousParam = parameterDeclaration;
         }
 
-        let rightParen = this.match(SyntaxType.RightParen);
+        const rightParen = this.match(SyntaxType.RightParen);
 
         return AST.ParameterDeclarationListSyntax(leftParen, parameters, rightParen);
     }
 
     parseParameterDeclaration(): AST.ParameterDeclarationSyntax {
-        let identifier = this.match(SyntaxType.Identifier);
-        let colonToken = this.match(SyntaxType.Colon);
-        let typeDeclaration = this.parsePredefinedTypeOrIdentifier();
+        const identifier = this.match(SyntaxType.Identifier);
+        const colonToken = this.match(SyntaxType.Colon);
+        const typeDeclaration = this.parsePredefinedTypeOrIdentifier();
         return AST.ParameterDeclarationSyntax(identifier, colonToken, typeDeclaration);
     }
 
@@ -417,8 +417,8 @@ export default class Parser
     }
 
     parseVariableDeclarationStatement(): AST.VariableDeclarationSyntax {
-        let typeQualifier = this.matchAny(SyntaxType.LetKeyword, SyntaxType.VarKeyword);
-        let identifier = this.match(SyntaxType.Identifier);
+        const typeQualifier = this.matchAny(SyntaxType.LetKeyword, SyntaxType.VarKeyword);
+        const identifier = this.match(SyntaxType.Identifier);
 
         let typeDeclaration : AST.TypeNameSyntax | undefined = undefined;
         let colonToken : Token | undefined = undefined;
@@ -442,52 +442,52 @@ export default class Parser
     }
     
     parseReturnStatement(): AST.StatementNode {
-        let returnToken = this.match(SyntaxType.ReturnKeyword);
+        const returnToken = this.match(SyntaxType.ReturnKeyword);
         
         if(this.current.kind == SyntaxType.SemiColon)
         {
-            let semiColonToken = this.match(SyntaxType.SemiColon);
+            const semiColonToken = this.match(SyntaxType.SemiColon);
             return AST.ReturnStatementSyntax(returnToken, undefined, semiColonToken);
         }
 
-        let expression = this.parseExpression();
-        let semiColonToken = this.match(SyntaxType.SemiColon);
+        const expression = this.parseExpression();
+        const semiColonToken = this.match(SyntaxType.SemiColon);
         return AST.ReturnStatementSyntax(returnToken, expression, semiColonToken);
     }
 
     private parseBlockStatement(): AST.BlockStatementSyntax {
-        let statements : AST.StatementNode[] = [];
+        const statements : AST.StatementNode[] = [];
 
-        let openBraceToken = this.match(SyntaxType.LeftBrace);
+        const openBraceToken = this.match(SyntaxType.LeftBrace);
         let lastTokenPosition : number = -1;        
         
         while(this.current.kind != SyntaxType.Eof &&
               this.current.kind != SyntaxType.RightBrace)
         {
-            let d = this.isMakingProgress(lastTokenPosition);
+            const d = this.isMakingProgress(lastTokenPosition);
             if(!d.progress)            
                 throw new Error("NO PROGRESS");   
             lastTokenPosition = d.newPosition;
 
-            let startToken = this.current;
+            const startToken = this.current;
             
-            let statement = this.parseStatement();
+            const statement = this.parseStatement();
             statements.push(statement);
 
             if(this.current == startToken)
                 this.next();
         }
 
-        let closingBrace = this.match(SyntaxType.RightBrace);
+        const closingBrace = this.match(SyntaxType.RightBrace);
 
         return AST.BlockStatementSyntax(openBraceToken, statements, closingBrace);
     }
 
     private parseIfStatement(): AST.IfStatementSyntax {
-        let keyword = this.match(SyntaxType.IfKeyword);
-        let condition = this.parseExpression();
-        let trueBranch = this.parseStatement();
-        let falseBranch = this.parseElseClause();
+        const keyword = this.match(SyntaxType.IfKeyword);
+        const condition = this.parseExpression();
+        const trueBranch = this.parseStatement();
+        const falseBranch = this.parseElseClause();
 
         return AST.IfStatementSyntax(keyword, condition, trueBranch, falseBranch);
     }
@@ -500,9 +500,9 @@ export default class Parser
         if(this.peek(0).kind == SyntaxType.Identifier && 
            this.peek(1).kind == SyntaxType.Equals)
         {
-            let identifierToken = this.next();
-            let operatorToken = this.next();
-            let right = this.parseAssignmentExpression();
+            const identifierToken = this.next();
+            const operatorToken = this.next();
+            const right = this.parseAssignmentExpression();
 
             return AST.AssignmentExpressionSyntax(identifierToken, operatorToken, right);
         }
@@ -513,12 +513,12 @@ export default class Parser
     private parseBinaryExpression(parentPrecedence : number = 0): AST.ExpressionNode {
         let left : AST.ExpressionNode;
 
-        var unaryOperatorPrecedence = SyntaxFacts.GetUnaryOperatorPrecedence(this.current.kind);
+        const unaryOperatorPrecedence = SyntaxFacts.GetUnaryOperatorPrecedence(this.current.kind);
 
         if(unaryOperatorPrecedence != 0 && unaryOperatorPrecedence >= parentPrecedence)
         {
-            let operatorToken = this.next();
-            let operand = this.parseBinaryExpression(unaryOperatorPrecedence);
+            const operatorToken = this.next();
+            const operand = this.parseBinaryExpression(unaryOperatorPrecedence);
             left = AST.UnaryExpressionSyntax(operatorToken, operand);
         }
         else
@@ -530,18 +530,18 @@ export default class Parser
 
         while(true)
         {
-            let d = this.isMakingProgress(lastTokenPosition);
+            const d = this.isMakingProgress(lastTokenPosition);
             if(!d.progress)            
                 throw new Error("NO PROGRESS");   
             lastTokenPosition = d.newPosition;
     
-            let precedence = SyntaxFacts.GetBinaryOperatorPrecedence(this.current.kind); 
+            const precedence = SyntaxFacts.GetBinaryOperatorPrecedence(this.current.kind); 
 
             if(precedence == 0 || precedence <= parentPrecedence)
                 break;
 
-            let operatorToken = this.next();
-            let right = this.parseBinaryExpression(precedence);
+            const operatorToken = this.next();
+            const right = this.parseBinaryExpression(precedence);
             left = AST.BinaryExpressionSyntax(left, operatorToken, right);
         }
 
@@ -574,35 +574,35 @@ export default class Parser
     }
 
     private parseParenthesizedExpression(): AST.ExpressionNode {
-        let left = this.match(SyntaxType.LeftParen);
-        let expression = this.parseExpression();
-        let right = this.match(SyntaxType.RightParen);
+        const left = this.match(SyntaxType.LeftParen);
+        const expression = this.parseExpression();
+        const right = this.match(SyntaxType.RightParen);
         return AST.ParenthesizedExpressionSyntax(left, expression, right);
     }
 
     private parseBooleanLiteral(): AST.ExpressionNode {
-        let token = this.matchAny(SyntaxType.TrueKeyword, SyntaxType.FalseKeyword);
+        const token = this.matchAny(SyntaxType.TrueKeyword, SyntaxType.FalseKeyword);
         return AST.BooleanLiteralExpressionSyntax(token);
     }
 
     private parseFloatLiteral(): AST.ExpressionNode {
-        let token = this.match(SyntaxType.FloatLiteral);
+        const token = this.match(SyntaxType.FloatLiteral);
         return AST.FloatLiteralExpressionSyntax(token);
     }
 
     private parseIntegerLiteral(): AST.ExpressionNode {
-        let token = this.match(SyntaxType.IntegerLiteral);
+        const token = this.match(SyntaxType.IntegerLiteral);
         return AST.IntegerLiteralExpressionSyntax(token);
     }
 
     private parseStringLiteral(): AST.ExpressionNode {
-        let token = this.match(SyntaxType.StringLiteral);
+        const token = this.match(SyntaxType.StringLiteral);
         return AST.StringLiteralExpressionSyntax(token);
     }
     
     private parseCallExpression(): AST.ExpressionNode {        
         
-        let identifier = this.matchAny(
+        const identifier = this.matchAny(
             SyntaxType.Identifier,
             SyntaxType.IntKeyword,
             SyntaxType.FloatKeyword,
@@ -616,7 +616,7 @@ export default class Parser
 
         while(true)
         {
-            let d = this.isMakingProgress(lastTokenPosition);
+            const d = this.isMakingProgress(lastTokenPosition);
             if(!d.progress)            
                 throw new Error("NO PROGRESS");   
             lastTokenPosition = d.newPosition;
@@ -640,9 +640,9 @@ export default class Parser
     }
 
     private parseCallExpressionRemainder(name: AST.NameExpressionSyntax): AST.ExpressionNode {
-        let leftParenToken = this.match(SyntaxType.LeftParen);
+        const leftParenToken = this.match(SyntaxType.LeftParen);
 
-        let callArguments : AST.ExpressionNode[] = [];
+        const callArguments : AST.ExpressionNode[] = [];
 
         if(this.peekType() != SyntaxType.RightParen)
         {
@@ -657,13 +657,13 @@ export default class Parser
             } while(true);
         }
 
-        let rightParenToken = this.match(SyntaxType.RightParen);
+        const rightParenToken = this.match(SyntaxType.RightParen);
 
         return AST.CallExpressionSyntax(name, leftParenToken, callArguments, rightParenToken);
     }
 
     private parseNameExpression(): AST.ExpressionNode {
-        let identifier = this.match(SyntaxType.Identifier);
+        const identifier = this.match(SyntaxType.Identifier);
         return AST.NameExpressionSyntax(identifier);
     }
 
@@ -671,46 +671,46 @@ export default class Parser
         if(this.current.kind != SyntaxType.ElseKeyword)
             return null;
 
-        let keyword = this.next();
-        let statement = this.parseStatement();
+        const keyword = this.next();
+        const statement = this.parseStatement();
         return AST.ElseStatementSyntax(keyword, statement);
     }
 
     private parseForStatement(): AST.ForStatementSyntax {
-        let forKeyword = this.match(SyntaxType.ForKeyword);
-        let letToken = this.match(SyntaxType.LetKeyword);
-        let identifier = this.match(SyntaxType.Identifier);
-        let inToken = this.match(SyntaxType.InKeyword);
-        let lowerBound = this.parseExpression();
-        let toKeyword = this.match(SyntaxType.ToKeyword);
-        let upperBound = this.parseExpression();
-        let body = this.parseStatement();
+        const forKeyword = this.match(SyntaxType.ForKeyword);
+        const letToken = this.match(SyntaxType.LetKeyword);
+        const identifier = this.match(SyntaxType.Identifier);
+        const inToken = this.match(SyntaxType.InKeyword);
+        const lowerBound = this.parseExpression();
+        const toKeyword = this.match(SyntaxType.ToKeyword);
+        const upperBound = this.parseExpression();
+        const body = this.parseStatement();
 
         return AST.ForStatementSyntax(forKeyword, letToken, identifier, inToken, lowerBound, toKeyword, upperBound, body);
     }    
 
     private parseWhileStatement(): AST.WhileStatementSyntax {
-        let whileKeyword = this.match(SyntaxType.WhileKeyword);
-        let condition = this.parseExpression();
-        let body = this.parseStatement();
+        const whileKeyword = this.match(SyntaxType.WhileKeyword);
+        const condition = this.parseExpression();
+        const body = this.parseStatement();
 
         return AST.WhileStatementSyntax(whileKeyword, condition, body);
     } 
 
     private parseBreakStatement() : AST.BreakStatementSyntax
     {
-        var keyword = this.match(SyntaxType.BreakKeyword);
+        const keyword = this.match(SyntaxType.BreakKeyword);
         return AST.BreakStatementSyntax(keyword);
     }
 
     private parseContinueStatement() : AST.ContinueStatementSyntax
     {
-        var keyword = this.match(SyntaxType.ContinueKeyword);
+        const keyword = this.match(SyntaxType.ContinueKeyword);
         return AST.ContinueStatementSyntax(keyword);
     }
 
     private parseExpressionStatement(): AST.ExpressionStatementSyntax {
-        let expression = this.parseExpression();
+        const expression = this.parseExpression();
 
         switch(expression.kind)
         {
@@ -721,13 +721,13 @@ export default class Parser
                 this._diagnostics.reportUnexpectedStatementExpression(expression.span());
         }        
 
-        let semiColonToken = this.match(SyntaxType.SemiColon);
+        const semiColonToken = this.match(SyntaxType.SemiColon);
         return AST.ExpressionStatementSyntax(expression, semiColonToken);
     }
  
     isMakingProgress(lastTokenPosition : number) : { progress : boolean, newPosition : number }
     {
-        var pos = this.current.position;
+        const pos = this.current.position;
 
         if (pos > lastTokenPosition)
         {
