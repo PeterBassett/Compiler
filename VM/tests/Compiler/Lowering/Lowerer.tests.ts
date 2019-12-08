@@ -5,6 +5,8 @@ import { BoundGlobalScope, BoundNodeKind } from "../../../Language/Compiler/Bind
 import Binder from "../../../Language/Compiler/Binding/Binder";
 import Lowerer from "../../../Language/Compiler/lowering/Lowerer";
 import BoundTreeStructureVisitor from "../BoundTreeStructureVisitor";
+import ControlFlowGraph from "../../../Language/Compiler/Binding/ControlFlow/ControlFlowGraph";
+import { StringWriter } from "../../../misc/StringWriter";
 
 describe("A Lowerer object", () => {
 

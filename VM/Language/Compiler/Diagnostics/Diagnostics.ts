@@ -4,6 +4,7 @@ import SourceText from "../Syntax/Text/SourceText";
 import { Type } from "../../Types/TypeInformation";
 import { ValueType } from "../../Types/ValueType";
 import Token from "../Syntax/Token";
+import { BoundFunctionDeclaration } from "../Binding/BoundNode";
 
 export enum DiagnosticType {
     UnexpectedCharacter,
@@ -25,7 +26,8 @@ export enum DiagnosticType {
     ExpressionConvertableToTypeRequired,
     InvalidBreakOrContinue,
     ExpectedClassType,
-    EntryPointNotFound
+    EntryPointNotFound,
+    NotAllPathsReturn
 }
 
 export class Diagnostic
@@ -57,9 +59,6 @@ export class Diagnostic
 
 export class Diagnostics
 {
-    reportUnsupportedType(type: ValueType) {
-        throw new Error("Method not implemented.");
-    }
     private readonly _diagnostics : Diagnostic[];
     private readonly _source : SourceText;
 
@@ -168,6 +167,14 @@ export class Diagnostics
 
     reportEntryPointNotFound(entryPoint: string) {
         this.report(`Program entry point '${entryPoint}' not found.`, DiagnosticType.EntryPointNotFound, TextSpan.Empty);
+    }
+
+    reportAllPathsMustReturn(func: BoundFunctionDeclaration) {
+        this.report(`Not all code paths return a value in function ${func.identifier}.`, DiagnosticType.NotAllPathsReturn, TextSpan.Empty);
+    }
+    
+    reportUnsupportedType(type: ValueType) {
+        throw new Error("Method not implemented.");
     }
 
     public get text() : SourceText

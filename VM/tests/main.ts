@@ -56,7 +56,8 @@ require(["jasmine-boot"], () =>
             "./Compiler/CodeGenerator/CodeGenerator.tests",
             "./Compiler/CompileAndExecute/CompileAndExecute.tests",
             "./Compiler/CompileAndExecute/CompilerIntrinsicExecute.tests",
-            "./Compiler/Optimisation/ExpressionOptimiser.tests"
+            "./Compiler/Optimisation/ExpressionOptimiser.tests",
+            "./Compiler/Binding/ControlFlowAnalysis/ControlFlowAnalyser.tests",
           ], () => {
             //trigger Jasmine
           (window as any).onload();

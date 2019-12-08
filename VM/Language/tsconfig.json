@@ -16,7 +16,7 @@
     "incremental": false
   },
   "include": [
-      "./**/*.ts"
+      "./**/*.ts" //, "../misc/StringWriter.ts", "../misc/TextWriter.ts"
   ],
   "exclude": [
     "node_modules",

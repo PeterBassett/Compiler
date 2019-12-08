@@ -14,24 +14,17 @@ describe("A Binder object", () => {
         let BoundGlobalScope = parser.parse();
         let binder = new Binder();
         let boundTree = binder.Bind(BoundGlobalScope);
+
         return boundTree;
     }
 
     function testBoundTreeStructure(text : string, structure : string) : void
     {
-        let scope : BoundGlobalScope;
-        //try
-       // {
-            scope = bind(text);
+        let scope : BoundGlobalScope = bind(text);
 
-            expect(scope.success).toEqual(true);
-            expect(scope.diagnostics).toBeTruthy();
-            expect(scope.diagnostics.length).toEqual(0);
-      /*  }
-        catch(e)
-        {
-            bind(text);
-        }*/
+        expect(scope.success).toEqual(true);
+        expect(scope.diagnostics).toBeTruthy();
+        expect(scope.diagnostics.length).toEqual(0);
 
         if(scope.success)
         {

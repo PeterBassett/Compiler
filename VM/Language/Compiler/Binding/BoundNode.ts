@@ -49,7 +49,11 @@ export enum BoundBinaryOperatorKind {
     LogicalOr
 }
 
-export abstract class BoundNode {
+export abstract class BoundNode
+{    
+    private static MaxNodeId:number=0;
+    public readonly id : number = BoundNode.MaxNodeId++;
+
     public abstract get kind(): BoundNodeKind;
 
     public accept(visitor:any)
