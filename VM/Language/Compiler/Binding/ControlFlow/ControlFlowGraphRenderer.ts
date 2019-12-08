@@ -33,7 +33,7 @@ export default class ControlFlowGraphRenderer
         {
             const id = blockIdsToNodeStrings[block.id];
             const label = Quote(ReplaceNewLines(block.toString()));
-            writer.WriteLine(`    ${id} [label = ${label} shape = box]`);
+            writer.WriteLine(`    ${id} [label = ${label}]`);
         }
 
         for(let branch of this.cfg.branches)
