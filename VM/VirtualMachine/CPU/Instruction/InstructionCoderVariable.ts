@@ -1,7 +1,8 @@
-import Instruction from "./Instruction";
+import Instruction, { OpcodeModes, OpcodeMode } from "./Instruction";
 import InstructionCoder from "./InstructionCoder";
 import RAM from "../../Memory/RAM";
 import { MapOpCodeToExecutor, InstructionSet } from "./InstructionSet";
+import { decodeInstructionOperandToValue, Endpoint, encodeInstructionOperand, encodeOpCodeModes } from "./InstructionCoder32Bit";
 
 function Mask(bits : number) : number
 {
@@ -36,21 +37,29 @@ const MemoryAddress32BitMask = MemoryAddressMask << MemoryAddressOffset;
 export default class InstructionCoderVariable implements InstructionCoder
 {
     encodeInstruction(opcode : number, 
-        opcodeMode : number, 
+        opcodeMode : OpcodeModes, 
         sourceRegister : number, 
         destinationRegister : number, 
-        memoryAddress : number): Uint8Array
+        destinationMemoryAddress : number,
+        sourceMemoryAddress : number): Uint8Array
     {
         var instructionSpec = InstructionSet.filter( i => i.opcode === opcode )[0];
 
         this.validateInstructionPart(opcode, OpCodeMask, "OpCode");
-        this.validateInstructionPart(opcodeMode, OpcodeModeMask, "OpcodeMode");
+        //this.validateInstructionPart(opcodeMode, OpcodeModeMask, "OpcodeMode");
         this.validateInstructionPart(sourceRegister, SourceRegisterMask, "SourceRegister");
-        this.validateInstructionPart(destinationRegister, DestinationRegisterMask, "DestinationRegister");
+        this.validateInstructionPart(destinationRegister, DestinationRegisterMask, "DestinationRegister");        
+
+        const memoryAddress = encodeInstructionOperand(destinationMemoryAddress,
+            sourceMemoryAddress,
+            opcodeMode.destination.isPointer && opcodeMode.source.isPointer);
+
         this.validateInstructionPart(memoryAddress, MemoryAddressMask, "MemoryAddress");
 
+        let mode = encodeOpCodeModes(opcodeMode);
+
         const instruction = (opcode << OpCodeOffset) |
-                            (opcodeMode << OpcodeModeOffset) |
+                            (mode << OpcodeModeOffset) |
                             (sourceRegister << SourceRegisterOffset) |
                             (destinationRegister << DestinationRegisterOffset) |
                             (memoryAddress << MemoryAddressOffset);
@@ -58,7 +67,7 @@ export default class InstructionCoderVariable implements InstructionCoder
         const array = new Uint8Array(12);//instructionSpec.instructionLength);
         
         array[0] = opcode;
-        array[1] = opcodeMode;
+        array[1] = mode;
         array[2] = sourceRegister;
         array[3] = destinationRegister;
 
@@ -92,17 +101,49 @@ export default class InstructionCoderVariable implements InstructionCoder
         const sourceRegister = array[2];
         const destinationRegister = array[3];
 
-        const memoryAddress = (array[4] << 0) |
-                              (array[5] << 8 ) |
-                              (array[6] << 16) |
-                              (array[7] << 24) |
-                              (array[8] << 32) |
-                              (array[9] << 40) |
-                              (array[10] << 48) |
-                              (array[11] << 56);
+        const rawMemoryAddress = (array[4] << 0) |
+                                    (array[5] << 8 ) |
+                                    (array[6] << 16) |
+                                    (array[7] << 24) |
+                                    (array[8] << 32) |
+                                    (array[9] << 40) |
+                                    (array[10] << 48) |
+                                    (array[11] << 56);
 
+        const mode = new OpcodeModes(
+            new OpcodeMode(
+                (opcodeMode & 0b0001) !== 0,
+                (opcodeMode & 0b0100) !== 0,
+            ),
+            new OpcodeMode(
+                (opcodeMode & 0b0010) !== 0,
+                (opcodeMode & 0b1000) !== 0,
+            )
+        );
+
+        let sourceMemoryAddress : number = rawMemoryAddress;
+        let destinationMemoryAddress : number = 0;
+
+        if(mode.source.isPointer || mode.destination.isPointer)
+        {
+            sourceMemoryAddress = decodeInstructionOperandToValue(
+                rawMemoryAddress, 
+                Endpoint.Source, 
+                mode.source.isPointer && mode.destination.isPointer);
+
+            destinationMemoryAddress = decodeInstructionOperandToValue(
+                rawMemoryAddress, 
+                Endpoint.Destination, 
+                mode.source.isPointer && mode.destination.isPointer);            
+        }
+    
         return { 
-            instruction : new Instruction(opcode, opcodeMode, sourceRegister, destinationRegister, memoryAddress),
+            instruction : new Instruction(opcode, 
+                mode, 
+                sourceRegister, 
+                destinationRegister, 
+                destinationMemoryAddress,
+                sourceMemoryAddress),
             length : 12
         };
     }

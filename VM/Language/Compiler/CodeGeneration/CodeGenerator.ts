@@ -8,6 +8,7 @@ import BuiltinFunctions from "../BuiltinFunctions";
 
 export default class CodeGenerator
 {
+    private functionName! : string;
     private diagnostics! : Diagnostics;
     private lines : string[] = [];
     private stackIndex : number = 0;
@@ -105,6 +106,7 @@ export default class CodeGenerator
     }
 
     writeFunction(func: Nodes.BoundFunctionDeclaration) {
+        this.functionName = func.identifier;
         this.blankLine();
         this.label(func.identifier);
             
@@ -119,6 +121,7 @@ export default class CodeGenerator
         })
         
         this.writeStatement(func.blockBody);
+        this.writeStackFrameEpilogue(func.identifier);
         this.popVariableMap();               
     }
 
@@ -132,15 +135,6 @@ export default class CodeGenerator
                 if(stmt.statements.length > 0)
                 {                    
                     stmt.statements.forEach( s => this.writeStatement(s) );
-                 
-                    // lexical scoping variable deallocation magic to be injected here
-                   // console.log(end-start);
-                   // let bytesToDeallocate = 4 * (end-start);
-                   // if(bytesToDeallocate > 0)
-                   // {
-                   //     this.instruction(`MVI R3 ${bytesToDeallocate}`);                    
-                   //     this.instruction(`ADD SP R3`);
-                   // }
                 }                    
                 break;
             }         
@@ -151,8 +145,8 @@ export default class CodeGenerator
                 if(stmt.expression)
                     this.writeExpression(stmt.expression);
 
-                this.writeStackFrameEpilogue();
-                this.instruction("RET");                
+                this.writeJumpToStackFrameEpilogue(this.functionName);
+                      
                 break;
             }
             case Nodes.BoundNodeKind.LabelStatement:
@@ -544,10 +538,24 @@ export default class CodeGenerator
         this.instruction("MOV R6 SP", "R6 is bottom of stack. Make current top of stack the bottom of the new stack frame");
     }
 
-    writeStackFrameEpilogue() : void
+    writeJumpToStackFrameEpilogue(functionName : string) : void
     {
+        this.instruction(`JMP ${functionName}_epilogue:`);
+    }
+
+    writeStackFrameEpilogue(functionName : string) : void
+    {
+        // if the previous line was a jump to this epilogue
+        if(this.lines[this.lines.length-1].trim() == `JMP ${functionName}_epilogue:`)        
+        {
+            // just remove the unneeded jump.
+            this.lines.splice(this.lines.length-1, 1);
+        }
+
+        this.label(`${functionName}_epilogue`);        
         this.instruction("MOV SP R6", "restore SP; now it points to old R6");
         this.instruction("POP R6", "restore old R6; now SP is where it was before prologue");
+        this.instruction("RET");
     }
 
     label(label:string) : void

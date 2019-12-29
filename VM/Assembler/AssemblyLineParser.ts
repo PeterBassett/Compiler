@@ -1,5 +1,5 @@
 import { AssemblyLineLexer, Token, OperandToken } from "./AssemblyLineLexer";
-import Instruction from "../VirtualMachine/CPU/Instruction/Instruction";
+import Instruction, { OpcodeModes, OpcodeMode } from "../VirtualMachine/CPU/Instruction/Instruction";
 import { InstructionMap } from "../VirtualMachine/CPU/Instruction/InstructionSet";
 import ValueOrRegister from "./ValueOrRegister";
 
@@ -86,37 +86,38 @@ export class AssemblyLineParser
 
         if(instruction.operandCount == 0)
         {
-            return new Instruction(instruction.opcode, 0, 0, 0, 0);
+            return new Instruction(instruction.opcode, OpcodeModes.Default, 0, 0, 0, 0);
         }
 
         if(instruction.operandCount == 1)
         {
             const operand = this.parseOperand();
             
-            const code = operandCode(operand, 0);
+            const mode = new OpcodeMode(operand.isPointer, !!operand.register);
+            const modes = new OpcodeModes(mode, OpcodeMode.Default);
 
             return new Instruction(instruction.opcode, 
-                                   code,                                                                   
+                                   modes,                                                                   
                                    0, 
                                    this.parseRegisterName(operand.register),
-                                   operand.value || 0);
+                                   0, operand.value || 0);
         }
         else if(instruction.operandCount == 2)
         {
             const op1 = this.parseOperand();
             const op2 = this.parseOperand();
 
-            let code = 0;
-            code |= operandCode(op2, 0);
-            code |= operandCode(op1, 1);
-           
-            const operandValue = encodeInstructionOperand(op1.value, op2.value, op1.isPointer && op2.isPointer);
-
+            let modes = new OpcodeModes(
+                new OpcodeMode(op2.isPointer, !!op2.register),
+                new OpcodeMode(op1.isPointer, !!op1.register)
+            );
+            
             return new Instruction(instruction.opcode, 
-                code,
+                modes,
                 this.parseRegisterName(op2.register), 
                 this.parseRegisterName(op1.register),
-                operandValue);
+                op1.value || 0, 
+                op2.value || 0);
         }
         else
             throw RangeError("Invalid operand count");
@@ -243,52 +244,4 @@ export class AssemblyLineParser
 
         return true;
     }
-}
-
-export function encodeInstructionOperand(destinationRegisterOffset : number | undefined, sourceRegisterOffset : number | undefined, isTwoOffsets : boolean) : number
-{
-    destinationRegisterOffset = destinationRegisterOffset || 0;
-    sourceRegisterOffset = sourceRegisterOffset || 0;
-
-    if(destinationRegisterOffset < 0)
-        destinationRegisterOffset = Math.abs(destinationRegisterOffset) | 128;
-
-    if(sourceRegisterOffset < 0)
-        sourceRegisterOffset = Math.abs(sourceRegisterOffset) | 128;
-
-    const value = sourceRegisterOffset | destinationRegisterOffset << 8;
-    return value;
-}
-
-export function decodeInstructionOperand(value : number, isTwoOffsets : boolean) : {op1Offset8? : number, op2Offset8? : number}
-{
-    let offset1 = value >> 8;
-    let offset2 = value & 255;
-
-    if(offset1 & 128)
-        offset1 = -(offset1 & 127);
-
-    if(offset2 & 128)
-        offset2 = -(offset2 & 127);
-
-    return {op1Offset8 : offset1, op2Offset8 : offset2};
-}
-
-function operandCode(value : ValueOrRegister, scale : number) : number
-{
-    return opCodeMode(value.isPointer, !!value.register, scale);
-}
-
-export function opCodeMode(isPointer : boolean, isRegister : boolean, scale : number) : number
-{
-    let code = 0;
-
-    if(isPointer)
-        code |= 1;    
-    if(isRegister)
-        code |= 4;
-    
-    code = code << scale;
-    
-    return code;
 }

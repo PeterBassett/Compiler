@@ -6,7 +6,7 @@ import Assembler from "../../Assembler/Assembler";
 import { OpCodes as Op, Registers as Reg } from "../../VirtualMachine/CPU/Instruction/InstructionSet";
 import InstructionCoder from "../../VirtualMachine/CPU/Instruction/InstructionCoder";
 import InstructionCoder32Bit from "../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
-import InstructionCoderVariable from "../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
+//import InstructionCoderVariable from "../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
 import { Logger } from "../../Assembler/interfaces/Logger";
 import Parser from "../../Assembler/Parser";
 import defaultPreprocessor from "../../Assembler/Preprocessors/DefaultPreprocessor";

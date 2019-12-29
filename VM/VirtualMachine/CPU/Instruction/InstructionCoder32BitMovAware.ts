@@ -1,4 +1,4 @@
-import Instruction from "./Instruction";
+/*import Instruction, { OpcodeModes } from "./Instruction";
 import InstructionCoder from "./InstructionCoder";
 import RAM from "../../Memory/RAM";
 import { OpCodes } from "./InstructionSet";
@@ -36,10 +36,12 @@ const MemoryAddress32BitMask = MemoryAddressMask << MemoryAddressOffset;
 export default class InstructionCoder32Bit implements InstructionCoder
 {
     encodeInstruction(opcode : number, 
-        opcodeMode : number, 
+        opcodeMode : OpcodeModes, 
         sourceRegister : number,
         destinationRegister : number, 
-        memoryAddress : number): Uint8Array
+        destinationMemoryAddress : number,
+        sourceMemoryAddress : number,
+        ): Uint8Array
     {
         this.validateInstructionPart(opcode, OpCodeMask, "OpCode");
         this.validateInstructionPart(opcodeMode, OpcodeModeMask, "OpcodeMode");
@@ -92,4 +94,4 @@ export default class InstructionCoder32Bit implements InstructionCoder
             length : 4
         };
     }
-}
+}*/

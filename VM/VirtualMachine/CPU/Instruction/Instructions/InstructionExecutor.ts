@@ -4,42 +4,10 @@ import RegisterBank from "../../RegisterBank";
 import { Registers } from "../InstructionSet";
 import Flags from "../../Flags";
 import CPU from "../../CPU";
-import { decodeInstructionOperand } from "../../../../Assembler/AssemblyLineParser";
 import BuiltinFunctions from "../../../../Language/Compiler/BuiltinFunctions";
 
 type InstructionExecutor = (cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags: Flags) => void;
 export { InstructionExecutor };
-
-function isPointer(opcodeMode : number, scale : number) : boolean 
-{
-    opcodeMode = opcodeMode >> scale;
-    return (opcodeMode & 1) == 1;
-}
-
-function isTwoRelativeAddressed(instruction:Instruction)
-{
-    return  isPointer(instruction.opcodeMode, Endpoint.Source) &&
-            isPointer(instruction.opcodeMode, Endpoint.Destination); 
-}
-
-function isRegister(opcodeMode : number, scale : number) : boolean 
-{
-    opcodeMode = opcodeMode >> scale;
-    return (opcodeMode & 4) == 4;
-}
-
-export function decodeInstructionOperandToValue(value : number, endpoint :Endpoint, isTwoOffsets:boolean) : number
-{
-    let f = decodeInstructionOperand(value, isTwoOffsets);
-
-    if(f.op1Offset8 != null && endpoint == Endpoint.Destination)
-        return f.op1Offset8;
-
-    if(f.op2Offset8 != null && endpoint == Endpoint.Source)
-        return f.op2Offset8;
-    
-    throw RangeError();
-}
 
 enum Endpoint
 {
@@ -55,12 +23,14 @@ function storeValue(instruction : Instruction,
                     value : number,
                     size : number) : void
 {
-    if(isRegister(instruction.opcodeMode, endpoint))
+    const mode = endpoint === Endpoint.Source ? instruction.opcodeMode.source : instruction.opcodeMode.destination;
+
+    if(mode.isRegister)
     {
-        if(isPointer(instruction.opcodeMode, endpoint))
+        if(mode.isPointer)
         {            
             let registerValue = registers.get(register);
-            let offset = decodeInstructionOperandToValue(instruction.memoryAddress, endpoint, isTwoRelativeAddressed(instruction));
+            let offset = endpoint === Endpoint.Source ? instruction.sourceMemoryAddress : instruction.destinationMemoryAddress;
             memory.storeNumber(registerValue + offset, value, size);
         }
         else        
@@ -72,7 +42,7 @@ function storeValue(instruction : Instruction,
     else
     {
         value = readBytes(value, size);
-        memory.storeNumber(instruction.memoryAddress, value, size);
+        memory.storeNumber(instruction.sourceMemoryAddress, value, size);
     }
 }
 
@@ -83,19 +53,21 @@ function getValue(instruction : Instruction,
                   registers : RegisterBank,
                   size : number) : number
 {
+    const mode = endpoint === Endpoint.Source ? instruction.opcodeMode.source : instruction.opcodeMode.destination;
+
     var value = 0;
-    if(isRegister(instruction.opcodeMode, endpoint))
+    if(mode.isRegister)
     {
         value = registers.get(register);
 
-        if(isPointer(instruction.opcodeMode, endpoint))
+        if(mode.isPointer)
         {            
-            let offset = decodeInstructionOperandToValue(instruction.memoryAddress, endpoint, isTwoRelativeAddressed(instruction));
+            let offset = endpoint === Endpoint.Source ? instruction.sourceMemoryAddress : instruction.destinationMemoryAddress;
             return memory.readNumber(value + offset, size);             
         }        
     }
     else
-        value = instruction.memoryAddress;
+        value = instruction.sourceMemoryAddress;
 
     value = readBytes(value, size);
     
@@ -126,58 +98,58 @@ function setFlags(flags : Flags, result : number)
 }
 
 export function MVI(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    const hardCodedValue = instruction.memoryAddress;
+    const hardCodedValue = instruction.sourceMemoryAddress;
     registers.set(instruction.destinationRegister, hardCodedValue);    
 }
 
 export function MVIb(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    const hardCodedValue = instruction.memoryAddress & 0xff;
+    const hardCodedValue = instruction.sourceMemoryAddress & 0xff;
     registers.set(instruction.destinationRegister, hardCodedValue);    
 }
 
 export function MVIw(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    const hardCodedValue = instruction.memoryAddress & 0xffff;
+    const hardCodedValue = instruction.sourceMemoryAddress & 0xffff;
     registers.set(instruction.destinationRegister, hardCodedValue);    
 }
 
 export function MVIf(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    const hardCodedValue = instruction.memoryAddress & 0xffffffff;
+    const hardCodedValue = instruction.sourceMemoryAddress & 0xffffffff;
     registers.set(instruction.destinationRegister, hardCodedValue);    
 }
 
 export function STR(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    memory.storeDWord(instruction.memoryAddress, registers.get(instruction.destinationRegister));
+    memory.storeDWord(instruction.sourceMemoryAddress, registers.get(instruction.destinationRegister));
 }
 
 export function STRw(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    memory.storeWord(instruction.memoryAddress, registers.get(instruction.destinationRegister));
+    memory.storeWord(instruction.sourceMemoryAddress, registers.get(instruction.destinationRegister));
 }
 
 export function STRb(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    memory.storeByte(instruction.memoryAddress, registers.get(instruction.destinationRegister));
+    memory.storeByte(instruction.sourceMemoryAddress, registers.get(instruction.destinationRegister));
 }
 
 export function STRf(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    memory.storeFloat64(instruction.memoryAddress, registers.get(instruction.destinationRegister));
+    memory.storeFloat64(instruction.sourceMemoryAddress, registers.get(instruction.destinationRegister));
 }
 
 export function LDR(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    const value = memory.readDWord(instruction.memoryAddress);
+    const value = memory.readDWord(instruction.sourceMemoryAddress);
     registers.set(instruction.destinationRegister, value);
 }
 
 export function LDRw(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    const value = memory.readWord(instruction.memoryAddress);
+    const value = memory.readWord(instruction.sourceMemoryAddress);
     registers.set(instruction.destinationRegister, value);
 }
 
 export function LDRb(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    const value = memory.readByte(instruction.memoryAddress);
+    const value = memory.readByte(instruction.sourceMemoryAddress);
     registers.set(instruction.destinationRegister, value);
 }
 
 export function LDRf(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    const value = memory.readFloat64(instruction.memoryAddress);
+    const value = memory.readFloat64(instruction.sourceMemoryAddress);
     registers.set(instruction.destinationRegister, value);
 }
 
@@ -250,8 +222,8 @@ export function POPf(cpu : CPU, instruction:Instruction, memory: Memory, registe
 }
 
 export function INT(cpu : CPU, instruction: Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-//    let interupt = instruction.memoryAddress >> 8;
- //   let vector = instruction.memoryAddress & 255;
+//    let interupt = instruction.sourceMemoryAddress >> 8;
+ //   let vector = instruction.sourceMemoryAddress & 255;
 
     let interupt = memory.readDWord(registers.SP);
     let paramCount = memory.readDWord(registers.SP+4);
@@ -272,7 +244,7 @@ export function INT(cpu : CPU, instruction: Instruction, memory: Memory, registe
 }
 
 export function JMP(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    registers.IP = instruction.memoryAddress;
+    registers.IP = instruction.sourceMemoryAddress;
 }
 
 export function JMR(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
@@ -281,33 +253,33 @@ export function JMR(cpu : CPU, instruction:Instruction, memory: Memory, register
 
 export function JLT(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
     if(flags.Negative)
-        registers.IP = instruction.memoryAddress;
+        registers.IP = instruction.sourceMemoryAddress;
 }
 
 export function JGE(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
     if(!flags.Negative || flags.Zero)
-        registers.IP = instruction.memoryAddress;
+        registers.IP = instruction.sourceMemoryAddress;
 }
 
 export function JEQ(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
     if(!flags.Negative && flags.Zero)
-        registers.IP = instruction.memoryAddress;
+        registers.IP = instruction.sourceMemoryAddress;
 }
 
 export function JNE(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
     if(!flags.Zero)
-        registers.IP = instruction.memoryAddress;
+        registers.IP = instruction.sourceMemoryAddress;
 }
 
 export function JNZ(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
     if(!flags.Zero)
-        registers.IP = instruction.memoryAddress;
+        registers.IP = instruction.sourceMemoryAddress;
 }
 
 export function CALL(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {    
     registers.SP -= 4;
     memory.storeDWord(registers.SP, registers.IP);    
-    registers.IP = instruction.memoryAddress;
+    registers.IP = instruction.sourceMemoryAddress;
 }
 
 export function RET(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {        
@@ -408,13 +380,13 @@ export function DEC(cpu : CPU, instruction:Instruction, memory: Memory, register
 }
 
 export function LSH(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    const result = registers.get(instruction.destinationRegister) << instruction.memoryAddress;
+    const result = registers.get(instruction.destinationRegister) << instruction.sourceMemoryAddress;
     registers.set(instruction.destinationRegister, result);
     setFlags(flags, result);
 }
 
 export function RSH(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    const result = registers.get(instruction.destinationRegister) >> instruction.memoryAddress;
+    const result = registers.get(instruction.destinationRegister) >> instruction.sourceMemoryAddress;
     registers.set(instruction.destinationRegister, result);
     setFlags(flags, result);
 }
@@ -458,7 +430,7 @@ export function LOOP(cpu : CPU, instruction:Instruction, memory: Memory, registe
     
     if(value > 0)
     {
-        registers.IP = instruction.memoryAddress;
+        registers.IP = instruction.sourceMemoryAddress;
     }
 }
 

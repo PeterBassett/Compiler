@@ -1,4 +1,4 @@
-import { encodeInstructionOperand, decodeInstructionOperand } from "../../Assembler/AssemblyLineParser";
+import { encodeInstructionOperand, decodeInstructionOperand } from "../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
 
 describe("The encodeInstructionOperand function ", () => {
     it("encodes a single string", () => {

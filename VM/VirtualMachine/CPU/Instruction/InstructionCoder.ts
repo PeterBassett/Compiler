@@ -1,14 +1,15 @@
 
-import Instruction from "./Instruction";
+import Instruction, { OpcodeModes } from "./Instruction";
 import Memory from "../../Memory/Memory";
 
 export default interface InstructionCoder
 {
     encodeInstruction(opcode : number, 
-        opcodeMode : number, 
+        opcodeMode : OpcodeModes, 
         sourceRegister : number,
         destinationRegister : number, 
-        memoryAddress : number): Uint8Array;
+        destinationMemoryAddress : number,
+        sourceMemoryAddress : number): Uint8Array;
         
     decodeInstruction (memory : Memory, offset : number) : { instruction: Instruction, length:number }
 }

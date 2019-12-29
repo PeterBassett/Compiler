@@ -57,7 +57,6 @@ export class AssemblyLineLexer
     {
         if (this.end)
         {
-//            this.current = null;
             return false;
         }
         
@@ -66,7 +65,6 @@ export class AssemblyLineLexer
 
         if (this.end)
         {
-//            this.current = null;
             return false;
         }
 

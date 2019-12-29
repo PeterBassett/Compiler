@@ -319,35 +319,14 @@ export class BoundFunctionDeclaration extends BoundStatement
         return this._blockBody; 
     } 
  
-    defineBody(body: BoundBlockStatement/*, returnType : Type*/): void 
+    defineBody(body: BoundBlockStatement): void 
     {
         if(this._blockBody)
             throw new Error("Function Body Is Already Defined!");
 
         this._blockBody = body;
-    //    this._returnType = returnType;
     }
 }
-
-/*
-export class BoundLambdaDeclaration extends BoundStatement
-{
-    constructor(identifier : string, parameters: ParameterDeclaration[], returnType : Type, blockBody : BoundExpression)
-    {        
-        super();
-
-        this.identifier = identifier;
-        this.parameters = parameters;
-        this.returnType = returnType;
-        this.blockBody = blockBody;
-    }
-
-    public get kind() { return BoundNodeKind.FunctionDefinition; };    
-    public readonly identifier : string;
-    public readonly parameters : ParameterDeclaration[];
-    public readonly returnType : Type;
-    public readonly blockBody : BoundExpression;
-}*/
 
 export class ParameterDeclaration
 {
@@ -535,20 +514,6 @@ export class BoundCallExpression extends BoundExpression
     public get type(): Type { return this.returnType; }
 }
 
-/*
-export class BoundCallExpression extends BoundExpression 
-{
-    constructor(public readonly identifier : Identifier, 
-                public readonly callArguments : BoundExpression[],
-                public readonly returnType : Type)
-    {
-        super();
-    }
-
-    public get kind(): BoundNodeKind { return BoundNodeKind.CallExpression; };
-    public get type(): Type { return this.returnType; }
-}*/
-
 export class BoundAssignmentExpression extends BoundExpression 
 {
     constructor(public readonly identifier : Identifier, 
@@ -648,6 +613,5 @@ export class BoundConversionExpression extends BoundExpression
         super();
     }
 
-    //public get type() : Type { return this.operator.type; }
     public get kind(): BoundNodeKind { return BoundNodeKind.ConversionExpression; }
 }

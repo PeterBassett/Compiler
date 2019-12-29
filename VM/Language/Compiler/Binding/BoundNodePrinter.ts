@@ -250,7 +250,7 @@ export class BoundNodePrinter
         }
         else if (node.type == PredefinedValueTypes.String)
         {
-            value = "\"" + value.Replace("\"", "\"\"") + "\"";
+            value = "\"" + value.replace("\"", "\"\"") + "\"";
             this.WriteString(writer, value);
         }
         else

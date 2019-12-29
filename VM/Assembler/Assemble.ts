@@ -5,6 +5,7 @@ import { dataSectionSizeInBytes } from "./Preprocessors/ReplaceDataLabels";
 import { AssemblyLineLexer } from "./AssemblyLineLexer";
 import { AssemblyLineParser } from "./AssemblyLineParser";
 import InstructionCoder from "../VirtualMachine/CPU/Instruction/InstructionCoder";
+import { OpcodeModes } from "../VirtualMachine/CPU/Instruction/Instruction";
 
 export function assemble(instructions : AssemblyLine[], data : DataLabel[], fixedTextSectionOffset : number, encoder : InstructionCoder) : ArrayBuffer
 {
@@ -40,9 +41,14 @@ export function encodeTextSection(instructions : AssemblyLine[], offset : number
                 
                 const instruction = parser.Parse();
                 
-                const { opcode, opcodeMode, sourceRegister, destinationRegister, memoryAddress } = instruction;
+                const { opcode, opcodeMode, sourceRegister, destinationRegister, destinationMemoryAddress, sourceMemoryAddress } = instruction;
 
-                const encoded = encoder.encodeInstruction(opcode, opcodeMode, sourceRegister, destinationRegister, memoryAddress);
+                const encoded = encoder.encodeInstruction(opcode, 
+                    opcodeMode, 
+                    sourceRegister, 
+                    destinationRegister, 
+                    destinationMemoryAddress,
+                    sourceMemoryAddress);
 
                 if(output.length < bytesOutput + encoded.length)
                 {

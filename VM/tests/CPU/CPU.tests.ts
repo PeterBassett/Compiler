@@ -2,10 +2,10 @@ import CPU from "../../VirtualMachine/CPU/CPU";
 import * as helpers from "../helpers";
 import RAM from "../../VirtualMachine/Memory/RAM";
 import RegisterBank from "../../VirtualMachine/CPU/RegisterBank";
-import InstructionCoder32Bit from "../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
+import InstructionCoder32Bit, { encodeInstructionOperand } from "../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
 import { OpCodes as Op, Registers as Reg } from "../../VirtualMachine/CPU/Instruction/InstructionSet";
-import { encodeInstructionOperand, opCodeMode } from "../../Assembler/AssemblyLineParser";
 import Flags from "../../VirtualMachine/CPU/Flags";
+import { OpcodeModes, OpcodeMode } from "../../VirtualMachine/CPU/Instruction/Instruction";
 
 describe("A CPU", () => {
     let ram : RAM;
@@ -41,19 +41,20 @@ describe("A CPU", () => {
         destinationOffset : number,
         memoryAddress : number = 0): number
     {
-        //var opcodeMode = opCodeMode(destinationOffset > 0, !!sourceRegister, 1);
-        //opcodeMode |= opCodeMode(sourceOffset > 0, !!destinationRegister, 0);        
-
-        var opcodeMode = opCodeMode(sourceOffset != 0, !!sourceRegister, 0);
-        opcodeMode |= opCodeMode(destinationOffset != 0, !!destinationRegister, 1);        
-
-        let operand = encodeInstructionOperand(destinationOffset, sourceOffset, destinationOffset != 0 && sourceOffset != 0);
+        if((!!sourceOffset || !!destinationOffset) && !!memoryAddress)
+            throw Error("Something wrong here");
+                
+        let modes = new OpcodeModes(
+            new OpcodeMode(sourceOffset != 0, !!sourceRegister),
+            new OpcodeMode(destinationOffset != 0, !!destinationRegister)
+        )
 
         let instruction = instructionCoder.encodeInstruction(opcode,
-            opcodeMode, 
+            modes, 
             sourceRegister,
-            destinationRegister, 
-            operand | memoryAddress);
+            destinationRegister,
+            destinationOffset,
+            sourceOffset || memoryAddress || 0);
 
         ram.blitStoreBytes(ip, instruction); 
         
