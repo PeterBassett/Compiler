@@ -1,11 +1,9 @@
 import AssemblyLine from "./AssemblyLine";
 import { DataLabel, DataLabelType } from "./Preprocessors/ParseDataLabels";
-import InstructionCoder32Bit from "../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
 import { dataSectionSizeInBytes } from "./Preprocessors/ReplaceDataLabels";
 import { AssemblyLineLexer } from "./AssemblyLineLexer";
 import { AssemblyLineParser } from "./AssemblyLineParser";
 import InstructionCoder from "../VirtualMachine/CPU/Instruction/InstructionCoder";
-import { OpcodeModes } from "../VirtualMachine/CPU/Instruction/Instruction";
 
 export function assemble(instructions : AssemblyLine[], data : DataLabel[], fixedTextSectionOffset : number, encoder : InstructionCoder) : ArrayBuffer
 {
