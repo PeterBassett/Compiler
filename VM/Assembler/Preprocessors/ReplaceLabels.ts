@@ -28,7 +28,6 @@ export function replaceLabels(memoryOffset : number, lines: AssemblyLine[]): Ass
 
     labels.sort((a, b) => b.length - a.length).forEach((label) => {
         lines.forEach((line, index) => {
-            //line.source = line.source.replace(label, (memoryOffset + (map.labels[label] * 4)).toString());
             let regEx = new RegExp(label, "ig");
             let target = memoryOffset + (map.labels[label] * 4);
             line.source = line.source.replace(regEx, target.toString());            
