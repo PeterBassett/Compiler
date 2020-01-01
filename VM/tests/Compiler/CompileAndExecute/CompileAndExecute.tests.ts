@@ -14,6 +14,7 @@ import RAM from "../../../VirtualMachine/Memory/RAM";
 import Flags from "../../../VirtualMachine/CPU/Flags";
 import RegisterBank from "../../../VirtualMachine/CPU/RegisterBank";
 import CPU from "../../../VirtualMachine/CPU/CPU";
+import InstructionCoderVariable from "../../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
 
 describe("Complie Assemble and Execute", () => {
 
@@ -44,10 +45,18 @@ describe("Complie Assemble and Execute", () => {
         return result;
     }
 
+    function CreateInstructionCoder() : InstructionCoder
+    {
+        const instructionCoder32 = new InstructionCoder32Bit();
+        const instructionCoderVariable = new InstructionCoderVariable();
+
+        return instructionCoder32;
+    }
+
     function assemble(assemblyCode : string) : ArrayBuffer
     {
         const logger : Logger = (lineNumber : number, characterNumber : number, message : string) => {};
-        const instructionCoder = new InstructionCoder32Bit();
+        const instructionCoder = CreateInstructionCoder();        
         const assembler = new Assembler(logger, AssemblyParser, defaultPreprocessor, instructionCoder, 0);
 
         return assembler.assemble(assemblyCode)
@@ -59,7 +68,6 @@ describe("Complie Assemble and Execute", () => {
         let ram : RAM;
         let flags : Flags;
         let registers : RegisterBank;
-        let instructionCoder : InstructionCoder;
         const ramSize = 1 << 10;
         let cpu : CPU;
         let ip : number;
@@ -72,7 +80,8 @@ describe("Complie Assemble and Execute", () => {
         
         ram.blitStoreBytes(0, instructionStream);
 
-        instructionCoder = new InstructionCoder32Bit();
+        const instructionCoder = CreateInstructionCoder();
+        
         cpu = new CPU(ram, registers, flags, instructionCoder);
 
         let stepCount = 0;
