@@ -1,6 +1,7 @@
 import * as ReplaceLabels from "../../../Assembler/Preprocessors/ReplaceLabels";
 import AssemblyLine from "../../../Assembler/AssemblyLine";
 import MockAssemblyLine from "../MockAssemblyLine";
+import InstructionCoder32Bit from "../../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
 
 describe("The buildLabelMap function ", () => {
     let lines : MockAssemblyLine[];
@@ -18,7 +19,8 @@ describe("The buildLabelMap function ", () => {
             return new MockAssemblyLine(s, i);
         });
 
-        const actual = ReplaceLabels.buildLabelMap(lines);
+        const encoder = new InstructionCoder32Bit()
+        const actual = ReplaceLabels.buildLabelMap(lines, encoder);
 
         expect(actual.lines.length).toEqual(expectedlines.length);
 

@@ -3,9 +3,10 @@ import * as SectionExtraction from "../SectionExtraction";
 import { AssemblyLineParser } from "../AssemblyLineParser";
 import { AssemblyLineLexer } from "../AssemblyLineLexer";
 import InstructionCoder32Bit from "../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
+import InstructionCoder from "../../VirtualMachine/CPU/Instruction/InstructionCoder";
 
-export function buildLabelMap(inputLines: AssemblyLine[]): {lines : AssemblyLine [], labels : { [label:string] : number } } {
-    const { lines, labels } = buildDetailedLabelMap(inputLines);
+export function buildLabelMap(inputLines: AssemblyLine[], encoder : InstructionCoder): {lines : AssemblyLine [], labels : { [label:string] : number } } {
+    const { lines, labels } = buildDetailedLabelMap(inputLines, encoder);
     const m : { [label:string] : number } = {};
 
     const l = Object.keys(labels).map( name => m[name] = labels[name].lineNumber );
@@ -13,7 +14,7 @@ export function buildLabelMap(inputLines: AssemblyLine[]): {lines : AssemblyLine
     return { lines, labels: m };
 }
 
-export function buildDetailedLabelMap(lines: AssemblyLine[]): {lines : AssemblyLine [], labels : { [index:string] : { lineNumber : number, byteOffset : number } } } {
+export function buildDetailedLabelMap(lines: AssemblyLine[], encoder : InstructionCoder): {lines : AssemblyLine [], labels : { [index:string] : { lineNumber : number, byteOffset : number } } } {
     const labels : { 
         [index:string] : { lineNumber : number, byteOffset : number } 
     } = {};
@@ -34,7 +35,7 @@ export function buildDetailedLabelMap(lines: AssemblyLine[]): {lines : AssemblyL
             return false;        
         }
         
-        byteOffset += calculateInstructionSize(line);
+        byteOffset += calculateInstructionSize(line, encoder);
 
         return true
     });
@@ -42,13 +43,12 @@ export function buildDetailedLabelMap(lines: AssemblyLine[]): {lines : AssemblyL
     return { lines, labels };
 }
 
-export function calculateInstructionSize(line : AssemblyLine) : number
+export function calculateInstructionSize(line : AssemblyLine, encoder : InstructionCoder) : number
 {
-    const parser = new AssemblyLineParser(new AssemblyLineLexer(line.source), true);
-    const instructionEncoder = new InstructionCoder32Bit();
+    const parser = new AssemblyLineParser(new AssemblyLineLexer(line.source), true);    
     const instruction = parser.Parse();
 
-    const output = instructionEncoder.encodeInstruction(instruction.opcode, 
+    const output = encoder.encodeInstruction(instruction.opcode, 
         instruction.opcodeMode, 
         instruction.sourceRegister, 
         instruction.destinationRegister, 
@@ -60,8 +60,8 @@ export function calculateInstructionSize(line : AssemblyLine) : number
 
 export function replaceLabels(memoryOffset : number, lines: AssemblyLine[]) : AssemblyLine[] 
 {
-    
-    const map = buildDetailedLabelMap(lines);
+    const instructionEncoder = new InstructionCoder32Bit();
+    const map = buildDetailedLabelMap(lines, instructionEncoder);
     const labels = Object.keys(map.labels);
     lines = map.lines;
 
