@@ -1,5 +1,4 @@
-export enum OperandToken
-{
+export enum OperandToken {
     WHITESPACE,
     IDENTIFIER,
     LEFT_SQUARE_BRACKET,
@@ -7,7 +6,9 @@ export enum OperandToken
     REGISTER,
     NUMBER,
     PLUS,
-    MINUS
+    MINUS,
+    LABEL,
+    DATALABEL
 }
 
 export class Token
@@ -93,7 +94,18 @@ export class AssemblyLineLexer
                 return true;
         }
 
-        if(this.isAlpha(this.currentChar))
+        if(this.currentChar == '.')
+        {
+            this._currentPosition++;
+            this.identifierToken();
+            
+            const lexeme = this.current.lexeme;
+
+            this.current = new Token("." + lexeme, this.current.position - 1, OperandToken.DATALABEL);
+            
+            return true;
+        }
+        else if(this.isAlpha(this.currentChar))
         {
             this.identifierToken();
             
@@ -198,10 +210,23 @@ export class AssemblyLineLexer
     identifierToken(): boolean {
         const start = this._currentPosition;
 
-        while(!this.end && (this.isAlpha(this.currentChar) || this.isDigit(this.currentChar)))
+        let isJumpLabel = false;
+
+        while(!this.end && (this.isAlpha(this.currentChar) || 
+                            this.isDigit(this.currentChar)))
             this._currentPosition++;
 
-        this.current = new Token(this._source.substring(start, this._currentPosition), start, OperandToken.IDENTIFIER);
+        if(!this.end && this.currentChar == ':')
+        {
+            isJumpLabel = true;
+            this._currentPosition++;
+        }
+    
+        if(isJumpLabel)
+            this.current = new Token(this._source.substring(start, this._currentPosition), start, OperandToken.LABEL);
+        else
+            this.current = new Token(this._source.substring(start, this._currentPosition), start, OperandToken.IDENTIFIER);
+            
         return true;
     }
 
@@ -227,6 +252,7 @@ export class AssemblyLineLexer
     
     isAlpha(char: string): boolean {
         return (char >= 'a' && char <= 'z') ||
-               (char >= 'A' && char <= 'Z');
+               (char >= 'A' && char <= 'Z') || 
+               char == '_';
     }    
 }

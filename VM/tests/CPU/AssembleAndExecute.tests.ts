@@ -86,6 +86,19 @@ describe("Assemble and execute", () => {
         expect(registers.R5).toEqual(20);
     });
 
+    it("a ldrf instruction", () => {
+        execute(`
+    .data
+        .takesUpSpace float 123.456
+    .text
+    .global start:
+        start:
+        ldrf r5 .takesUpSpace
+        halt`);
+
+        expect(registers.R5).toEqual(123.456);
+    });
+
     it("a move instruction with a relative source", () => {
         execute(`
     .data

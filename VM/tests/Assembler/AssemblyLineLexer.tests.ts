@@ -91,6 +91,22 @@ describe("The AssemblyLineLexer class ", () => {
         test("RET", [ OperandToken.IDENTIFIER ]);
     });
 
+    it("lexes a line of assembly with a label", () => {
+        test("label:", [ OperandToken.LABEL ]);
+    });
+
+    it("lexes a line of assembly with a label containing underscores and numbers", () => {
+        test("label1_2test:", [ OperandToken.LABEL ]);
+    });
+
+    it("lexes a line of assembly with a datalabel", () => {
+        test(".datalabel", [ OperandToken.DATALABEL ]);
+    });
+
+    it("lexes a line of assembly with a datalabelcontaining underscores and numbers", () => {
+        test(".datalabel1_234_test", [ OperandToken.DATALABEL ]);
+    });
+
     it("lexes a line of assembly with which references a memory location by register pointer", () => {
         test("MOV R4 [R1]", [ OperandToken.IDENTIFIER, OperandToken.REGISTER, OperandToken.LEFT_SQUARE_BRACKET, OperandToken.REGISTER, OperandToken.RIGHT_SQUARE_BRACKET ] );
     });

@@ -7,11 +7,13 @@ export class AssemblyLineParser
 {
     private lexer : AssemblyLineLexer;
     private tokens : Token[];
+    private labelsExpected : boolean;
 
-    constructor(lexer : AssemblyLineLexer) 
+    constructor(lexer : AssemblyLineLexer, labelsExpected:boolean = false) 
     {
         this.lexer = lexer;
         this.tokens = [];
+        this.labelsExpected = labelsExpected;
     }
 
     private ConsumeAny() : Token
@@ -141,6 +143,10 @@ export class AssemblyLineParser
                 return this.parseRegister();
             case OperandToken.NUMBER:
                 return this.parseNumber();
+            case OperandToken.LABEL:
+                return this.parseLabel();                
+            case OperandToken.DATALABEL:
+                return this.parseDataLabel();    
         }
         
         throw RangeError("Failed to find a value, register or relative address");    
@@ -216,6 +222,24 @@ export class AssemblyLineParser
     parseNumber() : ValueOrRegister
     {
         return new ValueOrRegister(undefined, false, this.lexer.current.value);
+    }
+
+    parseLabel() : ValueOrRegister
+    {
+        if(!this.labelsExpected)
+            throw RangeError("Unexpected unresolved Label token " + this.lexer.current.lexeme + " at " + this.lexer.current.position);
+
+        // labels are not expected to produce final values
+        return new ValueOrRegister(undefined, false, 0);
+    }
+
+    parseDataLabel() : ValueOrRegister
+    {
+        if(!this.labelsExpected)
+            throw RangeError("Unexpected unresolved Data Label token " + this.lexer.current.lexeme + " at " + this.lexer.current.position);
+
+        // labels are not expected to produce final values
+        return new ValueOrRegister(undefined, false, 0);
     }
 
     parseRegisterName(registerName : string|undefined) : number
