@@ -50,7 +50,7 @@ export default class Assembler
         
         let {data, text} = extractSections(lines);
     
-        text = replaceLabels(this.baseMemoryOffset, text);
+        text = replaceLabels(this.baseMemoryOffset, text, this.encoder);
         let dataLabels = parseDataLabels(text.length * Uint32Array.BYTES_PER_ELEMENT + this.baseMemoryOffset, data);        
 
         text = replaceDataLabels(text, dataLabels, this.baseMemoryOffset);

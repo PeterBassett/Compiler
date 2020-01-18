@@ -58,9 +58,8 @@ export function calculateInstructionSize(line : AssemblyLine, encoder : Instruct
     return output.length;
 }
 
-export function replaceLabels(memoryOffset : number, lines: AssemblyLine[]) : AssemblyLine[] 
+export function replaceLabels(memoryOffset : number, lines: AssemblyLine[], instructionEncoder : InstructionCoder) : AssemblyLine[] 
 {
-    const instructionEncoder = new InstructionCoder32Bit();
     const map = buildDetailedLabelMap(lines, instructionEncoder);
     const labels = Object.keys(map.labels);
     lines = map.lines;

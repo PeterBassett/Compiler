@@ -101,7 +101,8 @@ describe("The replaceLabels function ", () => {
             return new MockAssemblyLine(s, i);
         });
 
-        const actual = ReplaceLabels.replaceLabels(0, lines);
+        const instructionEncoder = new InstructionCoder32Bit();
+        const actual = ReplaceLabels.replaceLabels(0, lines, instructionEncoder);
 
         expect(actual.length).toEqual(expectedlines.length);
 
