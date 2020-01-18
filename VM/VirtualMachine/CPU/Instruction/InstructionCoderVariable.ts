@@ -36,7 +36,68 @@ const MemoryAddress32BitMask = MemoryAddressMask << MemoryAddressOffset;
 
 export default class InstructionCoderVariable implements InstructionCoder
 {
+    static coderMap : { [mnemonic :  string] : { 
+        encoder : (opcode : number, 
+            opcodeMode : OpcodeModes, 
+            sourceRegister : number, 
+            destinationRegister : number, 
+            destinationMemoryAddress : number,
+            sourceMemoryAddress : number) => Uint8Array, 
+        decoder : (ram : RAM, offset : number) => { instruction: Instruction, length: number }     
+    } } = {
+        "HALT" : {
+            encoder : InstructionCoderVariable.encodeSingleByteInstruction,
+            decoder : InstructionCoderVariable.decodeSingleByteInstruction
+        }
+    }
+    
+    static validateInstructionPart(part : number, max : number, name : string) : void
+    {
+        if(part < 0)
+            throw new RangeError(`Instruction part ${name} can not be negative (${part})`);
+
+        if(part > max && max >= 0)
+            throw new RangeError(`Instruction part ${name} is outside range (${part}). Max is ${max}`);
+    }
+
     encodeInstruction(opcode : number, 
+        opcodeMode : OpcodeModes, 
+        sourceRegister : number, 
+        destinationRegister : number, 
+        destinationMemoryAddress : number,
+        sourceMemoryAddress : number): Uint8Array
+    {        
+        var instructionSpec = InstructionSet.filter( i => i.opcode === opcode )[0];
+
+        if(!!instructionSpec && InstructionCoderVariable.coderMap[instructionSpec.name])
+            return InstructionCoderVariable.coderMap[instructionSpec.name].encoder(opcode, 
+                                                                                    opcodeMode, 
+                                                                                    sourceRegister, 
+                                                                                    destinationRegister,
+                                                                                    destinationMemoryAddress,
+                                                                                    sourceMemoryAddress);
+
+        return InstructionCoderVariable.encodeDefaultInstruction(opcode, 
+            opcodeMode, 
+            sourceRegister, 
+            destinationRegister,
+            destinationMemoryAddress,
+            sourceMemoryAddress);
+    }
+
+    decodeInstruction (ram : RAM, offset : number) : { instruction: Instruction, length: number }
+    {
+        const array = ram.blitReadBytes(offset, 1);
+        var opcode = array[0];
+        var instructionSpec = InstructionSet.filter( i => i.opcode === opcode )[0];
+
+        if(!!instructionSpec && InstructionCoderVariable.coderMap[instructionSpec.name])
+            return InstructionCoderVariable.coderMap[instructionSpec.name].decoder(ram, offset);
+
+        return InstructionCoderVariable.decodeDefaultInstruction(ram, offset);        
+    }
+
+    static encodeDefaultInstruction(opcode : number, 
         opcodeMode : OpcodeModes, 
         sourceRegister : number, 
         destinationRegister : number, 
@@ -45,16 +106,16 @@ export default class InstructionCoderVariable implements InstructionCoder
     {
         var instructionSpec = InstructionSet.filter( i => i.opcode === opcode )[0];
 
-        this.validateInstructionPart(opcode, OpCodeMask, "OpCode");
-        //this.validateInstructionPart(opcodeMode, OpcodeModeMask, "OpcodeMode");
-        this.validateInstructionPart(sourceRegister, SourceRegisterMask, "SourceRegister");
-        this.validateInstructionPart(destinationRegister, DestinationRegisterMask, "DestinationRegister");        
+        InstructionCoderVariable.validateInstructionPart(opcode, OpCodeMask, "OpCode");
+        //InstructionCoderVariable.validateInstructionPart(opcodeMode, OpcodeModeMask, "OpcodeMode");
+        InstructionCoderVariable.validateInstructionPart(sourceRegister, SourceRegisterMask, "SourceRegister");
+        InstructionCoderVariable.validateInstructionPart(destinationRegister, DestinationRegisterMask, "DestinationRegister");        
 
         const memoryAddress = encodeInstructionOperand(destinationMemoryAddress,
             sourceMemoryAddress,
             opcodeMode.destination.isPointer && opcodeMode.source.isPointer);
 
-        this.validateInstructionPart(memoryAddress, MemoryAddressMask, "MemoryAddress");
+        InstructionCoderVariable.validateInstructionPart(memoryAddress, MemoryAddressMask, "MemoryAddress");
 
         let mode = encodeOpCodeModes(opcodeMode);
 
@@ -83,16 +144,7 @@ export default class InstructionCoderVariable implements InstructionCoder
         return array;
     }
 
-    validateInstructionPart(part : number, max : number, name : string) : void
-    {
-        if(part < 0)
-            throw new RangeError(`Instruction part ${name} can not be negative (${part})`);
-
-        if(part > max && max >= 0)
-            throw new RangeError(`Instruction part ${name} is outside range (${part}). Max is ${max}`);
-    }
-
-    decodeInstruction (ram : RAM, offset : number) : { instruction: Instruction, length: number }
+    static decodeDefaultInstruction (ram : RAM, offset : number) : { instruction: Instruction, length: number }
     {
         const array = ram.blitReadBytes(offset, 12);
 
@@ -145,6 +197,32 @@ export default class InstructionCoderVariable implements InstructionCoder
                 destinationMemoryAddress,
                 sourceMemoryAddress),
             length : 12
+        };
+    }
+
+    static encodeSingleByteInstruction(opcode : number, 
+        opcodeMode : OpcodeModes, 
+        sourceRegister : number, 
+        destinationRegister : number, 
+        destinationMemoryAddress : number,
+        sourceMemoryAddress : number): Uint8Array
+    {
+        const array = new Uint8Array(1);        
+        array[0] = opcode;
+        return array;
+    }
+
+    static decodeSingleByteInstruction(ram : RAM, offset : number) : { instruction: Instruction, length: number }
+    {
+        const array = ram.blitReadBytes(offset, 1);
+
+        const opcode = array[0];
+
+        return { 
+            instruction : new Instruction(opcode, 
+                OpcodeModes.Default, 
+                0, 0, 0, 0),
+            length : 1
         };
     }
 }

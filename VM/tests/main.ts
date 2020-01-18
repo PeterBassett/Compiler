@@ -40,6 +40,7 @@ require(["jasmine-boot"], () =>
             "./Assembler/Preprocessors/ReplaceDataLabels.tests",
             "./Assembler/EncodeDataSection.tests",          
             "./CPU/AssembleAndExecute.tests",
+            "./CPU/AssembleAndExecuteVariableLengthInstructions.tests",
             "./Assembler/AssemblyLineLexer.tests",
             "./Assembler/AssemblyLineParser.tests",
             "./Assembler/encodeInstructionOperand.tests",

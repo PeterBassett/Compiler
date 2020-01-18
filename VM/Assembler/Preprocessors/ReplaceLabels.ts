@@ -43,6 +43,16 @@ export function buildDetailedLabelMap(lines: AssemblyLine[], encoder : Instructi
     return { lines, labels };
 }
 
+export function calculateTextSectionEncodedLength(lines: AssemblyLine[], instructionEncoder : InstructionCoder) : number
+{
+    let size = 0;
+
+    for(let line of lines)
+        size += calculateInstructionSize(line, instructionEncoder);
+    
+    return size;
+}
+
 export function calculateInstructionSize(line : AssemblyLine, encoder : InstructionCoder) : number
 {
     const parser = new AssemblyLineParser(new AssemblyLineLexer(line.source), true);    
@@ -61,6 +71,7 @@ export function calculateInstructionSize(line : AssemblyLine, encoder : Instruct
 export function replaceLabels(memoryOffset : number, lines: AssemblyLine[], instructionEncoder : InstructionCoder) : AssemblyLine[] 
 {
     const map = buildDetailedLabelMap(lines, instructionEncoder);
+    
     const labels = Object.keys(map.labels);
     lines = map.lines;
 

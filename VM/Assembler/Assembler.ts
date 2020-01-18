@@ -5,7 +5,7 @@ import { Validator } from "./interfaces/Validator";
 import { extractSections } from "./SectionExtraction";
 import { assemble } from "./Assemble";
 import { parseDataLabels } from "./Preprocessors/ParseDataLabels";
-import { replaceLabels } from "./Preprocessors/ReplaceLabels";
+import { replaceLabels, calculateTextSectionEncodedLength } from "./Preprocessors/ReplaceLabels";
 import { replaceDataLabels } from "./Preprocessors/ReplaceDataLabels";
 import InstructionCoder from "../VirtualMachine/CPU/Instruction/InstructionCoder";
 
@@ -44,18 +44,21 @@ export default class Assembler
 
     assemble(input: string): ArrayBuffer
     {
-        let lines = this.parseLines(input);
+        const parsedLines = this.parseLines(input);
     
-        lines = this.preprocess(lines);
+        const processedLines = this.preprocess(parsedLines);
         
-        let {data, text} = extractSections(lines);
+        const {data, text} = extractSections(processedLines);
     
-        text = replaceLabels(this.baseMemoryOffset, text, this.encoder);
-        let dataLabels = parseDataLabels(text.length * Uint32Array.BYTES_PER_ELEMENT + this.baseMemoryOffset, data);        
+        const replacedLabelText = replaceLabels(this.baseMemoryOffset, text, this.encoder);
 
-        text = replaceDataLabels(text, dataLabels, this.baseMemoryOffset);
+        const textSectionEncodedLength = calculateTextSectionEncodedLength(replacedLabelText, this.encoder);
 
-        const binary = assemble(text, dataLabels, 0, this.encoder);
+        const dataLabels = parseDataLabels(textSectionEncodedLength + this.baseMemoryOffset, data);        
+
+        const replacedDataLabelsText = replaceDataLabels(replacedLabelText, dataLabels, this.baseMemoryOffset);
+
+        const binary = assemble(replacedDataLabelsText, dataLabels, 0, this.encoder);
 
         return binary;
     }
