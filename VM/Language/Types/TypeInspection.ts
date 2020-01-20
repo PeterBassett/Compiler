@@ -18,7 +18,7 @@ export default class TypeQuery
             case "bool":
                 return PredefinedValueTypes.Boolean;
             case "string" : 
-                return PredefinedValueTypes.String;                
+                return PredefinedValueTypes.String;
             default:
             {
                 let identifier = scope.scope.info.Find(scope.scope, name);

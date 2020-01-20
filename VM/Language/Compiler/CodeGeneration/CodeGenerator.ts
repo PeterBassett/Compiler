@@ -9,13 +9,20 @@ import BuiltinFunctions from "../BuiltinFunctions";
 export default class CodeGenerator
 {
     private functionName! : string;
-    private diagnostics! : Diagnostics;
+    private diagnostics! : Diagnostics;    
+    private sections : string[][] = [];
     private lines : string[] = [];
     private stackIndex : number = 0;
     private variableMap! : Stack< { [index:string] : { offset:number, size:number } } >;
     private labelCount:number = 0;
     private writeComments : boolean;
     private writeBlankLines : boolean;
+
+    private dataSection = 0;
+    private entrySection = 0;
+    private initSection = 0;
+    private codeSection = 0;
+    
     private readonly stackOffset : number = 8;
 
     constructor( options? : { comments:boolean, blankLines:boolean} )
@@ -32,47 +39,96 @@ export default class CodeGenerator
 
     public generate(root : Nodes.BoundGlobalScope) : GeneratedCode
     {
-        this.stackIndex=0;
+        this.dataSection = this.codeSection = this.initSection = this.entrySection = 0;;
+
+        this.stackIndex = 0;
         this.variableMap = new Stack<{ [index:string] : { offset:number, size:number } }>();
         this.lines = [];    
         this.labelCount = 0;
         this.diagnostics = new Diagnostics(root.diagnostics.text, root.diagnostics);
 
+        this.createSections();
         this.writeGlobalVariables(root.variables);
+        this.writeInitialisation();
         this.writeFunctions(root.functionMap);
 
-        return new GeneratedCode(this.lines, this.diagnostics);
+        let lines = this.join()
+        return new GeneratedCode(lines, this.diagnostics);
     }
-    
+
+    createSections() : void 
+    {
+        this.dataSection = this.sections.push([]) - 1;
+        this.entrySection = this.sections.push([]) - 1;
+        this.initSection = this.sections.push([]) - 1;
+        this.codeSection = this.sections.push([]) - 1;
+    }
+
+    setCurrentSection(section: number) {
+        this.lines = this.sections[section];
+    }
+
+    writeInitialisation() : void 
+    {
+        this.setCurrentSection(this.entrySection);
+
+        this.lines.push(".text");
+        this.lines.push(".global __entrypoint:");
+        this.label("__entrypoint");
+
+        this.setCurrentSection(this.codeSection);
+
+        this.instruction("MOV R6 SP", "Initialise Base Pointer");
+        this.instruction("CALL main:")
+        this.instruction("HALT")
+    }
+
+    join() : string[]
+    {
+        let lines : string[] = [];
+
+        for(let section of this.sections)
+            lines = [...lines, ...section];
+
+        return lines;
+    }
+
     writeGlobalVariables(variables: Nodes.BoundVariableDeclaration[]) 
     {
-        this.lines.push(".data");
+        this.setCurrentSection(this.dataSection);
+
+        this.lines.push(".data");    
         
-        variables.forEach(v => {
-            let slotType = this.mnemonicForType(v.variable.type.type);
-            let line = "    ." + v.variable.name + " " + slotType;
-            this.lines.push(line);
+        variables.forEach(v => 
+        {
+            const expression = v.initialiser;
+
+            if(expression.kind == Nodes.BoundNodeKind.LiteralExpression)
+            {                
+                let exp = expression as Nodes.BoundLiteralExpression;           
+                this.data(v.variable.type.type, v.variable.name, exp.value, `Global variable Declaration for ${v.variable.name}`);
+            }            
+            else
+            {
+                this.setCurrentSection(this.dataSection);
+                this.data(v.variable.type.type, v.variable.name, 0, `Global variable Declaration for ${v.variable.name}`);
+
+                this.setCurrentSection(this.initSection);
+                this.writeExpression(expression);                
+                const str = this.typedMnemonic(v.variable.type.type, "STR");
+                this.instruction(`${str} R1 .${v.variable.name}`, "Initialise global variable");
+            }
         });
     }
 
     writeFunctions(functionMap: { [index: string]: Nodes.BoundFunctionDeclaration; }) 
     {
-        this.lines.push(".text");
-
         let main = functionMap["main"];
 
         if(!main)
             this.diagnostics.reportEntryPointNotFound("main");
         else
-        {
-            this.lines.push(".global __entrypoint:");
-            this.lines.push("__entrypoint:");
-            this.instruction("MOV R6 SP", "Initialise Base Pointer");
-            this.instruction("CALL main:")
-            this.instruction("HALT")
-
             this.writeFunction(main);             
-        }
 
         let functionNames = Object.keys(functionMap);
 
@@ -271,14 +327,15 @@ export default class CodeGenerator
             {
                 let exp = expression as Nodes.BoundLiteralExpression;           
                 let mvi = this.typedMnemonic(exp.type.type, "MVI");
-                
+                const hannah = "beautiful";
                 switch(exp.type.type)
                 {
                     case ValueType.Int :
                         this.instruction(`${mvi} R1 ${exp.value}`, "Loading literal int");
                         break;
                     case ValueType.Float :
-                        this.instruction(`${mvi} R1 ${exp.value}`, "Loading literal float");    
+                        const label = this.data(ValueType.Float, "floatLiteral_" + exp.id, exp.value, "Storing literal float");
+                        this.instruction(`LDRf R1 ${label}`, "Loading literal float");                            
                         break;
                     case ValueType.Boolean :
                         this.instruction(`${mvi} R1 ${ (exp.value ? "1" : "0") }`, "Loading literal boolean");                    
@@ -353,7 +410,9 @@ export default class CodeGenerator
                 }
                 else if(exp.variable.variable!.isGlobal)
                 {
-                    this.instruction(`${mov} R1 ${exp.variable.name}:`, "read global variable");    
+                    const ldr = this.typedMnemonic(exp.variable.type.type, "LDR");
+                    this.instruction(`${ldr} R1 .${exp.variable.name}`, "read global variable");   
+                    //this.instruction(`${mov} R1 .${exp.variable.name}`, "read global variable");    
                 }
                 else
                 {
@@ -381,7 +440,9 @@ export default class CodeGenerator
                 }
                 else if(exp.identifier.variable && exp.identifier.variable!.isGlobal)
                 {
-                    this.instruction(`${mov} ${exp.identifier.name}: R1`, "assign to global variable");
+                    const str = this.typedMnemonic(exp.identifier.type.type, "STR");
+                    this.instruction(`${str} R1 .${exp.identifier.name}`, "read global variable");                       
+                    //this.instruction(`${mov} .${exp.identifier.name} R1`, "assign to global variable");
                 }
                 else
                 {
@@ -403,9 +464,15 @@ export default class CodeGenerator
             }
         }
     }
-
-    writeFunctionCallParameter(expr: Nodes.BoundExpression) : void {
     
+    data(type: ValueType, name: string, value: any, comment: string) {
+        let slotType = this.mnemonicForType(type);
+        let line = "    ." + name + " " + slotType + " " + value;
+        this.lines.push(line);
+        return "." + name;
+    }
+
+    writeFunctionCallParameter(expr: Nodes.BoundExpression) : void {    
     }
     
     writeUnaryExpression(expression: Nodes.BoundUnaryExpression) : void

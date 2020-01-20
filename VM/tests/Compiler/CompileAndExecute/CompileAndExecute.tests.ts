@@ -355,7 +355,32 @@ func main() : int
     let d : bool = false;
 
 	return test(a, b, c, d);
-}`, 15]
+}`, 15],
+[
+`let secondsInAYear : int = 60*60*24;
+func main() : int
+{
+    return secondsInAYear;
+}`, 86400
+],
+[
+`var a : int = 1;
+func change() : int
+{
+    // assign to global
+    a = 5;
+    return 1;
+}
+func main() : int
+{
+    // assign to global
+    a = 2;        
+    change();
+
+    // read from global
+    return a;
+}`, 5
+]
 /*
 [`func main() : float {
     // floating point division

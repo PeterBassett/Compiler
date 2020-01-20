@@ -143,7 +143,38 @@ main:
     MOV R1 [R6-4]
     MOV SP R6
     POP R6
-    RET`]
+    RET`],
+[`
+let g1 : float = 3.14;
+let g2 : float = 3.14;
+let g3 : float = 3.14;
+let g4 : float = 3.15;
+let g5 : int = 3;
+let g6 : int = 3;
+let g7 : bool = true;
+let g8 : bool = false;
+let g9 : bool = true;
+
+func main() : int
+{
+    let localf : float = 3.14;
+    let locali : int = 3;
+    let localbt : bool = true;
+    let localbf : bool = true;
+
+    var n : int = 0;
+    n = 5;
+    return n;
+}`, 
+``],
+[`
+let secondsInAYear : int = 60*60*24*365;
+
+func main() : int
+{
+    return secondsInAYear;
+}`, 
+``]
     ].forEach((item) => {
         it(`should produce the correct ASM code ` + item[0], () => {  
             let text = item[0] as string;
@@ -154,7 +185,7 @@ main:
                 mainShouldBeDefined = item[2] as boolean;
 
             //diabled for now.
-         //   testBoundTreeStructure(text, expected, mainShouldBeDefined);
+            testBoundTreeStructure(text, expected, mainShouldBeDefined);
         });
     });
 });
