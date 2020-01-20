@@ -334,7 +334,9 @@ export default class CodeGenerator
                         this.instruction(`${mvi} R1 ${exp.value}`, "Loading literal int");
                         break;
                     case ValueType.Float :
+                        this.setCurrentSection(this.dataSection);
                         const label = this.data(ValueType.Float, "floatLiteral_" + exp.id, exp.value, "Storing literal float");
+                        this.setCurrentSection(this.codeSection);
                         this.instruction(`LDRf R1 ${label}`, "Loading literal float");                            
                         break;
                     case ValueType.Boolean :
