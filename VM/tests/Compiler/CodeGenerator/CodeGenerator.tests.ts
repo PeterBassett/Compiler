@@ -95,7 +95,7 @@ describe("A CodeGenerator object", () => {
 [`let global : float;`, 
 `.data
     .global float`, false ],
-[`let flag : boolean;`, 
+[`let flag : bool;`, 
 `.data
     .flag byte`, false ],
 [`let name : string;`, 
@@ -115,7 +115,8 @@ __entrypoint:
 main:
     PUSH R6
     MOV R6 SP
-    MOV R1 1
+    MVI R1 1
+main_epilogue:
     MOV SP R6
     POP R6
     RET` ],                                
@@ -136,11 +137,12 @@ __entrypoint:
 main:
     PUSH R6
     MOV R6 SP
-    MOV R1 0
+    MVI R1 0
     PUSH R1
-    MOV R1 5
+    MVI R1 5
     MOV [R6-4] R1
     MOV R1 [R6-4]
+main_epilogue:
     MOV SP R6
     POP R6
     RET`],
@@ -166,7 +168,44 @@ func main() : int
     n = 5;
     return n;
 }`, 
-``],
+`.data
+    .g1 float 3.14
+    .g2 float 3.14
+    .g3 float 3.14
+    .g4 float 3.15
+    .g5 long 3
+    .g6 long 3
+    .g7 byte true
+    .g8 byte false
+    .g9 byte true
+    .floatLiteral_0 float 3.14
+.text
+.global __entrypoint:
+__entrypoint:
+    MOV R6 SP
+    CALL main:
+    HALT
+main:
+    PUSH R6
+    MOV R6 SP
+    LDRf R1 .floatLiteral_0
+    PUSHf R1
+    MVI R1 3
+    PUSH R1
+    MVIb R1 1
+    PUSHb R1
+    MVIb R1 1
+    PUSHb R1
+    MVI R1 0
+    PUSH R1
+    MVI R1 5
+    MOV [R6-18] R1
+    MOV R1 [R6-18]
+main_epilogue:
+    MOV SP R6
+    POP R6
+    RET`
+],
 [`
 let secondsInAYear : int = 60*60*24*365;
 
@@ -174,7 +213,85 @@ func main() : int
 {
     return secondsInAYear;
 }`, 
-``]
+`.data
+    .secondsInAYear long 0
+.text
+.global __entrypoint:
+__entrypoint:
+    MVI R1 60
+    PUSH R1
+    MVI R1 60
+    POP R2
+    MUL R1 R2
+    PUSH R1
+    MVI R1 24
+    POP R2
+    MUL R1 R2
+    PUSH R1
+    MVI R1 365
+    POP R2
+    MUL R1 R2
+    STR R1 .secondsInAYear
+    MOV R6 SP
+    CALL main:
+    HALT
+main:
+    PUSH R6
+    MOV R6 SP
+    LDR R1 .secondsInAYear
+main_epilogue:
+    MOV SP R6
+    POP R6
+    RET`],
+[`func test(a:float, b:int, c:float, d:float, e:float) : float
+{
+    return a;
+}
+func main() : float
+{
+    return test(1.0, 2, 3.0, 1.0, 1.0);
+}`, 
+`.data
+    .floatLiteral_0 float 1
+    .floatLiteral_1 float 3
+.text
+.global __entrypoint:
+__entrypoint:
+    MOV R6 SP
+    CALL main:
+    HALT
+main:
+    PUSH R6
+    MOV R6 SP
+    LDRf R1 .floatLiteral_0
+    PUSHf R1
+    LDRf R1 .floatLiteral_0
+    PUSHf R1
+    LDRf R1 .floatLiteral_1
+    PUSHf R1
+    MVI R1 2
+    PUSH R1
+    LDRf R1 .floatLiteral_0
+    PUSHf R1
+    CALL test:
+    POPf R3
+    POPf R3
+    POPf R3
+    POP R3
+    POPf R3
+main_epilogue:
+    MOV SP R6
+    POP R6
+    RET
+test:
+    PUSH R6
+    MOV R6 SP
+    MOVf R1 [R6+8]
+test_epilogue:
+    MOV SP R6
+    POP R6
+    RET`
+]
     ].forEach((item) => {
         it(`should produce the correct ASM code ` + item[0], () => {  
             let text = item[0] as string;

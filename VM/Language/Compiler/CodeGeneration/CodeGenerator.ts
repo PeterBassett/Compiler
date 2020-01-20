@@ -17,6 +17,7 @@ export default class CodeGenerator
     private labelCount:number = 0;
     private writeComments : boolean;
     private writeBlankLines : boolean;
+    private globalLiterals : { name :string, type: ValueType, value : any }[] = [];
 
     private dataSection = 0;
     private entrySection = 0;
@@ -43,7 +44,8 @@ export default class CodeGenerator
 
         this.stackIndex = 0;
         this.variableMap = new Stack<{ [index:string] : { offset:number, size:number } }>();
-        this.lines = [];    
+        this.lines = [];  
+        this.globalLiterals =[];  
         this.labelCount = 0;
         this.diagnostics = new Diagnostics(root.diagnostics.text, root.diagnostics);
 
@@ -334,8 +336,8 @@ export default class CodeGenerator
                         this.instruction(`${mvi} R1 ${exp.value}`, "Loading literal int");
                         break;
                     case ValueType.Float :
-                        this.setCurrentSection(this.dataSection);
-                        const label = this.data(ValueType.Float, "floatLiteral_" + exp.id, exp.value, "Storing literal float");
+                        this.setCurrentSection(this.dataSection);                        
+                        const label = this.numberedLiteral(ValueType.Float, "floatLiteral", exp.value, "Storing literal float");
                         this.setCurrentSection(this.codeSection);
                         this.instruction(`LDRf R1 ${label}`, "Loading literal float");                            
                         break;
@@ -465,6 +467,30 @@ export default class CodeGenerator
                 break;
             }
         }
+    }
+    
+    numberedLiteral(type: ValueType, namePrefix: string, value: any, comment: string) {
+        this.setCurrentSection(this.dataSection);
+
+        const foundItems = this.globalLiterals.filter( (v) => {
+            return  v.value == value &&
+                    v.type == type;
+        });
+
+        if(foundItems.length > 0)
+            return foundItems[0].name;
+
+        const label = this.data(type, namePrefix + "_" + this.labelCount, value, comment);        
+
+        this.labelCount++;
+
+        this.globalLiterals.push({
+            name : label,
+            type : type,
+            value : value
+        });
+
+        return label;
     }
     
     data(type: ValueType, name: string, value: any, comment: string) {
