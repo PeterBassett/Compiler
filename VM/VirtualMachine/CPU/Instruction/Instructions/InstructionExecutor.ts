@@ -434,6 +434,23 @@ export function LOOP(cpu : CPU, instruction:Instruction, memory: Memory, registe
     }
 }
 
+export function CMPr(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
+    let a = registers.get(instruction.sourceRegister)
+    let b = registers.get(instruction.destinationRegister);
+
+    let result = b - a;
+
+    setFlags(flags, result);
+}
+
+export function CMPZ(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
+    let a = registers.get(instruction.destinationRegister)    
+
+    let result = 0 - a;
+
+    setFlags(flags, result);
+}
+
 export function CMP(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
     let a = getValue(instruction, Endpoint.Source, instruction.sourceRegister, memory, registers, 4);
     let b = getValue(instruction, Endpoint.Destination, instruction.destinationRegister, memory, registers, 4);

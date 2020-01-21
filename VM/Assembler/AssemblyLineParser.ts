@@ -86,6 +86,11 @@ export class AssemblyLineParser
 
         const instruction = InstructionMap[mnemonic.lexeme.toUpperCase()];
 
+        if(!instruction)
+        {
+            throw RangeError("Invalid instruction " + mnemonic.lexeme.toUpperCase());
+        }
+
         if(instruction.operandCount == 0)
         {
             return new Instruction(instruction.opcode, OpcodeModes.Default, 0, 0, 0, 0);

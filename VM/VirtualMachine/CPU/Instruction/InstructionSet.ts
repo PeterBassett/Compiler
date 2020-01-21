@@ -52,7 +52,10 @@ export enum OpCodes {
 
     INT,
 
+    CMPr,
+    CMPZ,
     CMP,
+    
     SETE,
     SETNE,
     SETLT,
@@ -138,7 +141,10 @@ const  InstructionSet : InstructionSpecification[] = [
 
     new InstructionSpecification("INT",     OpCodes.INT, [regOrPointer]),
     
-    new InstructionSpecification("CMP",     OpCodes.CMP, [regOrPointer, regOrPointerOrValue]),
+    new InstructionSpecification("CMPr",     OpCodes.CMPr, [reg, reg]), // compare registers
+    new InstructionSpecification("CMPZ",     OpCodes.CMPZ, [reg]), // compare register with zero
+    new InstructionSpecification("CMP",      OpCodes.CMP,  [regOrPointer, regOrPointerOrValue]), // general purpose 4 byte compare
+    
     new InstructionSpecification("SETE",     OpCodes.SETE, [regOrPointer]),
     new InstructionSpecification("SETNE",     OpCodes.SETNE, [regOrPointer]),
     new InstructionSpecification("SETGT",     OpCodes.SETGT, [regOrPointer]),

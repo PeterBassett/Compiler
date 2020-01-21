@@ -1574,7 +1574,7 @@ describe("Assemble and execute", () => {
         int 0x10 0x13            ; 320x200x256
         mov r1 0                 ; setup grayscale palette
         mov r2 0x03c8            ; setup register to receive
-        out r2 r3                ; full palette (768bytes of rgb data)
+        ;out r2 r3                ; full palette (768bytes of rgb data)
         inc r2                   ; the next register expects data
 
     setpalette:

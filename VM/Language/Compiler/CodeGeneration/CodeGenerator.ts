@@ -223,7 +223,7 @@ export default class CodeGenerator
             {
                 let stmt = statement as Nodes.BoundConditionalGotoStatement;            
                 this.writeExpression(stmt.condition);                
-                this.instruction("CMP R1 0", "");                
+                this.instruction("CMPZ R1", "");                
 
                 if(stmt.jumpIfTrue)
                     this.instruction(`JNE ${stmt.label.name}:`);
@@ -573,49 +573,49 @@ export default class CodeGenerator
             }    
             case Nodes.BoundBinaryOperatorKind.Equals:        
                 binpreamble();                
-                this.instruction("CMP R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
+                this.instruction("CMPr R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
                 this.instruction("SETE R1  ", "set R1 to 1 if ZF is on");
                 break;
             case Nodes.BoundBinaryOperatorKind.NotEquals:
                 binpreamble();    
-                this.instruction("CMP R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
+                this.instruction("CMPr R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
                 this.instruction("SETNE R1 ", "set R1 if R1 <= R2, i.e. if R1 - R2 is negative");
                 break;                
             case Nodes.BoundBinaryOperatorKind.LessThan:
                 binpreamble();    
                 this.instruction("SWAP R1 R2", "Division requires the operand be in the oposite order");
-                this.instruction("CMP R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
+                this.instruction("CMPr R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
                 this.instruction("SETLT R1", "set R1 if R1 < R2, i.e. if R1 - R2 is negative");
                 break;
             case Nodes.BoundBinaryOperatorKind.LessThanOrEquals:
                 binpreamble();    
                 this.instruction("SWAP R1 R2", "Division requires the operand be in the oposite order");
-                this.instruction("CMP R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
+                this.instruction("CMPr R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
                 this.instruction("SETLTE R1", "set R1 if R1 <= R2, i.e. if R1 - R2 is negative");
                 break;
             case Nodes.BoundBinaryOperatorKind.GreaterThan:
                 binpreamble();    
                 this.instruction("SWAP R1 R2", "Division requires the operand be in the oposite order");
-                this.instruction("CMP R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
+                this.instruction("CMPr R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
                 this.instruction("SETGT R1", "set R1 if R1 <= R2, i.e. if R1 - R2 is negative");
                 break;
             case Nodes.BoundBinaryOperatorKind.GreaterThanOrEquals:
                 binpreamble();    
                 this.instruction("SWAP R1 R2", "Division requires the operand be in the oposite order");
-                this.instruction("CMP R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
+                this.instruction("CMPr R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
                 this.instruction("SETGTE R1", "set R1 if R1 <= R2, i.e. if R1 - R2 is negative");
                 break;      
             case Nodes.BoundBinaryOperatorKind.LogicalAnd:
             {
                 this.writeExpression(expression.left);    
-                this.instruction("CMP R1 0", "check if left is true");
+                this.instruction("CMPZ R1", "check if left is true");
                 let clause2 = this.generateLabel("clause2");
                 this.instruction(`JNE ${clause2}:`, "left isn't 0, so we need to evaluate clause 2");                
                 let end = this.generateLabel("end");
                 this.instruction(`JMP ${end}:`);
                 this.label(clause2);
                 this.writeExpression(expression.right);                    
-                this.instruction("CMP R1 0", "check if right is true");
+                this.instruction("CMPZ R1", "check if right is true");
                 this.instruction("SETNE R1", "set R1 register to 1 iff e2 != 0");
                 this.label(end);
                 break;
@@ -623,7 +623,7 @@ export default class CodeGenerator
             case Nodes.BoundBinaryOperatorKind.LogicalOr:   
             {
                 this.writeExpression(expression.left);    
-                this.instruction("CMP R1 0", "check if left is true");
+                this.instruction("CMPZ R1", "check if left is true");
                 let clause2 = this.generateLabel("clause2");
                 this.instruction(`JEQ ${clause2}:`, "left is 0, so we need to evaluate clause 2");
                 this.instruction("MOV R1 1", "we didn't jump, so left is true and therefore result is 1");
@@ -631,7 +631,7 @@ export default class CodeGenerator
                 this.instruction(`JMP ${end}:`);
                 this.label(clause2);
                 this.writeExpression(expression.right);                    
-                this.instruction("CMP R1 0", "check if right is true");
+                this.instruction("CMPZ R1", "check if right is true");
                 this.instruction("SETNE R1", "set R1 register to 1 iff e2 != 0");
                 this.label(end);
                 break;
