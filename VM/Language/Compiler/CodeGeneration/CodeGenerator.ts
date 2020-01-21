@@ -528,33 +528,49 @@ export default class CodeGenerator
 
     writeBinaryExpression(expression: Nodes.BoundBinaryExpression) : void
     {
-        let binpreamble = () => {
+        let binpreamble = () : ValueType => {
+            const type = expression.left.type.type;
+            const push = this.typedMnemonic(type, "PUSH");
+            const pop = this.typedMnemonic(type, "POP");
             this.writeExpression(expression.left);
-            this.instruction("PUSH R1", "save value of the left hand expression on the stack");
+            this.instruction(`${push} R1`, "save value of the left hand expression on the stack");
             this.writeExpression(expression.right);
-            this.instruction("POP R2", "pop left hand result from the stack into R2");
+            this.instruction(`${pop} R2`, "pop left hand result from the stack into R2");
+            return type;
         };
         
         switch(expression.operator.operatorKind)
         {    
             case Nodes.BoundBinaryOperatorKind.Addition:
-                binpreamble();
-                this.instruction("ADD R1 R2", "add r1 to r2, save results in r1");                
+            {
+                const type = binpreamble();
+                const add = this.typedMnemonic(type, "ADD");
+                this.instruction(`${add} R1 R2`, "add r1 to r2, save results in r1");                
                 break;
+            }   
             case Nodes.BoundBinaryOperatorKind.Subtraction:
-                binpreamble();
+            {
+                const type = binpreamble();
+                const sub = this.typedMnemonic(type, "SUB");
                 this.instruction("SWAP R1 R2", "Subtraction requires the operand be int he oposite order");
-                this.instruction("SUB R1 R2", "subtract r2 from r1, save results in r1");                
+                this.instruction(`${sub} R1 R2`, "subtract r2 from r1, save results in r1");                
                 break;
+            }
             case Nodes.BoundBinaryOperatorKind.Multiplication:
-                binpreamble();    
-                this.instruction("MUL R1 R2", "multiple r1 by r2, save results in r1");                
+            {
+                const type = binpreamble();
+                const mul = this.typedMnemonic(type, "MUL");
+                this.instruction(`${mul} R1 R2`, "multiple r1 by r2, save results in r1");                
                 break;
+            }
             case Nodes.BoundBinaryOperatorKind.Division:
-                binpreamble();
+            {
+                const type = binpreamble();
+                const div = this.typedMnemonic(type, "DIV");
                 this.instruction("SWAP R1 R2", "Division requires the operand be in the oposite order");
-                this.instruction("DIV R1 R2", "divide r1 by r2, save results in r1");                
-                break;       
+                this.instruction(`${div} R1 R2`, "divide r1 by r2, save results in r1");                
+                break;   
+            }    
             case Nodes.BoundBinaryOperatorKind.Equals:        
                 binpreamble();                
                 this.instruction("CMP R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");

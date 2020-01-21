@@ -215,9 +215,9 @@ export function POPb(cpu : CPU, instruction:Instruction, memory: Memory, registe
     registers.set(instruction.destinationRegister, value);
 }
 
-export function POPf(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    registers.SP += 8;
+export function POPf(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {    
     const value = memory.readFloat64(registers.SP);
+    registers.SP += 8;
     registers.set(instruction.destinationRegister, value);
 }
 

@@ -380,7 +380,83 @@ func main() : int
     // read from global
     return a;
 }`, 5
+],
+[
+`
+var a1 : float = 1.2;
+var a2 : float = 2.3;
+var a3 : float = 3.4;
+var a4 : float = 4.5;
+var b1 : float;
+var b2 : float;
+var b3 : float;
+var b4 : float; 
+func main() : float
+{
+    b1 = 1.2;
+    b2 = 2.3;
+    b3 = 3.4;
+    b4 = 4.5;
+
+    return a1;// + b4;
+}`, 1.2
+],
+[`func main() : float
+{
+    return 1.2 + 2.3;
+}`, 3.5
+],
+[`func main() : bool
+{
+    return true;
+}`, 1
+],
+[`func main() : bool
+{
+    return false;
+}`, 0
+],
+[`func main() : bool
+{
+    return 1.2 < 2.0;
+}`, 1
+],
+[`func main() : bool
+{
+    return 1.2 > 2.0;
+}`, 0
+],
+[`func main() : bool
+{
+    return 1.2 == 2.0;
+}`, 0
+],
+[`func main() : bool
+{
+    return 2.0 == 2.0;
+}`, 1
+],
+[`func main() : bool
+{
+    return 2.0 < 2.0;
+}`, 0
+],
+[`func main() : bool
+{
+    return 2.0 > 2.0;
+}`, 0
+],
+[`func main() : bool
+{
+    return 2.0 >= 2.0;
+}`, 1
+],
+[`func main() : bool
+{
+    return 2.0 <= 2.0;
+}`, 1
 ]
+
 /*
 [`func main() : float {
     // floating point division
