@@ -412,7 +412,11 @@ export default class Binder
                 }
                 else
                 {
-                    if(returnType.type == ValueType.Unit)
+                    if(rs.expression.kind === Nodes.BoundNodeKind.ErrorExpression)
+                    {
+                        // already dealt with
+                    }
+                    else if(returnType.type == ValueType.Unit)
                         this.diagnostics.reportFunctionReturnsVoid(identifier.lexeme, rs.span);
                     else if(!rs.expression.type.isAssignableTo(returnType))
                         this.diagnostics.reportNotAssignableToType(rs.expression.type, returnType, rs.span);
@@ -705,17 +709,45 @@ export default class Binder
 
     private BindBinaryExpression(syntax : AST.BinaryExpressionSyntax) : Nodes.BoundExpression
     {
-        const boundLeft =  this.BindExpression(syntax.left);
-        const boundRight = this.BindExpression(syntax.right);
+        let boundLeft =  this.BindExpression(syntax.left);
+        let boundRight = this.BindExpression(syntax.right);
 
-        const boundOperator = Nodes.BoundBinaryOperator.Bind(syntax.operatorToken.kind, boundLeft.type, boundRight.type);
+        let boundOperator = Nodes.BoundBinaryOperator.Bind(syntax.operatorToken.kind, boundLeft.type, boundRight.type);
 
         if (boundOperator == null)
         {
-            this.diagnostics.reportUndefinedBinaryOperator(syntax.operatorToken.span, 
-                syntax.operatorToken.lexeme, boundLeft.type, boundRight.type);
+            const leftToRight = this.BindConversion(syntax.span(), boundLeft, boundRight.type, false, false);
 
-            return boundLeft;
+            if(leftToRight.kind == Nodes.BoundNodeKind.ErrorExpression)
+            {            
+                const rightToLeft = this.BindConversion(syntax.span(), boundRight, boundLeft.type, false, false);
+
+                if(rightToLeft.kind == Nodes.BoundNodeKind.ErrorExpression)
+                {
+                    this.diagnostics.reportUndefinedBinaryOperator(syntax.operatorToken.span, 
+                        syntax.operatorToken.lexeme, boundLeft.type, boundRight.type);                            
+                    
+                    return boundLeft;
+                }
+                else
+                {
+                    boundRight = rightToLeft;
+                }
+            }
+            else
+            {                
+                boundLeft = leftToRight;
+            }
+
+            boundOperator = Nodes.BoundBinaryOperator.Bind(syntax.operatorToken.kind, boundLeft.type, boundRight.type);
+
+            if(boundOperator == null)
+            {
+                this.diagnostics.reportUndefinedBinaryOperator(syntax.operatorToken.span, 
+                    syntax.operatorToken.lexeme, boundLeft.type, boundRight.type);                            
+                
+                return boundLeft;
+            }
         }
 
         return new Nodes.BoundBinaryExpression(boundLeft, boundOperator, boundRight);        
@@ -755,21 +787,23 @@ export default class Binder
     {
         return new Nodes.BoundExpressionStatement(new Nodes.BoundErrorExpression());
     }
-
     
-    private BindConversion(diagnosticSpan : TextSpan, expression : Nodes.BoundExpression, type : Type, allowExplicit : boolean = false) : Nodes.BoundExpression
+    private BindConversion(diagnosticSpan : TextSpan, expression : Nodes.BoundExpression, type : Type, allowExplicit : boolean = false, logDiagnostics : boolean = true) : Nodes.BoundExpression
     {
         const conversion = Conversion.classifyConversion(expression.type, type);
 
         if (!conversion.Exists)
         {
-            this.diagnostics.reportCannotConvert(diagnosticSpan, expression.type, type);
+            if(logDiagnostics)
+                this.diagnostics.reportCannotConvert(diagnosticSpan, expression.type, type);
             return new Nodes.BoundErrorExpression();
         }
 
         if (!allowExplicit && conversion.IsExplicit)
         {
-            this.diagnostics.reportCannotConvertImplicitly(diagnosticSpan, expression.type, type);
+            if(logDiagnostics)
+                this.diagnostics.reportCannotConvertImplicitly(diagnosticSpan, expression.type, type);
+            return new Nodes.BoundErrorExpression();
         }
 
         if (conversion.IsIdentity)

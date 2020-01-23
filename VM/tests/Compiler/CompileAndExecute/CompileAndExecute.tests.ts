@@ -455,9 +455,7 @@ func main() : float
 {
     return 2.0 <= 2.0;
 }`, 1
-]
-
-/*
+],
 [`func main() : float {
     // floating point division
     return 5.0 / 2;
@@ -481,7 +479,7 @@ func main() : float
 [`func main() : string {
     return string(1==2);
 }`,
-`false`] */
+`false`]
     ].forEach((item) => {
         it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
             const text = item[0] as string;

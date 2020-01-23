@@ -44,8 +44,13 @@ export default class Conversion
              to.equals(PredefinedValueTypes.Float))
             return new Conversion(true, false, true, PredefinedValueTypes.Float);
 
-        if(from.equals(PredefinedValueTypes.Float) && to.equals(PredefinedValueTypes.Integer))
-            return Conversion.Explicit;
+        if (from.equals(PredefinedValueTypes.Float))
+        {
+            if (to.equals(PredefinedValueTypes.Boolean) || 
+                to.equals(PredefinedValueTypes.Integer) ||
+                to.equals(PredefinedValueTypes.String) )
+                return Conversion.Explicit;
+        }
 
         return Conversion.None;
     }

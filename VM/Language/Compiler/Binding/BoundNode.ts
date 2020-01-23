@@ -6,6 +6,7 @@ import { Identifier } from "../../Scope/DefinitionScope";
 import TextSpan from "../Syntax/Text/TextSpan";
 import { IBoundNodeVisitor } from "./IBoundNodeVisitor";
 import { ValueType } from "../../Types/ValueType";
+import Conversion from "./Conversion";
 
 export enum BoundNodeKind {
     VariableDeclaration,

@@ -466,7 +466,75 @@ export default class CodeGenerator
                 this.writeBinaryExpression(expression as Nodes.BoundBinaryExpression);   
                 break;
             }
+            case Nodes.BoundNodeKind.ConversionExpression:
+            {
+                this.writeConversionExpression(expression as Nodes.BoundConversionExpression);   
+                break;
+            }            
+            default:
+            {
+                throw new Error(`Unexpected Expression Type ${expression.kind}`);
+            }
         }
+    }
+
+    writeConversionExpression(expression: Nodes.BoundConversionExpression) : void
+    {
+        // if identity conversion
+        if(expression.type.type == expression.expression.type.type)
+        {
+            this.writeExpression(expression.expression);
+            return;
+        }
+
+        // if converting to string
+        if(expression.type.type === ValueType.String)
+        {
+            throw new Error(`Conversion not implemented`);
+        }
+
+        // from type
+        switch(expression.type.type)
+        {
+            case ValueType.Int:
+            {
+                if(expression.expression.type.type == ValueType.Float)
+                {
+                    this.writeExpression(expression.expression);
+                    this.instruction("TRUNC R1", "CONVERT FROM FLOAT TO INT");
+                    return;
+                }
+                break;
+            }
+            case ValueType.Float:
+            {
+                if(expression.expression.type.type == ValueType.Int)
+                {
+                    this.writeExpression(expression.expression);
+                    this.comment("CONVERT FROM INT TO FLOAT");
+                    return;
+                }
+                break;
+            }                
+            case ValueType.Boolean:
+            {
+                if(expression.expression.type.type == ValueType.Int)
+                {
+                    this.writeExpression(expression.expression);
+                    this.comment("CONVERT FROM BOOL TO INT");
+                    return;
+                }                
+                else if(expression.expression.type.type == ValueType.Float)
+                {
+                    this.writeExpression(expression.expression);
+                    this.comment("CONVERT FROM BOOL TO FLOAT");
+                    return;
+                }     
+                break;                       
+            }
+        }
+
+        throw new Error("Unexpected conversion");           
     }
     
     numberedLiteral(type: ValueType, namePrefix: string, value: any, comment: string) {

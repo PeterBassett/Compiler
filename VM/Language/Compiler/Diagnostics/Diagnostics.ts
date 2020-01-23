@@ -116,11 +116,11 @@ export class Diagnostics
     }
 
     public reportCannotConvert(span: TextSpan, fromType: Type, targetType: Type): void {        
-        this.report(`Cannot convert type '{fromType}' to '{targetType}'`, DiagnosticType.CannotConvertType, span);
+        this.report(`Cannot convert type '${fromType.name}' to '${targetType.name}'`, DiagnosticType.CannotConvertType, span);
     }        
  
-    public reportCannotConvertImplicitly(span: TextSpan, type: Type, targetType: Type) {
-        this.report(`Cannot implicitly convert type '{fromType}' to '{targetType}'`, DiagnosticType.CannotConvertType, span);
+    public reportCannotConvertImplicitly(span: TextSpan, fromType: Type, targetType: Type) {
+        this.report(`Cannot implicitly convert type '${fromType.name}' to '${targetType.name}'`, DiagnosticType.CannotConvertType, span);
     }
 
     public reportUndefinedBinaryOperator(span: TextSpan, operator: string, leftType: Type, rightType: Type): void {

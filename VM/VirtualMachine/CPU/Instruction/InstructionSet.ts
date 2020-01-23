@@ -24,45 +24,36 @@ export enum OpCodes {
     MVIw,
     MVIb,
     MVIf,
-
     LDR,
     LDRw,
     LDRb,
     LDRf,
-    
     STR,
     STRw,
     STRb,
     STRf,
-
     MOV,
     MOVw,
     MOVb,
     MOVf,
-
     PUSH,
     PUSHw,
     PUSHb,
     PUSHf,
-
     POP,
     POPw,
     POPb,
     POPf,
-
     INT,
-
     CMPr,
     CMPZ,
     CMP,
-    
     SETE,
     SETNE,
     SETLT,
     SETGT,
     SETLTE,
     SETGTE,
-
     JMP,
     JMR,
     JLT,
@@ -70,10 +61,8 @@ export enum OpCodes {
     JEQ,
     JNE,
     JNZ,
-
     CALL,
     RET,
-
     ADD,
     SUB,
     MUL,
@@ -82,24 +71,19 @@ export enum OpCodes {
     SUBf,
     MULf,
     DIVf,
-    NEG,
-    
+    NEG,    
     SWAP,
-
     INC,
     DEC,
-
     LSH,
     RSH,
-
     AND,
-    OR ,
+    OR,
     XOR,
     NOT,
-        
+    TRUNC,
     LOOP,
-
-    HALT
+    HALT    
 }
 
 const reg = OperandType.reg;
@@ -109,6 +93,7 @@ const regOrPointer = OperandType.regOrPointer;
 const regOrPointerOrValue = OperandType.regOrPointerOrValue; 
 
 const  InstructionSet : InstructionSpecification[] = [
+
     new InstructionSpecification("LDR",    OpCodes.LDR,  [reg, regOrValue]),
     new InstructionSpecification("LDRw",   OpCodes.LDRw, [reg, regOrValue]),
     new InstructionSpecification("LDRb",   OpCodes.LDRb, [reg, regOrValue]),
@@ -184,7 +169,8 @@ const  InstructionSet : InstructionSpecification[] = [
     new InstructionSpecification("NOT",     OpCodes.NOT, [regOrPointer]),
     new InstructionSpecification("SWAP",     OpCodes.SWAP, [regOrPointer, regOrPointer]),
     new InstructionSpecification("LOOP",     OpCodes.LOOP, [reg, value]),
-
+    new InstructionSpecification("TRUNC",     OpCodes.TRUNC, [reg]),
+    
     new InstructionSpecification("HALT",    OpCodes.HALT, [])
 ];
 

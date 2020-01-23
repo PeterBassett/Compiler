@@ -113,7 +113,38 @@ func getANumber(a : int) : int
 }
 func main() : int {
     return getANumber(3) * 5;
-}`, 20]
+}`, 20]/*,
+[`
+function MandelbrotFractionalEscapeTime(cr : float, ci : float) : float
+{            
+    var zr = cr;
+    var zi = ci;
+    let MaxIterations = 20
+    let log2 = Math_Log(2);
+
+    for (var counter in 0 to MaxIterations)
+    {
+        var r2 : float = zr * zr;
+        var i2 : float = zi * zi;
+
+        if (r2 + i2 > 4.0)
+        {
+            var log_zn = Math_Log(r2 + i2) / 2.0;
+            var nu = Math_Log(log_zn / log2) / log2;
+
+            return counter + 1 - nu;                    
+        }
+
+        zi = 2.0 * zr * zi + ci;
+        zr = r2 - i2 + cr;
+    }
+
+    return float(MaxIterations) - 1;
+}
+
+func main() : int {
+    return MandelbrotFractionalEscapeTime(1.0, 1.0);
+}`, 20.0]*/
 ].forEach((item) => {
         it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
             let text = item[0] as string;

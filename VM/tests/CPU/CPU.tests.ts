@@ -1029,6 +1029,28 @@ describe("A CPU", () => {
         expect(registers.R3).toEqual(0);
     });     
 
+    it("has a TRUNC instruction which converts a number to a 32-bit integer in a destination register (R2) " +
+        "and stores the result in the destination register", () => {        
+        instruction(Op.MVI, 0, Reg.R2, 13.5);
+        instruction(Op.TRUNC, 0, Reg.R2, 0); 
+
+        cpu.step();
+        cpu.step();
+
+        expect(registers.R2).toEqual(13);
+    });    
+
+    it("has a TRUNC instruction which converts a number to a 32-bit integer in a destination register (R2) " +
+        "and stores the result in the destination register", () => {        
+        instruction(Op.MVI, 0, Reg.R2, 900719925474099.5);
+        instruction(Op.TRUNC, 0, Reg.R2, 0); 
+
+        cpu.step();
+        cpu.step();
+
+        expect(registers.R2).toEqual(858993459);
+    });        
+
     function testFlagsOnMathOp(op : number, operand1:number, operand2:number, expectedZero : boolean, expectedNeg : boolean)
     {
         let op1Negative = operand1 < 0;
