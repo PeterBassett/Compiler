@@ -502,6 +502,18 @@ describe("A CPU", () => {
         expect(registers.R1).toEqual(-13);
     });
 
+    it("has an NEG instruction which numerically negates the destination register (R1) " +
+        "and stores the result in the destination register", () => {
+        setup(false);
+        instruction(Op.MVI, 0, Reg.R1, 13);
+        instruction(Op.NEG, 0, Reg.R1, 0); 
+
+        cpu.step();
+        cpu.step();
+
+        expect(registers.R1).toEqual(-13);
+    });
+
     it("has an INC instruction which adds 1 to the destination register (R1) " +
        "and stores the result in the destination register", () => {
         instruction(Op.MVI, 0, Reg.R1, 13);
