@@ -35,39 +35,192 @@ const MemoryAddressBits = 16;
 const MemoryAddressMask = Mask(MemoryAddressBits);
 const MemoryAddress32BitMask = MemoryAddressMask << MemoryAddressOffset;
 
+export type encoder = (opcode : number, 
+    opcodeMode : OpcodeModes, 
+    sourceRegister : number, 
+    destinationRegister : number, 
+    destinationMemoryAddress : number,
+    sourceMemoryAddress : number) => Uint8Array; 
+
+export type decoder = (ram : RAM, offset : number) => { instruction: Instruction, length: number } ;
+
+class InstructionSetCoder
+{
+    constructor(
+        public readonly instructions : string[], 
+        public readonly coder : EncoderDecoder) 
+    {        
+    }
+}
+
+class EncoderDecoder 
+{
+    constructor(
+        public readonly encoder : encoder,
+        public readonly decoder : decoder) 
+    {        
+    }
+}
+
+
+function writeFloatAtPosition(array : Uint8Array, value : number, offset : number) : void
+{
+    const view = new DataView(array.buffer, 0, array.byteLength);
+    view.setFloat64(offset, value, true);        
+}
+
+function readFloatAtPosition(array : Uint8Array, offset : number) : number
+{
+    const view = new DataView(array.buffer, 0, array.byteLength);
+    return view.getFloat64(offset, true);
+}
+
+function decodeSingleByteMemoryAddress(ram : RAM, offset : number) : { instruction: Instruction, length: number }
+{
+    const array = ram.blitReadBytes(offset, 2);
+
+    const opcode = array[0];
+    const address = array[1];
+
+    return { 
+        instruction : new Instruction(opcode, 
+            OpcodeModes.Default, 
+            0, 0, address, 0),
+        length : 2
+    };
+}
+
+function encodeSingleByteMemoryAddress(opcode : number, 
+    opcodeMode : OpcodeModes, 
+    sourceRegister : number, 
+    destinationRegister : number, 
+    destinationMemoryAddress : number,
+    sourceMemoryAddress : number): Uint8Array
+{
+    const array = new Uint8Array(2);        
+    array[0] = opcode;
+    array[1] = sourceMemoryAddress;
+
+    return array;
+}
+const SingleByteMemoryAddressEncoder = new EncoderDecoder(encodeSingleByteMemoryAddress, decodeSingleByteMemoryAddress);
+
+function encodeSingleRegisterInstruction(opcode : number, 
+    opcodeMode : OpcodeModes, 
+    sourceRegister : number, 
+    destinationRegister : number, 
+    destinationMemoryAddress : number,
+    sourceMemoryAddress : number): Uint8Array
+{
+    const array = new Uint8Array(2);        
+    array[0] = opcode;
+    array[1] = destinationRegister;
+
+    return array;
+}
+ 
+function decodeSingleRegisterInstruction(ram : RAM, offset : number) : { instruction: Instruction, length: number }
+{
+    const array = ram.blitReadBytes(offset, 2);
+
+    const opcode = array[0];
+    const destinationRegister = array[1];
+
+    return { 
+        instruction : new Instruction(opcode, 
+            OpcodeModes.Default, 
+            0, destinationRegister, 0, 0),
+        length : 2
+    };
+}
+const SingleRegisterInstructionEncoder = new EncoderDecoder(encodeSingleRegisterInstruction, decodeSingleRegisterInstruction);
+
+function encodeEightByteMemoryAddress(opcode : number, 
+    opcodeMode : OpcodeModes, 
+    sourceRegister : number, 
+    destinationRegister : number, 
+    destinationMemoryAddress : number,
+    sourceMemoryAddress : number): Uint8Array
+{
+    const array = new Uint8Array(10);        
+    array[0] = opcode;
+    array[1] = destinationRegister;
+
+    writeFloatAtPosition(array, sourceMemoryAddress, 2);
+
+    return array;
+}
+    
+function decodeEightByteMemoryAddress(ram : RAM, offset : number) : { instruction: Instruction, length: number }
+{
+    const array = ram.blitReadBytes(offset, 10);
+
+    const opcode = array[0];
+    const destinationRegister = array[1];
+    const memoryAddress = readFloatAtPosition(array, 2);
+
+    const mode = new OpcodeModes(
+        OpcodeMode.Register,
+        OpcodeMode.Default
+    );
+
+    return { 
+        instruction : new Instruction(opcode, 
+            mode,
+            0, destinationRegister, 0, memoryAddress),
+        length : 10
+    };
+}
+const EightByteMemoryAddressInstructionEncoder = new EncoderDecoder(encodeEightByteMemoryAddress, decodeEightByteMemoryAddress);
+
+function encodeSingleByteInstruction(opcode : number, 
+    opcodeMode : OpcodeModes, 
+    sourceRegister : number, 
+    destinationRegister : number, 
+    destinationMemoryAddress : number,
+    sourceMemoryAddress : number): Uint8Array
+{
+    const array = new Uint8Array(1);        
+    array[0] = opcode;
+    return array;
+}
+
+function decodeSingleByteInstruction(ram : RAM, offset : number) : { instruction: Instruction, length: number }
+{
+    const array = ram.blitReadBytes(offset, 1);
+
+    const opcode = array[0];
+
+    return { 
+        instruction : new Instruction(opcode, 
+            OpcodeModes.Default, 
+            0, 0, 0, 0),
+        length : 1
+    };
+}
+const SingleByteInstructionEncoder = new EncoderDecoder(encodeSingleByteInstruction, decodeSingleByteInstruction);
+
 export default class InstructionCoderVariable implements InstructionCoder
 {
-    static coderMap : { [mnemonic :  string] : { 
-        encoder : (opcode : number, 
-            opcodeMode : OpcodeModes, 
-            sourceRegister : number, 
-            destinationRegister : number, 
-            destinationMemoryAddress : number,
-            sourceMemoryAddress : number) => Uint8Array, 
-        decoder : (ram : RAM, offset : number) => { instruction: Instruction, length: number }     
-    } } = {
-        "HALT" : {
-            encoder : InstructionCoderVariable.encodeSingleByteInstruction,
-            decoder : InstructionCoderVariable.decodeSingleByteInstruction
-        },
-        "RET" : {
-            encoder : InstructionCoderVariable.encodeSingleByteInstruction,
-            decoder : InstructionCoderVariable.decodeSingleByteInstruction
-        },
-        "MVIb" : {
-            encoder : InstructionCoderVariable.encodeSingleByteMemoryAddress,
-            decoder : InstructionCoderVariable.decodeSingleByteMemoryAddress
-        },
-        "NEG" : {
-            encoder : InstructionCoderVariable.encodeSingleRegisterInstruction,
-            decoder : InstructionCoderVariable.decodeSingleRegisterInstruction
-        },
-        "MVIf" : {
-            encoder : InstructionCoderVariable.encodeEightByteMemoryAddress,
-            decoder : InstructionCoderVariable.decodeEightByteMemoryAddress
+    static instructionEncoderList : InstructionSetCoder[] = [
+        new InstructionSetCoder(["HALT", "RET"], SingleByteInstructionEncoder),
+        new InstructionSetCoder(["NEG", "NOT", "INC", "DEC"], SingleRegisterInstructionEncoder),
+        new InstructionSetCoder(["MVIf"], EightByteMemoryAddressInstructionEncoder)
+    ];
+
+    static instructionEncoderMap : { [mnemonic :  string] : EncoderDecoder };
+
+    private static _staticInitialiser = (() => {
+        InstructionCoderVariable.instructionEncoderMap = {};
+        for(let item of InstructionCoderVariable.instructionEncoderList)
+        {
+            for(let name of item.instructions)
+            {   
+                InstructionCoderVariable.instructionEncoderMap[name] = item.coder;
+            }
         }
-    }
-    
+    })();
+
     static validateInstructionPart(part : number, max : number, name : string) : void
     {
         if(part < 0)
@@ -86,8 +239,8 @@ export default class InstructionCoderVariable implements InstructionCoder
     {        
         var instructionSpec = InstructionSet.filter( i => i.opcode === opcode )[0];
 
-        if(!!instructionSpec && InstructionCoderVariable.coderMap[instructionSpec.name])
-            return InstructionCoderVariable.coderMap[instructionSpec.name].encoder(opcode, 
+        if(!!instructionSpec && InstructionCoderVariable.instructionEncoderMap[instructionSpec.name])
+            return InstructionCoderVariable.instructionEncoderMap[instructionSpec.name].encoder(opcode, 
                                                                                     opcodeMode, 
                                                                                     sourceRegister, 
                                                                                     destinationRegister,
@@ -108,8 +261,8 @@ export default class InstructionCoderVariable implements InstructionCoder
         var opcode = array[0];
         var instructionSpec = InstructionSet.filter( i => i.opcode === opcode )[0];
 
-        if(!!instructionSpec && InstructionCoderVariable.coderMap[instructionSpec.name])
-            return InstructionCoderVariable.coderMap[instructionSpec.name].decoder(ram, offset);
+        if(!!instructionSpec && InstructionCoderVariable.instructionEncoderMap[instructionSpec.name])
+            return InstructionCoderVariable.instructionEncoderMap[instructionSpec.name].decoder(ram, offset);
 
         return InstructionCoderVariable.decodeDefaultInstruction(ram, offset);        
     }
@@ -214,139 +367,6 @@ export default class InstructionCoderVariable implements InstructionCoder
                 destinationMemoryAddress,
                 sourceMemoryAddress),
             length : 12
-        };
-    }
-
-    static writeFloatAtPosition(array : Uint8Array, value : number, offset : number) : void
-    {
-        const view = new DataView(array.buffer, 0, array.byteLength);
-        view.setFloat64(offset, value, true);        
-    }
-
-    static readFloatAtPosition(array : Uint8Array, offset : number) : number
-    {
-        const view = new DataView(array.buffer, 0, array.byteLength);
-        return view.getFloat64(offset, true);
-    }
-
-    static decodeSingleByteMemoryAddress(ram : RAM, offset : number) : { instruction: Instruction, length: number }
-    {
-        const array = ram.blitReadBytes(offset, 2);
-
-        const opcode = array[0];
-        const address = array[1];
-
-        return { 
-            instruction : new Instruction(opcode, 
-                OpcodeModes.Default, 
-                0, 0, address, 0),
-            length : 2
-        };
-    }
-
-    static encodeSingleByteMemoryAddress(opcode : number, 
-        opcodeMode : OpcodeModes, 
-        sourceRegister : number, 
-        destinationRegister : number, 
-        destinationMemoryAddress : number,
-        sourceMemoryAddress : number): Uint8Array
-    {
-        const array = new Uint8Array(2);        
-        array[0] = opcode;
-        array[1] = sourceMemoryAddress;
-
-        return array;
-    }
-
-    static encodeSingleRegisterInstruction(opcode : number, 
-        opcodeMode : OpcodeModes, 
-        sourceRegister : number, 
-        destinationRegister : number, 
-        destinationMemoryAddress : number,
-        sourceMemoryAddress : number): Uint8Array
-    {
-        const array = new Uint8Array(2);        
-        array[0] = opcode;
-        array[1] = destinationRegister;
-
-        return array;
-    }
-     
-    static decodeSingleRegisterInstruction(ram : RAM, offset : number) : { instruction: Instruction, length: number }
-    {
-        const array = ram.blitReadBytes(offset, 2);
-
-        const opcode = array[0];
-        const destinationRegister = array[1];
-
-        return { 
-            instruction : new Instruction(opcode, 
-                OpcodeModes.Default, 
-                0, destinationRegister, 0, 0),
-            length : 2
-        };
-    }
-
-    static encodeEightByteMemoryAddress(opcode : number, 
-        opcodeMode : OpcodeModes, 
-        sourceRegister : number, 
-        destinationRegister : number, 
-        destinationMemoryAddress : number,
-        sourceMemoryAddress : number): Uint8Array
-    {
-        const array = new Uint8Array(10);        
-        array[0] = opcode;
-        array[1] = destinationRegister;
-
-        InstructionCoderVariable.writeFloatAtPosition(array, sourceMemoryAddress, 2);
-
-        return array;
-    }
-        
-    static decodeEightByteMemoryAddress(ram : RAM, offset : number) : { instruction: Instruction, length: number }
-    {
-        const array = ram.blitReadBytes(offset, 10);
-
-        const opcode = array[0];
-        const destinationRegister = array[1];
-        const memoryAddress = InstructionCoderVariable.readFloatAtPosition(array, 2);
-
-        const mode = new OpcodeModes(
-            OpcodeMode.Register,
-            OpcodeMode.Default
-        );
-
-        return { 
-            instruction : new Instruction(opcode, 
-                mode,
-                0, destinationRegister, 0, memoryAddress),
-            length : 10
-        };
-    }
-
-    static encodeSingleByteInstruction(opcode : number, 
-        opcodeMode : OpcodeModes, 
-        sourceRegister : number, 
-        destinationRegister : number, 
-        destinationMemoryAddress : number,
-        sourceMemoryAddress : number): Uint8Array
-    {
-        const array = new Uint8Array(1);        
-        array[0] = opcode;
-        return array;
-    }
-
-    static decodeSingleByteInstruction(ram : RAM, offset : number) : { instruction: Instruction, length: number }
-    {
-        const array = ram.blitReadBytes(offset, 1);
-
-        const opcode = array[0];
-
-        return { 
-            instruction : new Instruction(opcode, 
-                OpcodeModes.Default, 
-                0, 0, 0, 0),
-            length : 1
         };
     }
 }

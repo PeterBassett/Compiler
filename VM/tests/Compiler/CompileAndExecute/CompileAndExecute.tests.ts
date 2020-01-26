@@ -467,7 +467,7 @@ func main() : float
 [`func main() : int {
     return int(5.5);
 }`,
-5],
+5]/*,
 [`func main() : string {
     return string(3.14159);
 }`,
@@ -479,7 +479,7 @@ func main() : float
 [`func main() : string {
     return string(1==2);
 }`,
-`false`]
+`false`]*/
     ].forEach((item) => {
         it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
             const text = item[0] as string;

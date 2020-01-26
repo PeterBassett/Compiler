@@ -482,10 +482,11 @@ export default class CodeGenerator
 
     writeConversionExpression(expression: Nodes.BoundConversionExpression) : void
     {
+        this.writeExpression(expression.expression);
+
         // if identity conversion
         if(expression.type.type == expression.expression.type.type)
         {
-            this.writeExpression(expression.expression);
             return;
         }
 
@@ -494,18 +495,16 @@ export default class CodeGenerator
         {
             this.comment("CONVERT TO STRING -- NOT IMPLEMENTED");
             return;
-            
-            //throw new Error(`Conversion not implemented`);
         }
 
-        // from type
+        // to type
         switch(expression.type.type)
         {
             case ValueType.Int:
             {
+                // from type
                 if(expression.expression.type.type == ValueType.Float)
                 {
-                    this.writeExpression(expression.expression);
                     this.instruction("TRUNCf R1", "CONVERT FROM FLOAT TO INT");
                     return;
                 }
@@ -513,9 +512,9 @@ export default class CodeGenerator
             }
             case ValueType.Float:
             {
+                // from type
                 if(expression.expression.type.type == ValueType.Int)
                 {
-                    this.writeExpression(expression.expression);
                     this.comment("CONVERT FROM INT TO FLOAT");
                     return;
                 }
@@ -523,15 +522,14 @@ export default class CodeGenerator
             }                
             case ValueType.Boolean:
             {
+                // from type
                 if(expression.expression.type.type == ValueType.Int)
                 {
-                    this.writeExpression(expression.expression);
                     this.comment("CONVERT FROM BOOL TO INT");
                     return;
                 }                
                 else if(expression.expression.type.type == ValueType.Float)
                 {
-                    this.writeExpression(expression.expression);
                     this.comment("CONVERT FROM BOOL TO FLOAT");
                     return;
                 }     
