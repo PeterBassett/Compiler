@@ -468,6 +468,8 @@ export default class CodeGenerator
             }
             case Nodes.BoundNodeKind.ConversionExpression:
             {
+                //let expr = expression as Nodes.BoundConversionExpression;
+                //this.writeExpression(expr.expression);
                 this.writeConversionExpression(expression as Nodes.BoundConversionExpression);   
                 break;
             }            
@@ -490,7 +492,10 @@ export default class CodeGenerator
         // if converting to string
         if(expression.type.type === ValueType.String)
         {
-            throw new Error(`Conversion not implemented`);
+            this.comment("CONVERT TO STRING -- NOT IMPLEMENTED");
+            return;
+            
+            //throw new Error(`Conversion not implemented`);
         }
 
         // from type
@@ -501,7 +506,7 @@ export default class CodeGenerator
                 if(expression.expression.type.type == ValueType.Float)
                 {
                     this.writeExpression(expression.expression);
-                    this.instruction("TRUNC R1", "CONVERT FROM FLOAT TO INT");
+                    this.instruction("TRUNCf R1", "CONVERT FROM FLOAT TO INT");
                     return;
                 }
                 break;

@@ -113,7 +113,7 @@ export function MVIw(cpu : CPU, instruction:Instruction, memory: Memory, registe
 }
 
 export function MVIf(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-    const hardCodedValue = instruction.sourceMemoryAddress & 0xffffffff;
+    const hardCodedValue = instruction.sourceMemoryAddress;
     registers.set(instruction.destinationRegister, hardCodedValue);    
 }
 
@@ -490,7 +490,7 @@ export function SETGTE(cpu : CPU, instruction:Instruction, memory: Memory, regis
     registers.set(instruction.destinationRegister, result);
 }
 
-export function TRUNC(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
+export function TRUNCf(cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
     let result = registers.get(instruction.destinationRegister);
     result = result - result % 1;
     registers.set(instruction.destinationRegister, result);

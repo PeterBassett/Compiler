@@ -6,25 +6,35 @@ import InstructionCoder32Bit, { encodeInstructionOperand } from "../../VirtualMa
 import { OpCodes as Op, Registers as Reg } from "../../VirtualMachine/CPU/Instruction/InstructionSet";
 import Flags from "../../VirtualMachine/CPU/Flags";
 import { OpcodeModes, OpcodeMode } from "../../VirtualMachine/CPU/Instruction/Instruction";
+import InstructionCoderVariable from "../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
+import InstructionCoder from "../../VirtualMachine/CPU/Instruction/InstructionCoder";
 
 describe("A CPU", () => {
     let ram : RAM;
     let registers : RegisterBank;
     let flags : Flags;
-    let instructionCoder : InstructionCoder32Bit;
+    let instructionCoder : InstructionCoder;
     let ramSize = 1 << 16;
     let cpu : CPU;
     let ip : number;
-    
-    beforeEach(() => {
+
+    function setup(predictableAddresses : boolean = true)
+    {
         ram = new RAM(ramSize);
         registers = new RegisterBank(ramSize);
         flags = new Flags();
-        instructionCoder = new InstructionCoder32Bit();
+
+        if(predictableAddresses)
+            instructionCoder = new InstructionCoder32Bit();
+        else
+            instructionCoder = new InstructionCoderVariable();
+        
         ip = 0;
 
-        cpu = new CPU(ram, registers, flags, instructionCoder);
-    });
+        cpu = new CPU(ram, registers, flags, instructionCoder);    
+    }
+
+    beforeEach(() => setup());
 
     function instruction(opcode : number,
         sourceRegister : number,
@@ -1029,10 +1039,22 @@ describe("A CPU", () => {
         expect(registers.R3).toEqual(0);
     });     
 
-    it("has a TRUNC instruction which converts a number to a 32-bit integer in a destination register (R2) " +
+    it("has an MVIf instruction which loads to a 64-bit float into a destination register (R2)", () => {        
+        setup(false);
+
+        instruction(Op.MVIf, 0, Reg.R2, 13.5);
+
+        cpu.step();
+
+        expect(registers.R2).toEqual(13.5);
+    });    
+
+    it("has a TRUNCf instruction which converts a number to a 32-bit integer in a destination register (R2) " +
         "and stores the result in the destination register", () => {        
-        instruction(Op.MVI, 0, Reg.R2, 13.5);
-        instruction(Op.TRUNC, 0, Reg.R2, 0); 
+        setup(false);
+
+        instruction(Op.MVIf, 0, Reg.R2, 13.5);
+        instruction(Op.TRUNCf, 0, Reg.R2, 0); 
 
         cpu.step();
         cpu.step();
@@ -1040,15 +1062,17 @@ describe("A CPU", () => {
         expect(registers.R2).toEqual(13);
     });    
 
-    it("has a TRUNC instruction which converts a number to a 32-bit integer in a destination register (R2) " +
+    it("has a TRUNCf instruction which converts a number to a 32-bit integer in a destination register (R2) " +
         "and stores the result in the destination register", () => {        
-        instruction(Op.MVI, 0, Reg.R2, 900719925474099.5);
-        instruction(Op.TRUNC, 0, Reg.R2, 0); 
+        setup(false);
+
+        instruction(Op.MVIf, 0, Reg.R2, 900719925474099.5);
+        instruction(Op.TRUNCf, 0, Reg.R2, 0); 
 
         cpu.step();
         cpu.step();
 
-        expect(registers.R2).toEqual(858993459);
+        expect(registers.R2).toEqual(900719925474099);
     });        
 
     function testFlagsOnMathOp(op : number, operand1:number, operand2:number, expectedZero : boolean, expectedNeg : boolean)

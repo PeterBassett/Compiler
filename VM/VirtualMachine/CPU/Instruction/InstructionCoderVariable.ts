@@ -3,6 +3,7 @@ import InstructionCoder from "./InstructionCoder";
 import RAM from "../../Memory/RAM";
 import { MapOpCodeToExecutor, InstructionSet } from "./InstructionSet";
 import { decodeInstructionOperandToValue, Endpoint, encodeInstructionOperand, encodeOpCodeModes } from "./InstructionCoder32Bit";
+import { memo } from "react";
 
 function Mask(bits : number) : number
 {
@@ -48,6 +49,18 @@ export default class InstructionCoderVariable implements InstructionCoder
         "HALT" : {
             encoder : InstructionCoderVariable.encodeSingleByteInstruction,
             decoder : InstructionCoderVariable.decodeSingleByteInstruction
+        },
+        "RET" : {
+            encoder : InstructionCoderVariable.encodeSingleByteInstruction,
+            decoder : InstructionCoderVariable.decodeSingleByteInstruction
+        },
+       /* "MVIb" : {
+            encoder : InstructionCoderVariable.encodeSingleByteMemoryAddress,
+            decoder : InstructionCoderVariable.decodeSingleByteMemoryAddress
+        },*/
+        "MVIf" : {
+            encoder : InstructionCoderVariable.encodeEightByteMemoryAddress,
+            decoder : InstructionCoderVariable.decodeEightByteMemoryAddress
         }
     }
     
@@ -197,6 +210,55 @@ export default class InstructionCoderVariable implements InstructionCoder
                 destinationMemoryAddress,
                 sourceMemoryAddress),
             length : 12
+        };
+    }
+
+    static writeFloatAtPosition(array : Uint8Array, value : number, offset : number) : void
+    {
+        const view = new DataView(array.buffer, 0, array.byteLength);
+        view.setFloat64(offset, value, true);        
+    }
+
+    static readFloatAtPosition(array : Uint8Array, offset : number) : number
+    {
+        const view = new DataView(array.buffer, 0, array.byteLength);
+        return view.getFloat64(offset, true);
+    }
+
+    static encodeEightByteMemoryAddress(opcode : number, 
+        opcodeMode : OpcodeModes, 
+        sourceRegister : number, 
+        destinationRegister : number, 
+        destinationMemoryAddress : number,
+        sourceMemoryAddress : number): Uint8Array
+    {
+        const array = new Uint8Array(10);        
+        array[0] = opcode;
+        array[1] = destinationRegister;
+
+        InstructionCoderVariable.writeFloatAtPosition(array, sourceMemoryAddress, 2);
+
+        return array;
+    }
+    
+    static decodeEightByteMemoryAddress(ram : RAM, offset : number) : { instruction: Instruction, length: number }
+    {
+        const array = ram.blitReadBytes(offset, 10);
+
+        const opcode = array[0];
+        const destinationRegister = array[1];
+        const memoryAddress = InstructionCoderVariable.readFloatAtPosition(array, 2);
+
+        const mode = new OpcodeModes(
+            OpcodeMode.Register,
+            OpcodeMode.Default
+        );
+
+        return { 
+            instruction : new Instruction(opcode, 
+                mode,
+                0, destinationRegister, 0, memoryAddress),
+            length : 10
         };
     }
 

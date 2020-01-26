@@ -81,7 +81,7 @@ export enum OpCodes {
     OR,
     XOR,
     NOT,
-    TRUNC,
+    TRUNCf,
     LOOP,
     HALT    
 }
@@ -169,7 +169,7 @@ const  InstructionSet : InstructionSpecification[] = [
     new InstructionSpecification("NOT",     OpCodes.NOT, [regOrPointer]),
     new InstructionSpecification("SWAP",     OpCodes.SWAP, [regOrPointer, regOrPointer]),
     new InstructionSpecification("LOOP",     OpCodes.LOOP, [reg, value]),
-    new InstructionSpecification("TRUNC",     OpCodes.TRUNC, [reg]),
+    new InstructionSpecification("TRUNCf",     OpCodes.TRUNCf, [reg]),
     
     new InstructionSpecification("HALT",    OpCodes.HALT, [])
 ];
