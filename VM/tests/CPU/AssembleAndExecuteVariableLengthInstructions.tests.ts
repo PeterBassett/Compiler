@@ -550,8 +550,8 @@ describe("Assemble and execute with Variable Length Instructions", () => {
             mvi r1 20
             mvi r2 123
 
-            mov [r1+30] r2
-            mov r3 [r1+30]
+            mov [r1+130] r2
+            mov r3 [r1+130]
             
             halt`);
     

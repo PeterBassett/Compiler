@@ -1693,4 +1693,26 @@ describe("Assemble and execute", () => {
         expect(registers.R1).toEqual(16);
         expect(registers.R2).toEqual(1);
     });
+
+    it("a JMR immediate instruction", () => {
+        execute(`
+    .data
+    .text
+    .global start:
+    start:
+
+        MVI R1 28
+        JMR R1    ; memory address of the below marked instruction
+        MVI R2 4
+        MVI R3 6
+        MVI R4 8
+        MVI R1 11 ; this one here!
+
+        halt`);
+        
+        expect(registers.R2).toEqual(0);
+        expect(registers.R3).toEqual(0);
+        expect(registers.R4).toEqual(0);
+        expect(registers.R1).toEqual(11);
+    });
 });

@@ -659,7 +659,21 @@ describe("A CPU", () => {
 
         expect(registers.R5).toEqual(213);
         expect(registers.R6).toEqual(13);        
-    });    
+    });  
+    
+    it("has an SWAP instruction which transposes the values held in two registers", () => {        
+        setup(false);
+        instruction(Op.MVI, 0, Reg.R5, 13);
+        instruction(Op.MVI, 0, Reg.R6, 213);
+        instruction(Op.SWAP, Reg.R5, Reg.R6, 0); 
+
+        cpu.step();
+        cpu.step();
+        cpu.step();
+
+        expect(registers.R5).toEqual(213);
+        expect(registers.R6).toEqual(13);        
+    });  
 
     it("MOV with relative addressed destination", () => {        
         instruction(Op.MVI, 0, Reg.R1, 20);
