@@ -88,6 +88,18 @@ describe("Assemble and execute with Variable Length Instructions", () => {
         expect(registers.R5).toEqual(20);
     });
 
+    it("a move immediate instruction with negative value", () => {
+        execute(`
+    .data
+    .text
+    .global start:
+        start:
+        mvi r5 -20
+        halt`);
+
+        expect(registers.R5).toEqual(-20);
+    });
+
     it("a ldrf instruction", () => {
         execute(`
     .data

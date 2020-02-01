@@ -152,6 +152,9 @@ export class AssemblyLineParser
                 return this.parseLabel();                
             case OperandToken.DATALABEL:
                 return this.parseDataLabel();    
+            case OperandToken.MINUS:
+                if(this.LookAhead(1).token === OperandToken.NUMBER)
+                    return this.parseNegativeNumber();    
         }
         
         throw RangeError("Failed to find a value, register or relative address");    
@@ -227,6 +230,12 @@ export class AssemblyLineParser
     parseNumber() : ValueOrRegister
     {
         return new ValueOrRegister(undefined, false, this.lexer.current.value);
+    }
+
+    parseNegativeNumber() : ValueOrRegister
+    {
+        const num = this.parseNumber();
+        return new ValueOrRegister(undefined, false, -num.value!);
     }
 
     parseLabel() : ValueOrRegister

@@ -114,4 +114,8 @@ describe("The AssemblyLineParser class ", () => {
     it("parses a line of assembly with binary integer", () => {
         test("mvi R0 0b101110011", new Instruction(OpCodes.MVI,b1000,0,0,0,0b101110011));
     });
+
+    it("parses a line of assembly with negative integer", () => {
+        test("mvi R0 -1", new Instruction(OpCodes.MVI,b1000,0,0,0,-1));
+    });
 });

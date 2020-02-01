@@ -46,6 +46,10 @@ describe("The AssemblyLineLexer class ", () => {
         test("-", [ OperandToken.MINUS ]);
     });
 
+    it("lexes a negative integer", () => {
+        test("-12345", [ OperandToken.MINUS, OperandToken.NUMBER ]);
+    });
+
     it("lexes a left square bracket", () => {
         test("[", [ OperandToken.LEFT_SQUARE_BRACKET ]);
     });
