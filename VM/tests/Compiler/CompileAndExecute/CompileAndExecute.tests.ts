@@ -508,7 +508,20 @@ func main() : int {
 
 func main() : int {
     return fib(25);
-}`, 121393]
+}`, 121393],
+[
+`func McCarthy(n:int) : int
+{
+    if (n > 100)
+        return n - 10;
+
+    return McCarthy(McCarthy(n + 11));
+}
+func main() : int
+{
+    return McCarthy(45);
+}
+`, 91],
 
 /*,
 [`func main() : string {
