@@ -487,7 +487,28 @@ func main() : int {
 	var a : int = 0;
     var b : int = 5;
     return test(a-b);
-}`, 2]
+}`, 2],
+[
+`func fib(num:int):int 
+{
+	var a : int = 1;
+    var b : int = 0;
+    var temp : int = 0;
+
+    while (num >= 0)
+    {
+      temp = a;
+      a = a + b;
+      b = temp;
+      num = num - 1;
+    }
+
+  	return b;
+}
+
+func main() : int {
+    return fib(25);
+}`, 121393]
 
 /*,
 [`func main() : string {
