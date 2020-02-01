@@ -469,7 +469,27 @@ func main() : float
 [`func main() : int {
     return int(5.5);
 }`,
-5]/*,
+5],
+[
+`func test(num:int):int  
+{
+    // test the greater than or equal to operator
+    if (num >= 0)
+    {
+		return 1;
+    }
+	else
+    {
+    	return 2;
+    }    
+}
+func main() : int {
+	var a : int = 0;
+    var b : int = 5;
+    return test(a-b);
+}`, 2]
+
+/*,
 [`func main() : string {
     return string(3.14159);
 }`,

@@ -12,8 +12,8 @@ describe("A ram object", () => {
     beforeEach(() => {
         ramSize = helpers.randomInt(10, maxRamSize) * 4;
         dataPosition = helpers.randomInt(0, ramSize);
-        storedWord = 1 << helpers.randomInt(1, 16);
-        storedByte = 1 << helpers.randomInt(1, 8);
+        storedWord = 1 << helpers.randomInt(1, 15);
+        storedByte = 1 << helpers.randomInt(1, 7);
 
         ram = new RAM(ramSize);
     });
@@ -35,11 +35,11 @@ describe("A ram object", () => {
     });
 
     it("has storeWord and readWord methods which store their data in the same position", () => {
-        ram.storeWord(0, 65535);
+        ram.storeWord(0, 32767);
 
         let actual = ram.readWord(0);
 
-        expect(actual).toEqual(65535);
+        expect(actual).toEqual(32767);
     });
 
     it("has storeByte and readByte methods", () => {
@@ -52,29 +52,29 @@ describe("A ram object", () => {
 
     describe("The store* and read* methods", () => {
         it("read and write to the same backing store", () => {
-            ram.storeWord(0, 65534);
+            ram.storeWord(0, 32767);
 
             let actual0 = ram.readByte(0);
             let actual1 = ram.readByte(1);
 
-            expect(actual0).toEqual(254);
-            expect(actual1).toEqual(255);
+            expect(actual0).toEqual(-1);
+            expect(actual1).toEqual(127);
         });
     });
 
     describe("The 32 bit store and read methods", () => {
         it("read and write to the same backing store", () => {
-            ram.storeDWord(0, Math.pow(2, 32) - 1);
+            ram.storeDWord(0, 2147483647);
 
             let actual0 = ram.readByte(0);
             let actual1 = ram.readByte(1);
             let actual2 = ram.readByte(2);
             let actual3 = ram.readByte(3);
 
-            expect(actual0).toEqual(255);
-            expect(actual1).toEqual(255);
-            expect(actual2).toEqual(255);
-            expect(actual3).toEqual(255);
+            expect(actual0).toEqual(-1);
+            expect(actual1).toEqual(-1);
+            expect(actual2).toEqual(-1);
+            expect(actual3).toEqual(127);
         });
     });
 });

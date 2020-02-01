@@ -24,7 +24,10 @@ export function assemble(instructions : AssemblyLine[],
 
     return {
         machineCode : buffer,
-        readonlyRegions : [new Region(0, instructionBuffer.byteLength)] // registering the code section as readonly 
+        readonlyRegions : [
+            // registering the code section as readonly 
+            new Region(0, instructionBuffer.byteLength - 1) // minus one here because regions record start and end, not lengths.
+        ]
     };
 }
 

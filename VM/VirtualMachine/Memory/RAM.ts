@@ -20,28 +20,32 @@ export default class RAM implements Memory
     }
 
     readByte(address: number) : number {
-       return this.view.getUint8(address);
+       return this.view.getInt8(address);
     }
 
     storeByte(address: number, value : number) : void
     {
-        this.view.setUint8(address, value);
+        this.checkReadonlyAccess(address, 1);
+
+        this.view.setInt8(address, value);
     }
 
     readWord(address: number) : number {
-        return this.view.getUint16(address, true);
+        return this.view.getInt16(address, true);
     }
 
     storeWord(address: number, value : number) : void{
-        this.view.setUint16(address, value, true);
+        this.checkReadonlyAccess(address, 2);
+        this.view.setInt16(address, value, true);
     }
 
     readDWord(address: number) : number {
-        return this.view.getUint32(address, true);
+        return this.view.getInt32(address, true);
     }
 
     storeDWord(address: number, value : number) : void{
-        this.view.setUint32(address, value, true);
+        this.checkReadonlyAccess(address, 4);
+        this.view.setInt32(address, value, true);
     }
 
     readFloat32(address: number) : number {
@@ -49,6 +53,7 @@ export default class RAM implements Memory
     }
 
     storeFloat32(address: number, value : number) : void{
+        this.checkReadonlyAccess(address, 4);
         this.view.setFloat32(address, value, true);
     }
 
@@ -57,18 +62,19 @@ export default class RAM implements Memory
     }
 
     storeFloat64(address: number, value : number) : void{
+        this.checkReadonlyAccess(address, 8);
         this.view.setFloat64(address, value, true);
     }
 
-    readNumber(address: number, size : number) : number {
+    readNumber(address: number, size : number) : number {        
         switch(size)
         {
             case 1 : 
-                return this.view.getUint8(address);
+                return this.view.getInt8(address);
             case 2 : 
-                return this.view.getUint16(address, true);
+                return this.view.getInt16(address, true);
             case 4 : 
-                return this.view.getUint32(address, true);
+                return this.view.getInt32(address, true);
             case 8 : 
                 return this.view.getFloat64(address, true);
             default:
@@ -78,16 +84,17 @@ export default class RAM implements Memory
 
     storeNumber(address: number, value : number, size : number) : void
     {
+        this.checkReadonlyAccess(address, size);
         switch(size)
         {
             case 1 : 
-                this.view.setUint8(address, value);
+                this.view.setInt8(address, value);
                 break;
             case 2 : 
-                this.view.setUint16(address, value, true);
+                this.view.setInt16(address, value, true);
                 break;
             case 4 : 
-                this.view.setUint32(address, value, true);
+                this.view.setInt32(address, value, true);
                 break;
             case 8 : 
                 this.view.setFloat64(address, value, true);
@@ -96,14 +103,18 @@ export default class RAM implements Memory
     }
 
     blitStoreBytes(baseAddress: number, buffer : ArrayBuffer) : void {
-        const array = new Uint8Array(buffer);
 
-        for(let i = 0; i< array.length; i++)
-            this.storeByte(baseAddress + i, array[i]);
+        this.checkReadonlyAccess(baseAddress, buffer.byteLength);
+
+        const source = new Int8Array(buffer);
+        const destinaiton = new Int8Array(this.buffer);
+
+        for(let i = 0; i< source.length; i++)
+            destinaiton[baseAddress + i] = source[i];
     }
 
-    blitReadBytes(baseAddress: number, length : number) : Uint8Array {
-        return new Uint8Array(this.buffer.slice(baseAddress, baseAddress + length));
+    blitReadBytes(baseAddress: number, length : number) : Int8Array {
+        return new Int8Array(this.buffer.slice(baseAddress, baseAddress + length));
     }
 
     getDataView(): DataView {
@@ -112,10 +123,21 @@ export default class RAM implements Memory
 
     setReadonlyRegions(regions: Region[]) {
         for(let region of regions)
-            this.setReadonlyRegion(region.start, region.length);
+            this.readonlyRegions.push( region );
     }
 
     setReadonlyRegion(start: number, length: number) {
-        this.readonlyRegions.push( new Region(start,length) );
+        this.readonlyRegions.push( new Region(start, start + length) );
+    }
+
+    checkReadonlyAccess(address: number, length: number) {
+        let other = new Region(address, address + length);
+
+        for(let region of this.readonlyRegions)
+        {
+            if(region.contains(address) ||
+               region.overlaps(other))
+               throw new Error("INVALID MEMORY WRITE");
+        }
     }
 }

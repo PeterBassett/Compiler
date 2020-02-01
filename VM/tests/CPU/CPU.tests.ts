@@ -108,16 +108,16 @@ describe("A CPU", () => {
     });
     
     it("has an STR instruction which stores a value in a memory address (1000) from a register (R2)", () => {
-        instruction(Op.MVI, 0, Reg.R2, 234);
+        instruction(Op.MVI, 0, Reg.R2, 238);
         instruction(Op.STR, 0, Reg.R2, 1000);
 
         cpu.step();
 
-        expect(ram.readByte(1000)).toEqual(0);
+        expect(ram.readWord(1000)).toEqual(0);
                 
         cpu.step();
 
-        expect(ram.readByte(1000)).toEqual(234);
+        expect(ram.readWord(1000)).toEqual(238);
     });
 
     it("has an LDR instruction which loads a value from a memory address (1000) into a register (R3)", () => {
@@ -129,11 +129,11 @@ describe("A CPU", () => {
         cpu.step();
 
         expect(registers.R2).toEqual(234);
-        expect(ram.readByte(1000)).toEqual(0);
+        expect(ram.readWord(1000)).toEqual(0);
                 
         cpu.step();
 
-        expect(ram.readByte(1000)).toEqual(234);
+        expect(ram.readWord(1000)).toEqual(234);
 
         cpu.step();
 
@@ -171,7 +171,7 @@ describe("A CPU", () => {
         
         cpu.step();
 
-        expect(ram.readByte(registers.SP)).toEqual(234);
+        expect(ram.readWord(registers.SP)).toEqual(234);
         expect(registers.SP).toBeLessThan(oldSP);
         expect(registers.R1).toEqual(234);
     });

@@ -1105,7 +1105,7 @@ describe("Assemble and execute", () => {
     it("mov byte from long value", () => {
         execute(`
     .data
-        .a long 0b11110000101010100000111100000111
+        .a long 0b01110000101010100000111100000111
     .text
     .global intro:
     intro:
@@ -1119,16 +1119,16 @@ describe("Assemble and execute", () => {
 
         halt`);
 
-        expect(registers.R1).toEqual(0b11110000101010100000111100000111);
+        expect(registers.R1).toEqual(0b01110000101010100000111100000111);
         expect(registers.R2).toEqual(0b0000111100000111);
         expect(registers.R3).toEqual(0b00000111);        
-        expect(registers.R5).toEqual(0b11110000101010100000111100000111);
+        expect(registers.R5).toEqual(0b01110000101010100000111100000111);
     });
 
     it("push long and pop bytes", () => {
         execute(`
     .data
-        .a long 0b11110000101010100000111100000111
+        .a long 0b01110000001010100000111100000111
     .text
     .global intro:
     intro:
@@ -1142,11 +1142,11 @@ describe("Assemble and execute", () => {
 
         halt`);
 
-        expect(registers.R1).toEqual(0b11110000101010100000111100000111);        
+        expect(registers.R1).toEqual(0b01110000001010100000111100000111);        
         expect(registers.R2).toEqual(0b00000111);        
         expect(registers.R3).toEqual(0b00001111);        
-        expect(registers.R4).toEqual(0b10101010);        
-        expect(registers.R5).toEqual(0b11110000);
+        expect(registers.R4).toEqual(0b00101010);        
+        expect(registers.R5).toEqual(0b01110000);
     });
 
     it("push long and shift to take bytes", () => {
