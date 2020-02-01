@@ -5,8 +5,12 @@ import { AssemblyLineLexer } from "./AssemblyLineLexer";
 import { AssemblyLineParser } from "./AssemblyLineParser";
 import InstructionCoder from "../VirtualMachine/CPU/Instruction/InstructionCoder";
 import Instruction from "../VirtualMachine/CPU/Instruction/Instruction";
+import Region from "./Region";
 
-export function assemble(instructions : AssemblyLine[], data : DataLabel[], fixedTextSectionOffset : number, encoder : InstructionCoder) : ArrayBuffer
+export function assemble(instructions : AssemblyLine[], 
+    data : DataLabel[], 
+    fixedTextSectionOffset : number, 
+    encoder : InstructionCoder) : { machineCode : ArrayBuffer, readonlyRegions : Region[] }
 {
     const instructionBuffer = encodeTextSection(instructions, fixedTextSectionOffset, encoder);
 
@@ -18,7 +22,10 @@ export function assemble(instructions : AssemblyLine[], data : DataLabel[], fixe
 
     encodeDataSection(dataOutput, data, 0);
 
-    return buffer;
+    return {
+        machineCode : buffer,
+        readonlyRegions : [new Region(0, instructionBuffer.byteLength)] // registering the code section as readonly 
+    };
 }
 
 function round(i : number, v : number) : number {

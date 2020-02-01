@@ -1,14 +1,17 @@
 import Memory from "./Memory";
+import Region from "../../Assembler/Region";
 
 export default class RAM implements Memory
-{
-    private buffer : ArrayBuffer;
-    private view : DataView;
-
+{    
+    private readonly buffer : ArrayBuffer;
+    private readonly view : DataView;
+    private readonly readonlyRegions : Region[];
+ 
     constructor(sizeInBytes : number)
     {
         this.buffer = new ArrayBuffer(sizeInBytes);
         this.view = new DataView(this.buffer);
+        this.readonlyRegions = [];
     }
 
     get capacity() : number
@@ -20,7 +23,8 @@ export default class RAM implements Memory
        return this.view.getUint8(address);
     }
 
-    storeByte(address: number, value : number) : void{
+    storeByte(address: number, value : number) : void
+    {
         this.view.setUint8(address, value);
     }
 
@@ -104,5 +108,14 @@ export default class RAM implements Memory
 
     getDataView(): DataView {
         return new DataView(this.buffer);
+    }
+
+    setReadonlyRegions(regions: Region[]) {
+        for(let region of regions)
+            this.setReadonlyRegion(region.start, region.length);
+    }
+
+    setReadonlyRegion(start: number, length: number) {
+        this.readonlyRegions.push( new Region(start,length) );
     }
 }

@@ -1,7 +1,6 @@
 import Instruction from "../Instruction";
 import Memory from "../../../Memory/Memory";
 import RegisterBank from "../../RegisterBank";
-import { Registers } from "../InstructionSet";
 import Flags from "../../Flags";
 import CPU from "../../CPU";
 import BuiltinFunctions from "../../../../Language/Compiler/BuiltinFunctions";

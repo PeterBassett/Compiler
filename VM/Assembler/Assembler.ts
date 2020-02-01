@@ -8,6 +8,7 @@ import { parseDataLabels } from "./Preprocessors/ParseDataLabels";
 import { replaceLabels, calculateTextSectionEncodedLength } from "./Preprocessors/ReplaceLabels";
 import { replaceDataLabels } from "./Preprocessors/ReplaceDataLabels";
 import InstructionCoder from "../VirtualMachine/CPU/Instruction/InstructionCoder";
+import { AssembledOutput } from "./AssembledOutput";
 
 export default class Assembler
 {
@@ -42,7 +43,7 @@ export default class Assembler
         this.baseMemoryOffset = baseMemoryOffset;
     }
 
-    assemble(input: string): ArrayBuffer
+    assemble(input: string): AssembledOutput
     {
         const parsedLines = this.parseLines(input);
     
@@ -60,6 +61,6 @@ export default class Assembler
 
         const binary = assemble(replacedDataLabelsText, dataLabels, 0, this.encoder);
 
-        return binary;
+        return new AssembledOutput(binary.machineCode, binary.readonlyRegions);
     }
 }

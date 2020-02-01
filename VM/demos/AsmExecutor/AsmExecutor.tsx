@@ -4,7 +4,9 @@ import RAM from "../../VirtualMachine/Memory/RAM";
 import RegisterBank from "../../VirtualMachine/CPU/RegisterBank";
 import Assembler from "../../Assembler/Assembler";
 import { OpCodes as Op, Registers as Reg } from "../../VirtualMachine/CPU/Instruction/InstructionSet";
+import InstructionCoder from "../../VirtualMachine/CPU/Instruction/InstructionCoder";
 import InstructionCoder32Bit from "../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
+import InstructionCoderVariable from "../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
 import { Logger } from "../../Assembler/interfaces/Logger";
 import AssemblyParser from "../../Assembler/Parser";
 import defaultPreprocessor from "../../Assembler/Preprocessors/DefaultPreprocessor";
@@ -22,9 +24,9 @@ interface AsmExecutorState
     assembly:string;
     instructionsExecuted : number;
 }
-// /24743
+
 interface AsmExecutorProps
-{
+{ 
     asmFileName?:string;
     asm?:string;
 }
@@ -35,8 +37,8 @@ export default class AsmExecutor extends React.Component<AsmExecutorProps, AsmEx
     public ram : RAM;
     public flags : Flags;
     public registers : RegisterBank;
-    public instructionCoder : InstructionCoder32Bit;
-    public ramSize = 1 << 10;
+    public instructionCoder : InstructionCoder;
+    public ramSize = 1 << 12;
     public cpu : CPU;
 
     constructor(props){
@@ -101,12 +103,13 @@ export default class AsmExecutor extends React.Component<AsmExecutorProps, AsmEx
         this.ram = new RAM(this.ramSize);
         this.registers = new RegisterBank(this.ramSize);
         this.flags = new Flags();
-        this.instructionCoder = new InstructionCoder32Bit();
+        this.instructionCoder = new InstructionCoderVariable();
         this.assembler = new Assembler(logger, AssemblyParser, defaultPreprocessor, this.instructionCoder, 0);
 
         const instructions = this.assembler.assemble(assemblyCode)
 
-        this.ram.blitStoreBytes(0, instructions);
+        this.ram.blitStoreBytes(0, instructions.machineCode);
+        this.ram.setReadonlyRegions(instructions.regions);
 
         this.cpu = new CPU(this.ram, this.registers, this.flags, this.instructionCoder);
 

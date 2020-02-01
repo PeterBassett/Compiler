@@ -47,7 +47,8 @@ describe("Assemble and execute", () => {
 
         const instructions = assembler.assemble(assemblyCode)
 
-        ram.blitStoreBytes(0, instructions);
+        ram.blitStoreBytes(0, instructions.machineCode);
+        ram.setReadonlyRegions(instructions.regions);
 
         cpu = new CPU(ram, registers, flags, instructionCoder);
 

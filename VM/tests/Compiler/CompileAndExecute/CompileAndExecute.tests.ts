@@ -15,6 +15,7 @@ import Flags from "../../../VirtualMachine/CPU/Flags";
 import RegisterBank from "../../../VirtualMachine/CPU/RegisterBank";
 import CPU from "../../../VirtualMachine/CPU/CPU";
 import InstructionCoderVariable from "../../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
+import { AssembledOutput } from "../../../Assembler/AssembledOutput";
 
 describe("Complie Assemble and Execute", () => {
 
@@ -53,7 +54,7 @@ describe("Complie Assemble and Execute", () => {
         return instructionCoder32;
     }
 
-    function assemble(assemblyCode : string) : ArrayBuffer
+    function assemble(assemblyCode : string) : AssembledOutput
     {
         const logger : Logger = (lineNumber : number, characterNumber : number, message : string) => {};
         const instructionCoder = CreateInstructionCoder();        
@@ -62,7 +63,7 @@ describe("Complie Assemble and Execute", () => {
         return assembler.assemble(assemblyCode)
     }
 
-    function execute(instructionStream : ArrayBuffer) : number
+    function execute(output : AssembledOutput) : number
     {
         let assembler : Assembler;
         let ram : RAM;
@@ -78,7 +79,8 @@ describe("Complie Assemble and Execute", () => {
         registers = new RegisterBank(ramSize);
         flags = new Flags();
         
-        ram.blitStoreBytes(0, instructionStream);
+        ram.blitStoreBytes(0, output.machineCode);
+        ram.setReadonlyRegions(output.regions);
 
         const instructionCoder = CreateInstructionCoder();
         
