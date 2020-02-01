@@ -2,7 +2,7 @@ import Memory from "./Memory";
 import Region from "../../Assembler/Region";
 
 export default class RAM implements Memory
-{    
+{        
     private readonly buffer : ArrayBuffer;
     private readonly view : DataView;
     private readonly readonlyRegions : Region[];
@@ -41,6 +41,10 @@ export default class RAM implements Memory
 
     readDWord(address: number) : number {
         return this.view.getInt32(address, true);
+    }
+
+    readUDWord(address: number): number {
+        return this.view.getUint32(address, true);
     }
 
     storeDWord(address: number, value : number) : void{
