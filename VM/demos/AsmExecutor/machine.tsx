@@ -17,8 +17,8 @@ export default class Machine extends React.Component<MachineProps, {}>
 {
     public render(){
         let memory = this.props.ram.getDataView();
-        return <div className="grid">
-            <MemoryView memory={ memory } />
+        return <div className="grid-container">
+            <MemoryView memory={ memory } instructionsExecuted={this.props.instructionsExecuted} />
             <RegistersView registers={ this.props.registers } ramSize={ this.props.ram.capacity } />
             <div>Instructions : { this.props.instructionsExecuted }</div>
         </div>;

@@ -113,8 +113,8 @@ export default class RAM implements Memory
             destinaiton[baseAddress + i] = source[i];
     }
 
-    blitReadBytes(baseAddress: number, length : number) : Int8Array {
-        return new Int8Array(this.buffer.slice(baseAddress, baseAddress + length));
+    blitReadBytes(baseAddress: number, length : number) : Uint8Array {
+        return new Uint8Array(this.buffer.slice(baseAddress, baseAddress + length));
     }
 
     getDataView(): DataView {

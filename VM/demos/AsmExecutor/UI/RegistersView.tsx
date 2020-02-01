@@ -12,7 +12,7 @@ export default class RegistersView extends React.Component<RegistersViewProps, a
 {
     render() : JSX.Element
     {
-        return <div>    
+        return <div className="registers">    
             { this.register("SP", 7) }
             { this.register("IP", 8) }
             { [1, 2, 3, 4, 5, 6].map(r => this.register("R" + r, r)) }

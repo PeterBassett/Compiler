@@ -25,12 +25,18 @@
     }
 
     .grid-container {
+      height: 100vh;
       display: grid;
       grid-template-areas:
         'header header'
         'registers memory'
         'footer footer';
     } 
+
+    .memory{
+      height:100%;
+      overflow:scroll;
+    }
 
     .CodeMirror
     {
