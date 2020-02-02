@@ -27,7 +27,10 @@ export default class Machine extends React.Component<MachineProps, {}>
                 insructionsLength={this.props.instructionsLength}
                 instruction={this.props.instruction} />
             <RegistersView registers={ this.props.registers } ramSize={ this.props.ram.capacity } />
-            <div className="footer">Instructions : { this.props.instructionsExecuted }</div>
+            <div className="footer">
+                Instructions : { this.props.instructionsExecuted },
+                Instruction Encoded Length : { this.props.instructionsLength }
+            </div>
         </div>;
     }
 }

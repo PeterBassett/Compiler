@@ -62,7 +62,7 @@ export default class MemoryView extends React.Component<MemoryViewProps, any>
             const address = baseAddress + i;
             let colour = "memory";
 
-            if(baseAddress < this.props.insructionsLength)
+            if(address < this.props.insructionsLength)
                 colour = "instructions";
             else if(address >= this.props.registers.SP)
                 colour = "stack";
@@ -73,7 +73,7 @@ export default class MemoryView extends React.Component<MemoryViewProps, any>
                  address < this.props.registers.IP))
                 colour = "IP";                
     
-            output.push(<td className={"colour_" + colour} title={array[i].toString()}>
+            output.push(<td className={"colour_" + colour} title={address + ":" + array[i].toString()}>
                 {
                     (array[i] === 0) ?
                     "." :
