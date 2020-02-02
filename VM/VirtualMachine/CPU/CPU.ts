@@ -21,14 +21,16 @@ export default class CPU
         this.instructionDecoder = instructionDecoder;
     }
 
-    public step(): void {
+    public step(): Instruction {
         const instruction = this.fetchNextInstruction();
         this.execute(instruction);
+        return instruction;
     }
 
     private fetchNextInstruction() : Instruction
     {
-        const { instruction, length } = this.instructionDecoder.decodeInstruction(this.ram, this.registers.IP);        
+        const { instruction, length } = this.instructionDecoder.decodeInstruction(this.ram, this.registers.IP); 
+        instruction.encodedLength = length;       
         this.registers.IP += length;
         return instruction;
     }

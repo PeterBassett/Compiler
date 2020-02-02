@@ -48,6 +48,7 @@ export default class Instruction
     private _destinationRegister : number;
     private _destinationMemoryAddress : number;
     private _sourceMemoryAddress : number;
+    public encodedLength: number;
     
     constructor(opcode : number,
         opcodeMode : OpcodeModes, 
