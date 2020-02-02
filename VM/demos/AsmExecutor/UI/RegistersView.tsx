@@ -24,6 +24,6 @@ export default class RegistersView extends React.Component<RegistersViewProps, a
     register( name : string, num : number  ) : JSX.Element
     {
         var value = this.props.registers.get(num);     
-        return <div>{name} : {value}</div>;
+        return <div key={name}>{name} : {value}</div>;
     }
 }

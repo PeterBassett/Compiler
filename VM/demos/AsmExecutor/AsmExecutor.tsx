@@ -16,6 +16,7 @@ import MemoryView from "./UI/MemoryView";
 import RegistersView from "./UI/RegistersView";
 import Machine from "./machine";
 import { assemble } from "../../Assembler/Assemble";
+import Instruction from "../../VirtualMachine/CPU/Instruction/Instruction";
 
 interface AsmExecutorState
 {
@@ -23,6 +24,8 @@ interface AsmExecutorState
     loaded:boolean;
     assembly:string;
     instructionsExecuted : number;
+    instructionsLength : number;
+    currentInstruction? : Instruction;
 }
 
 interface AsmExecutorProps
@@ -44,7 +47,7 @@ export default class AsmExecutor extends React.Component<AsmExecutorProps, AsmEx
     constructor(props){
         super(props);
         
-        this.state = {executing : false, assembly:null, loaded:false, instructionsExecuted : 0};
+        this.state = {executing : false, assembly:null, loaded:false, instructionsExecuted : 0, instructionsLength : 0, currentInstruction : null};
     }
 
     componentWillMount()
@@ -67,11 +70,14 @@ export default class AsmExecutor extends React.Component<AsmExecutorProps, AsmEx
 
     frame()
     {
-        var executed = this.step();
+        var result = this.step();
 
-        this.setState( { instructionsExecuted : this.state.instructionsExecuted + 1 });
+        this.setState( { 
+            instructionsExecuted : this.state.instructionsExecuted + 1,
+            currentInstruction : result.instruction
+        });
 
-        return executed;
+        return result.continue;
     }  
 
     executeStep()
@@ -106,26 +112,27 @@ export default class AsmExecutor extends React.Component<AsmExecutorProps, AsmEx
         this.instructionCoder = new InstructionCoderVariable();
         this.assembler = new Assembler(logger, AssemblyParser, defaultPreprocessor, this.instructionCoder, 0);
 
-        const instructions = this.assembler.assemble(assemblyCode)
+        const instructions = this.assembler.assemble(assemblyCode);
 
         this.ram.blitStoreBytes(0, instructions.machineCode);
         this.ram.setReadonlyRegions(instructions.regions);
 
         this.cpu = new CPU(this.ram, this.registers, this.flags, this.instructionCoder);
 
-        this.setState({loaded:true});
+        this.setState({loaded:true, instructionsLength : instructions.machineCode.byteLength});
     }
 
-    step() : boolean
+    step() : { continue : boolean, instruction? : Instruction }
     {
         try
         {
-            this.cpu.step();
-            return true;
+            const instruction = this.cpu.step();
+
+            return { continue: true, instruction };
         }
         catch(e)
         {
-            return false;
+            return { continue: false, instruction: null };
         }
     }
 
@@ -133,7 +140,13 @@ export default class AsmExecutor extends React.Component<AsmExecutorProps, AsmEx
         if(!this.state.loaded)
             return <div>loading</div>;
 
-        return <Machine executing={ this.state.executing } instructionsExecuted={this.state.instructionsExecuted} cpu={ this.cpu } ram={ this.ram } registers={ this.registers } />;          
+        return <Machine executing={ this.state.executing } 
+            instructionsExecuted={this.state.instructionsExecuted} 
+            instructionsLength={this.state.instructionsLength}
+            cpu={ this.cpu } 
+            ram={ this.ram } 
+            registers={ this.registers }
+            instruction={this.state.currentInstruction} />;          
     }
 }
 

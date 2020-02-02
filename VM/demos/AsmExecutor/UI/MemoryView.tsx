@@ -1,11 +1,16 @@
 import * as Reach from "react";
 import React = require("react");
 import RAM from "../../../VirtualMachine/Memory/RAM";
+import RegisterBank from "../../../VirtualMachine/CPU/RegisterBank";
+import Instruction from "../../../VirtualMachine/CPU/Instruction/Instruction";
 
 export interface MemoryViewProps extends React.Props<MemoryView>
 {
     memory : RAM;
+    registers : RegisterBank;
     instructionsExecuted : number;
+    insructionsLength : number;
+    instruction?:Instruction;
 }
 
 export default class MemoryView extends React.Component<MemoryViewProps, any>
@@ -14,8 +19,10 @@ export default class MemoryView extends React.Component<MemoryViewProps, any>
     {
         return <div className="memory">
             <table>
-                { this.header() }
-                { this.rows() }
+                <tbody>
+                    { this.header() }
+                    { this.rows() }
+                </tbody>
             </table>
         </div> ;
     }
@@ -41,18 +48,32 @@ export default class MemoryView extends React.Component<MemoryViewProps, any>
         return output;
     }
 
-    toHex(value : number) : string
+    toHex(value : number, length : number) : string
     {
-        return "0x" + ("0000000" + value.toString(16)).substr(-8);
+        return "0x" + (Array(length).join("0") + value.toString(16)).substr(-length);
     }
 
-    toCharacters(array : Uint8Array) : JSX.Element[]
+    toCharacters(array : Uint8Array, baseAddress : number) : JSX.Element[]
     {
         const output = [];
-        
+
         for(let i = 0; i < array.length; i++)
         {
-            output.push(<td title={array[i].toString()}>
+            const address = baseAddress + i;
+            let colour = "memory";
+
+            if(baseAddress < this.props.insructionsLength)
+                colour = "instructions";
+            else if(address >= this.props.registers.SP)
+                colour = "stack";
+
+            if(address === this.props.registers.IP ||
+                (this.props.instruction &&
+                 address >= this.props.registers.IP - this.props.instruction.encodedLength &&
+                 address < this.props.registers.IP))
+                colour = "IP";                
+    
+            output.push(<td className={"colour_" + colour} title={array[i].toString()}>
                 {
                     (array[i] === 0) ?
                     "." :
@@ -67,13 +88,13 @@ export default class MemoryView extends React.Component<MemoryViewProps, any>
     row(address : number) : JSX.Element
     {
         return <tr>
-            <td>{address.toString(16)}</td>
-            <td>{this.toHex(this.props.memory.readUDWord(address))}</td>
-            <td>{this.toHex(this.props.memory.readUDWord(address + 4))}</td>
-            <td>{this.toHex(this.props.memory.readUDWord(address + 8))}</td>
-            <td>{this.toHex(this.props.memory.readUDWord(address + 12))}</td>
+            <td>{this.toHex(address, 8)}</td>
+            <td>{this.toHex(this.props.memory.readUDWord(address), 8)}</td>
+            <td>{this.toHex(this.props.memory.readUDWord(address + 4), 8)}</td>
+            <td>{this.toHex(this.props.memory.readUDWord(address + 8), 8)}</td>
+            <td>{this.toHex(this.props.memory.readUDWord(address + 12), 8)}</td>
             
-            {this.toCharacters(this.props.memory.blitReadBytes(address, 16))}
+            {this.toCharacters(this.props.memory.blitReadBytes(address, 16), address)}
             
         </tr>;
     }

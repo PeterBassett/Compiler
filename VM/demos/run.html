@@ -14,28 +14,61 @@
   <script src="../js/demos/demos/Loader.js"></script>
 
   <style type="text/css">
-    #header { grid-area: header; background-color: aqua }
-    #registers { grid-area: registers; background-color: blueviolet }
-    #memory { grid-area: memory; background-color:brown}    
-    #footer { grid-area: footer; background-color:coral}
+    
 
     html, body {
-      height:100hv; width:100vw;
+      margin:0;
+      padding:0;
+      height:100vh; width:100vw;
       overflow: hidden;
+      font-family: monospace;
+    }
+
+    .colour_instructions
+    {
+      background-color: rgb(162, 255, 178);
+    }
+
+    .colour_memory
+    {
+      background-color: white;
+    }
+
+    .colour_stack
+    {
+      background-color: rgb(181, 181, 255);
+    }
+
+    .colour_IP
+    {
+      background-color: yellow;
     }
 
     .grid-container {
       height: 100vh;
+      width: 100vw;
       display: grid;
       grid-template-areas:
         'header header'
-        'registers memory'
+        'memory registers'
         'footer footer';
     } 
 
-    .memory{
-      height:100%;
+    .header {
+      grid-area: header; 
+    }
+
+    .footer {
+      grid-area: footer;
+    }
+
+    .memory {
+      grid-area: memory;
       overflow:scroll;
+    }
+
+    .registers {
+      grid-area: registers;
     }
 
     .CodeMirror
