@@ -101,7 +101,7 @@ export default class Parser
     private peekType(ahead:number = 0) : SyntaxType
     {
         const token = this.peek(ahead);
-        return token.kind
+        return token.kind;
     }
 
     private get current() : Token
@@ -184,10 +184,12 @@ export default class Parser
     private parseStructMemberDeclarations() : AST.StructMemberDeclarationStatementSyntax[]
     {
         const members : AST.StructMemberDeclarationStatementSyntax[] = [];
-        while(!this.peekType(SyntaxType.SemiColon))
+        
+        while(this.peekType() !== SyntaxType.RightBrace)
         {
             members.push(this.parseStructMemberDeclaration());
         }
+
         return members;
     }
 
@@ -217,7 +219,7 @@ export default class Parser
                 throw new Error("NO PROGRESS");   
             lastTokenPosition = d.newPosition;
 
-            const expectedTokens = [SyntaxType.Eof, /*SyntaxType.StructKeyword,*/ SyntaxType.ClassKeyword, SyntaxType.FuncKeyword, SyntaxType.LetKeyword, SyntaxType.VarKeyword];
+            const expectedTokens = [SyntaxType.Eof, SyntaxType.StructKeyword, SyntaxType.ClassKeyword, SyntaxType.FuncKeyword, SyntaxType.LetKeyword, SyntaxType.VarKeyword];
             if(insideClass)
                 expectedTokens.push(SyntaxType.RightBrace);
             this.synchronise(...expectedTokens);
@@ -226,10 +228,10 @@ export default class Parser
             {
                 case SyntaxType.ClassKeyword:
                     declarations.push( this.parseClassDeclaration() );
-                break;
-               // case SyntaxType.StructKeyword:
-                //    declarations.push( this.parseStructDeclaration() );
-                //break;                
+                    break;
+                case SyntaxType.StructKeyword:
+                    declarations.push( this.parseStructDeclaration() );
+                break;                
                 case SyntaxType.FuncKeyword:
                     declarations.push( this.parseFunctionDeclaration() );
                     break;
@@ -257,18 +259,16 @@ export default class Parser
     }
 
     parseStructDeclaration(): AST.StructDeclarationStatementSyntax
-    {        
-        throw new Error("Not implemented");
-        /*
+    {
         const structKeyword = this.match(SyntaxType.StructKeyword);
         const name = this.match(SyntaxType.Identifier);
         const leftBrace = this.match(SyntaxType.LeftBrace);
         
-        const declarations : AST.DeclarationSyntax[] = this.parseStructMemberDeclarations();
+        const declarations = this.parseStructMemberDeclarations();
         
         const rightBrace = this.match(SyntaxType.RightBrace);
         
-        return AST.StructDeclarationStatementSyntax(structKeyword, name, leftBrace, declarations, rightBrace); */
+        return AST.StructDeclarationStatementSyntax(structKeyword, name, leftBrace, declarations, rightBrace);
     }
 
     private parseFunctionDeclaration() : AST.DeclarationSyntax
@@ -331,6 +331,7 @@ export default class Parser
             case SyntaxType.BoolKeyword:
                 this.next();
                 return AST.TypeNameSyntax(null, token, true);
+
             default:
                 this.next();
                 this._diagnostics.reportInvalidTypeName(token);

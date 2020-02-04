@@ -124,7 +124,8 @@ export default class Interpreter
                 return this.VisitFunctionDeclarationStatementSyntax(node);
             case "LambdaDeclarationStatementSyntax":
                 return this.VisitLambdaDeclarationStatementSyntax(node);
-            case "ClassDeclarationStatementSyntax" :                
+            case "StructDeclarationStatementSyntax" :
+            case "ClassDeclarationStatementSyntax" :
                 throw new Error("Class execution not impletmented yet");
             default: 
             {
@@ -187,8 +188,10 @@ export default class Interpreter
             case "CallExpressionSyntax":
                 return this.VisitCallExpressionSyntax(node);    
             case "TypeNameSyntax":
-                return this.VisitTypeNameSyntax(node);    
-            case "ClassDeclarationStatementSyntax" :                
+                return this.VisitTypeNameSyntax(node);
+            case "StructDeclarationStatementSyntax" :   
+            case "StructMemberDeclarationStatementSyntax" :             
+            case "ClassDeclarationStatementSyntax" :           
             case "GetExpressionSyntax":                           
                 throw new Error("Class execution not impletmented yet");                                
             default:
@@ -532,7 +535,7 @@ export default class Interpreter
             case "TypeNameSyntax":
                 return this.VisitTypeNameSyntax(node);     
             case "GetExpressionSyntax":               
-                return this.VisitGetExpressionSyntax(node);                                                                                
+                return this.VisitGetExpressionSyntax(node);                                                                                                     
             default :
                 exhaustiveCheck(node, true);
                 throw RangeError("JUST HERE TO CLEAR A COMPILER ERROR. The call above will throw before this");

@@ -20,7 +20,7 @@ export default class SyntaxTreeStructureVisitor
             case "IntegerLiteralExpressionSyntax":
             case "StringLiteralExpressionSyntax":
                 value = "<" + node.literalToken.lexeme + ">";
-                break;
+                break;                            
             case "BinaryExpressionSyntax":
             case "UnaryExpressionSyntax":
                 value = "<" + node.operatorToken.lexeme + ">";
@@ -29,15 +29,26 @@ export default class SyntaxTreeStructureVisitor
             case "LambdaDeclarationStatementSyntax":
             case "VariableDeclarationSyntax":
             case "ClassDeclarationStatementSyntax":
+            case "StructDeclarationStatementSyntax":            
                 value = "<" + node.identifier.lexeme + ">";
-                break;
+                break;                
             case "ParameterDeclarationSyntax":
+            case "StructMemberDeclarationStatementSyntax" :            
                 value = "<" + node.identifier.lexeme + ":" + (!!node.typeName ? node.typeName.identifier.lexeme : "INFERED") + ">";
                 break;            
             case "AssignmentExpressionSyntax":    
-            case "NameExpressionSyntax":
+            case "NameExpressionSyntax":            
                 value = "<" + node.identifierToken.lexeme + ">";
                 break;            
+            case "TypeNameSyntax":
+            {
+                let pointer = "";
+                if(node.starToken)
+                    pointer = "*";
+
+                value = "<" + pointer + node.identifier.lexeme + ">";
+                break;
+            }                                        
         }
         
         this.structure += Array(this.indent+1).join("    ") + node.kind + value + "\n";

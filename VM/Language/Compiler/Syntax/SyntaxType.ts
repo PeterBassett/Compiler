@@ -64,6 +64,6 @@ export enum SyntaxType {
     MultiLineCommentTrivia,
     SkippedTokensTrivia,
     ClassKeyword,
-    //StructKeyword,
+    StructKeyword,
     Dot
 }

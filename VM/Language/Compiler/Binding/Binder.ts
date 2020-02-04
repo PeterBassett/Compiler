@@ -142,8 +142,10 @@ export default class Binder
                 return this.BindReturnStatement(syntax); 
             case "ElseStatementSyntax" :
             case "ParameterDeclarationSyntax" : 
-            case "ParameterDeclarationListSyntax" :                 
-            case "ClassDeclarationStatementSyntax" :                 
+            case "ParameterDeclarationListSyntax" :   
+            case "StructDeclarationStatementSyntax" :     
+            case "StructMemberDeclarationStatementSyntax" :            
+            case "ClassDeclarationStatementSyntax" :       
                 throw new Error("");
 /*            case "ParameterDeclarationSyntax" : 
                 return this.BindParameterDeclarationSyntax(syntax);

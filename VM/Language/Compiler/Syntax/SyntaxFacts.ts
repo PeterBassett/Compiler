@@ -50,6 +50,7 @@ const lexemes : { lexeme : string, type : SyntaxType } [] = [
     { lexeme : "string", type : SyntaxType.StringKeyword },
     { lexeme : "bool", type : SyntaxType.BoolKeyword },
     { lexeme : "class", type : SyntaxType.ClassKeyword },
+    { lexeme : "struct", type : SyntaxType.StructKeyword },    
     { lexeme : "break", type : SyntaxType.BreakKeyword },
     { lexeme : "continue", type : SyntaxType.ContinueKeyword },
     { lexeme : ".", type : SyntaxType.Dot }
@@ -94,6 +95,7 @@ export function GetKeywordType(lexeme : string) : SyntaxType
         case "string" : return SyntaxType.StringKeyword;
         case "bool" : return SyntaxType.BoolKeyword;
         case "class" : return SyntaxType.ClassKeyword;
+        case "struct" : return SyntaxType.StructKeyword;
         case "break" : return SyntaxType.BreakKeyword;
         case "continue" : return SyntaxType.ContinueKeyword;
         default: return SyntaxType.Identifier;
@@ -203,6 +205,7 @@ export function isDeclaration(type : SyntaxType) : boolean
 {
     return type == SyntaxType.FuncKeyword ||
             type == SyntaxType.ClassKeyword ||
+            type == SyntaxType.StructKeyword ||
             type == SyntaxType.LetKeyword ||
             type == SyntaxType.VarKeyword;
 }

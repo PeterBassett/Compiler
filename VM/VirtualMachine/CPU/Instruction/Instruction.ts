@@ -63,6 +63,7 @@ export default class Instruction
         this._destinationRegister = destinationRegister;
         this._destinationMemoryAddress = destinationMemoryAddress;
         this._sourceMemoryAddress = sourceMemoryAddress;
+        this.encodedLength = 0;
     }
 
     get opcode () : number
