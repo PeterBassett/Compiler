@@ -36,6 +36,9 @@ export default class SyntaxTreeStructureVisitor
             case "StructMemberDeclarationStatementSyntax" :            
                 value = "<" + node.identifier.lexeme + ":" + (!!node.typeName ? node.typeName.identifier.lexeme : "INFERED") + ">";
                 break;            
+            case "GetExpressionSyntax":
+                value = "<" + node.name.lexeme + ">";
+                break;   
             case "AssignmentExpressionSyntax":    
             case "NameExpressionSyntax":            
                 value = "<" + node.identifierToken.lexeme + ">";

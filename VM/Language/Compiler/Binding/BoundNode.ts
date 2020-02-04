@@ -29,7 +29,8 @@ export enum BoundNodeKind {
     LabelStatement,
     GotoStatement,
     ConditionalGotoStatement,
-    ConversionExpression
+    ConversionExpression,
+    SetExpression
 }
 
 export enum BoundBinaryOperatorKind {
@@ -470,6 +471,17 @@ export class BoundVariableExpression extends BoundExpression
     public readonly variable : Identifier;
     public get kind(): BoundNodeKind { return BoundNodeKind.VariableExpression; };
     public get type(): Type { return this.variable.type; }
+}
+
+export class BoundSetExpression extends BoundExpression
+{    
+    constructor(public readonly left : BoundExpression, public readonly right : BoundExpression)
+    {
+        super();
+    }
+
+    public get kind(): BoundNodeKind { return BoundNodeKind.SetExpression; };
+    public get type(): Type { return this.left.type; }
 }
 
 export class BoundCallExpression extends BoundExpression 

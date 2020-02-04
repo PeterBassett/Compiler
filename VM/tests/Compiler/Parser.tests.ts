@@ -509,7 +509,7 @@ func main() : void
                 TypeNameSyntax<test>
             ExpressionStatementSyntax
                 CallExpressionSyntax
-                    GetExpressionSyntax
+                    GetExpressionSyntax<print>
                         NameExpressionSyntax<a>
 `],
 [`
@@ -587,24 +587,7 @@ func main() : int
                 TypeNameSyntax<pair>
             ReturnStatementSyntax
                 IntegerLiteralExpressionSyntax<1>
-`]
-/*
-
-[`
-func main() : int
-{
-    let n : struct {
-        a : int;
-        b : float;
-        c : int;
-        d : bool;
-    };
-
-    n.a = 5;
-
-    return n.a;
-}`, 
-``],
+`],
 [`
 struct pair 
 {
@@ -622,7 +605,114 @@ func main() : int
 
     return a.first + a.second;
 }`, 
-``],*/
+`CompilationUnitSyntax
+    StructDeclarationStatementSyntax<pair>
+        StructMemberDeclarationStatementSyntax<first:int>
+            TypeNameSyntax<int>
+        StructMemberDeclarationStatementSyntax<second:bool>
+            TypeNameSyntax<bool>
+        StructMemberDeclarationStatementSyntax<third:int>
+            TypeNameSyntax<int>
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        TypeNameSyntax<int>
+        BlockStatementSyntax
+            VariableDeclarationSyntax<a>
+                TypeNameSyntax<pair>
+            ExpressionStatementSyntax
+                SetExpressionSyntax
+                    GetExpressionSyntax<first>
+                        NameExpressionSyntax<a>
+                    IntegerLiteralExpressionSyntax<1>
+            ExpressionStatementSyntax
+                SetExpressionSyntax
+                    GetExpressionSyntax<second>
+                        NameExpressionSyntax<a>
+                    IntegerLiteralExpressionSyntax<2>
+            ReturnStatementSyntax
+                BinaryExpressionSyntax<+>
+                    GetExpressionSyntax<first>
+                        NameExpressionSyntax<a>
+                    GetExpressionSyntax<second>
+                        NameExpressionSyntax<a>
+`],
+[`
+struct root 
+{
+    a1 : int;
+}
+
+struct leaf1
+{
+    b1 : int;
+    b2 : root;
+}
+
+struct leaf2
+{
+    c1 : int;
+    c2 : leaf1;
+}
+
+struct leaf3
+{
+    d1 : int;
+    d2 : leaf2;
+}
+
+func main() : int
+{
+    let d1 : leaf3;
+    let b1 : leaf2;
+
+    d1.d2.c2.b2.a1 = b1.b2.a1;
+
+    return d1.d2.c2.b2.a1;
+}`, 
+`CompilationUnitSyntax
+    StructDeclarationStatementSyntax<root>
+        StructMemberDeclarationStatementSyntax<a1:int>
+            TypeNameSyntax<int>
+    StructDeclarationStatementSyntax<leaf1>
+        StructMemberDeclarationStatementSyntax<b1:int>
+            TypeNameSyntax<int>
+        StructMemberDeclarationStatementSyntax<b2:root>
+            TypeNameSyntax<root>
+    StructDeclarationStatementSyntax<leaf2>
+        StructMemberDeclarationStatementSyntax<c1:int>
+            TypeNameSyntax<int>
+        StructMemberDeclarationStatementSyntax<c2:leaf1>
+            TypeNameSyntax<leaf1>
+    StructDeclarationStatementSyntax<leaf3>
+        StructMemberDeclarationStatementSyntax<d1:int>
+            TypeNameSyntax<int>
+        StructMemberDeclarationStatementSyntax<d2:leaf2>
+            TypeNameSyntax<leaf2>
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        TypeNameSyntax<int>
+        BlockStatementSyntax
+            VariableDeclarationSyntax<d1>
+                TypeNameSyntax<leaf3>
+            VariableDeclarationSyntax<b1>
+                TypeNameSyntax<leaf2>
+            ExpressionStatementSyntax
+                SetExpressionSyntax
+                    GetExpressionSyntax<a1>
+                        GetExpressionSyntax<b2>
+                            GetExpressionSyntax<c2>
+                                GetExpressionSyntax<d2>
+                                    NameExpressionSyntax<d1>
+                    GetExpressionSyntax<a1>
+                        GetExpressionSyntax<b2>
+                            NameExpressionSyntax<b1>
+            ReturnStatementSyntax
+                GetExpressionSyntax<a1>
+                    GetExpressionSyntax<b2>
+                        GetExpressionSyntax<c2>
+                            GetExpressionSyntax<d2>
+                                NameExpressionSyntax<d1>
+`]
     ].forEach((item) => {
         it(`should parse source : ` + item[0], () => {
             let text = item[0] as string;

@@ -88,6 +88,7 @@ export interface ClassDeclarationStatementSyntax extends SyntaxNodeBase { kind: 
 export interface StructDeclarationStatementSyntax extends SyntaxNodeBase { kind: "StructDeclarationStatementSyntax"; structKeyword : Token; identifier:Token; leftBrace: Token; declarations : StructMemberDeclarationStatementSyntax []; rightBrace: Token; };
 export interface StructMemberDeclarationStatementSyntax extends SyntaxNodeBase { kind: "StructMemberDeclarationStatementSyntax"; identifier:Token; colonToken: Token; typeName:TypeNameSyntax; semiColonToken: Token; };
 export interface GetExpressionSyntax extends SyntaxNodeBase { kind:"GetExpressionSyntax"; left:ExpressionNode; dotToken:Token; name:Token; };
+export interface SetExpressionSyntax extends SyntaxNodeBase { kind:"SetExpressionSyntax"; left:ExpressionNode; equalsToken:Token; right:ExpressionNode; };
 
 export type DeclarationSyntax = ClassDeclarationStatementSyntax |
                                 StructDeclarationStatementSyntax |
@@ -120,7 +121,8 @@ export type ExpressionNode  =   BooleanLiteralExpressionSyntax |
                                 NameExpressionSyntax |
                                 CallExpressionSyntax | 
                                 TypeNameSyntax |
-                                GetExpressionSyntax;
+                                GetExpressionSyntax |
+                                SetExpressionSyntax;
 
 export type CallableExpressionNode = LambdaDeclarationStatementSyntax |
                                      FunctionDeclarationStatementSyntax;
@@ -160,4 +162,5 @@ export const TypeNameSyntax = (starToken: Token|null, identifier:Token, isPredef
 export const ClassDeclarationStatementSyntax = (classKeyword : Token, identifier:Token, leftBrace: Token, declarations : DeclarationSyntax [], rightBrace: Token) : ClassDeclarationStatementSyntax => ({kind:"ClassDeclarationStatementSyntax", classKeyword, identifier, leftBrace, declarations, rightBrace, span:spanCalculator});
 export const StructDeclarationStatementSyntax = (structKeyword : Token, identifier:Token, leftBrace: Token, declarations : StructMemberDeclarationStatementSyntax [], rightBrace: Token) : StructDeclarationStatementSyntax => ({kind:"StructDeclarationStatementSyntax", structKeyword, identifier, leftBrace, declarations, rightBrace, span:spanCalculator});
 export const StructMemberDeclarationStatementSyntax = (identifier:Token, colonToken: Token, typeName:TypeNameSyntax, semiColonToken: Token) : StructMemberDeclarationStatementSyntax => ({kind:"StructMemberDeclarationStatementSyntax", identifier, colonToken, typeName, semiColonToken, span:spanCalculator});
-export const GetExpressionSyntax = (left:ExpressionNode, dotToken:Token, name:Token) : GetExpressionSyntax => ({kind:"GetExpressionSyntax", left, dotToken, name, span:spanCalculator})
+export const GetExpressionSyntax = (left:ExpressionNode, dotToken:Token, name:Token) : GetExpressionSyntax => ({kind:"GetExpressionSyntax", left, dotToken, name, span:spanCalculator});
+export const SetExpressionSyntax = (left:ExpressionNode, equalsToken:Token, right:ExpressionNode) : SetExpressionSyntax => ({kind:"SetExpressionSyntax", left, equalsToken, right, span:spanCalculator});

@@ -508,7 +508,23 @@ export default class Parser
             return AST.AssignmentExpressionSyntax(identifierToken, operatorToken, right);
         }
 
-        return this.parseBinaryExpression();
+        const expression = this.parseBinaryExpression();
+
+        // if we did a series of dot expressions
+        if(expression.kind === "GetExpressionSyntax")
+        {
+            // and we are assigning to it
+            if(this.peek(0).kind == SyntaxType.Equals)
+            {
+                // convert the get expression into a set expression
+                const operatorToken = this.next();
+                const right = this.parseAssignmentExpression();
+    
+                return AST.SetExpressionSyntax(expression, operatorToken, right);
+            }
+        }
+
+        return expression;
     }
 
     private parseBinaryExpression(parentPrecedence : number = 0): AST.ExpressionNode {
@@ -716,8 +732,9 @@ export default class Parser
         switch(expression.kind)
         {
             case "CallExpressionSyntax":
-            case "AssignmentExpressionSyntax":
-                break;
+            case "AssignmentExpressionSyntax": 
+            case "SetExpressionSyntax":        
+                break;     
             default:
                 this._diagnostics.reportUnexpectedStatementExpression(expression.span());
         }        

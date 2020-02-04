@@ -192,7 +192,8 @@ export default class Interpreter
             case "StructDeclarationStatementSyntax" :   
             case "StructMemberDeclarationStatementSyntax" :             
             case "ClassDeclarationStatementSyntax" :           
-            case "GetExpressionSyntax":                           
+            case "GetExpressionSyntax":              
+            case "SetExpressionSyntax":                         
                 throw new Error("Class execution not impletmented yet");                                
             default:
                 return exhaustiveCheck(node);
@@ -200,6 +201,10 @@ export default class Interpreter
     }
 
     VisitGetExpressionSyntax(syntax: AST.GetExpressionSyntax): Value {
+        throw new Error("Method not implemented.");
+    }
+
+    VisitSetExpressionSyntax(syntax: AST.SetExpressionSyntax): Value {
         throw new Error("Method not implemented.");
     }
 
@@ -535,7 +540,9 @@ export default class Interpreter
             case "TypeNameSyntax":
                 return this.VisitTypeNameSyntax(node);     
             case "GetExpressionSyntax":               
-                return this.VisitGetExpressionSyntax(node);                                                                                                     
+                return this.VisitGetExpressionSyntax(node);   
+            case "SetExpressionSyntax":               
+                return this.VisitSetExpressionSyntax(node);                                                                                                                     
             default :
                 exhaustiveCheck(node, true);
                 throw RangeError("JUST HERE TO CLEAR A COMPILER ERROR. The call above will throw before this");

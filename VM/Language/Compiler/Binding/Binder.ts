@@ -532,7 +532,9 @@ export default class Binder
             case "AssignmentExpressionSyntax":               
                 return this.BindAssignmentExpression(syntax);
             case "GetExpressionSyntax":               
-                return this.BindGetExpression(syntax);                
+                return this.BindGetExpression(syntax);
+            case "SetExpressionSyntax":               
+                return this.BindSetExpression(syntax);                                
             case "TypeNameSyntax":
                 throw new Error("Not Implemented");
         }
@@ -576,6 +578,15 @@ export default class Binder
 
         this.diagnostics.reportUndefinedName(syntax.name.span, syntax.name.lexeme);
         return new Nodes.BoundErrorExpression();        
+    }
+
+    private BindSetExpression(syntax: AST.SetExpressionSyntax) : Nodes.BoundExpression {
+        const left = this.BindExpression(syntax.left);
+        const right = this.BindExpression(syntax.right);
+        
+        const convertedExpression = this.BindConversion(syntax.right.span(), right, left.type);
+
+        return new Nodes.BoundSetExpression(left, convertedExpression);
     }
 
     BindNameExpression(syntax: AST.NameExpressionSyntax): Nodes.BoundExpression 
