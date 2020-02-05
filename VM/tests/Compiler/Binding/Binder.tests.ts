@@ -472,7 +472,41 @@ func main() : int
                     BinaryExpression<==>
                         LiteralExpression<1:int>
                         LiteralExpression<2:int>
-`]
+`],
+[`
+struct root 
+{
+    a1 : int;
+}
+
+struct leaf1
+{
+    b1 : int;
+    b2 : root;
+}
+
+struct leaf2
+{
+    c1 : int;
+    c2 : leaf1;
+}
+
+struct leaf3
+{
+    d1 : int;
+    d2 : leaf2;
+}
+
+func main() : int
+{
+    let d1 : leaf3;
+    let b1 : leaf2;
+
+    d1.d2.c2.b2.a1 = b1.b2.a1;
+
+    return d1.d2.c2.b2.a1;
+}`, ``
+]
 /*,[`
 class test
 {

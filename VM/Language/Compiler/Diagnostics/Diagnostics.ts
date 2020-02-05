@@ -27,7 +27,8 @@ export enum DiagnosticType {
     InvalidBreakOrContinue,
     ExpectedClassType,
     EntryPointNotFound,
-    NotAllPathsReturn
+    NotAllPathsReturn,
+    DuplicateStructMember
 }
 
 export class Diagnostic
@@ -175,6 +176,11 @@ export class Diagnostics
     
     reportUnsupportedType(type: ValueType) {
         throw new Error("Method not implemented.");
+    }
+
+    reportDuplicateStructMember(structName: string, membername: string, span:TextSpan)
+    {
+        this.report(`Struct ${structName} contains duplicate member ${membername}.`, DiagnosticType.DuplicateStructMember, span);
     }
 
     public get text() : SourceText

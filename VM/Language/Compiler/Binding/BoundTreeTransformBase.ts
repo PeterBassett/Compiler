@@ -37,6 +37,7 @@ export default class BoundTreeTransformBase
                 root.diagnostics,
                 root.variables,
                 root.classes,
+                root.structs,
                 funcs);
         }
 

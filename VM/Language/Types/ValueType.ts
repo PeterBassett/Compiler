@@ -6,7 +6,8 @@ export enum ValueType {
     Int,
     Float,
     String,
-    Class
+    Class,
+    Struct
 }
 
 let ValueTypeNameMap : { [index:number] :string } = {};

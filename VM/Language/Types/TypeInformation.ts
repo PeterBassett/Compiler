@@ -105,6 +105,7 @@ export class Type
     clone(): Type {
         let a = new Type(this.type, this.name);
         a.isClass = this.isClass;
+        a.isStruct = this.isStruct;
         
         if(this.function)
             a.function = this.function.clone();
@@ -122,6 +123,7 @@ export class Type
         this.type = t.type;
         this.name = t.name;
         this.isClass = t.isClass;
+        this.isStruct = t.isStruct;
         if(this.function) 
              this.function.returnType.setFunctionReturnType(t);                     
     }
@@ -135,6 +137,7 @@ export class Type
         this.type = type;
         this.name = name;
         this.isClass = type == ValueType.Class;
+        this.isStruct = type == ValueType.Struct;
         this.function = func;
         this.isPredefined = isPredefined || false;
     }
@@ -142,5 +145,6 @@ export class Type
     public type: ValueType
     public name? : string;
     public isClass : boolean;    
+    public isStruct : boolean;
     public isPredefined : boolean;
 }

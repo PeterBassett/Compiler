@@ -17,7 +17,7 @@ import Token from "../Syntax/Token";
 
 // responsible for transforming a SyntaxTree into a BoundTree
 // this discards syntax detail complexity and enforces semantic rules.
-// it is the start of the.kindchecker
+// it is the start of the type checker
 export default class Binder
 {
     private diagnostics! : Diagnostics;
@@ -43,12 +43,13 @@ export default class Binder
 
         const declarations = this.BindDeclarations(compilationUnit.compilationUnit.declarations);
 
-        return new Nodes.BoundGlobalScope(this.diagnostics, declarations.variables, declarations.classes, declarations.functions);
+        return new Nodes.BoundGlobalScope(this.diagnostics, declarations.variables, declarations.classes, declarations.structs, declarations.functions);
     } 
     
     private BindDeclarations(declarations : AST.DeclarationSyntax[]) : { 
         variables : Nodes.BoundVariableDeclaration[],
         classes : Nodes.BoundClassDeclaration[],
+        structs : Nodes.BoundStructDeclaration[],
         functions : Nodes.BoundFunctionDeclaration[],
     }
     {
@@ -65,6 +66,12 @@ export default class Binder
             declarations.filter(d => {
                 return d.kind == "ClassDeclarationStatementSyntax"
             } ) as AST.ClassDeclarationStatementSyntax[]
+        );
+
+        const structs : Nodes.BoundStructDeclaration[] = this.BindStructDeclarations(
+            declarations.filter(d => {
+                return d.kind == "StructDeclarationStatementSyntax"
+            } ) as AST.StructDeclarationStatementSyntax[]
         );
 
         // three stage
@@ -97,6 +104,7 @@ export default class Binder
         return {
             variables,
             classes,
+            structs,
             functions
         };
     }
@@ -140,10 +148,11 @@ export default class Binder
                 return this.BindExpressionStatement(syntax);
             case "ReturnStatementSyntax" : 
                 return this.BindReturnStatement(syntax); 
+            case "StructDeclarationStatementSyntax" :     
+                return this.BindStructDeclarationStatement(syntax);             
             case "ElseStatementSyntax" :
             case "ParameterDeclarationSyntax" : 
-            case "ParameterDeclarationListSyntax" :   
-            case "StructDeclarationStatementSyntax" :     
+            case "ParameterDeclarationListSyntax" :               
             case "StructMemberDeclarationStatementSyntax" :            
             case "ClassDeclarationStatementSyntax" :       
                 throw new Error("");
@@ -330,6 +339,59 @@ export default class Binder
             this.scope.DefineVariableFromDeclaration(variable.name, node, variable);
 
         return node;
+    }
+    
+    private BindStructDeclarations(declarations: AST.StructDeclarationStatementSyntax[]): Nodes.BoundStructDeclaration[] {
+        return declarations.map(d => this.BindStructDeclarationStatement(d));
+    }    
+
+    private BindStructDeclarationStatement(syntax : AST.StructDeclarationStatementSyntax) : Nodes.BoundStructDeclaration
+    {
+        const name = syntax.identifier.lexeme;
+
+        this.scope.DefineType(name, new Type(ValueType.Struct, name));
+
+        const boundDeclarations = this.BindStructMemberDeclarations(syntax, syntax.declarations);        
+
+        return new Nodes.BoundStructDeclaration(name, boundDeclarations);
+    }
+
+    private BindStructMemberDeclarations(structSyntax : AST.StructDeclarationStatementSyntax, declarations: AST.StructMemberDeclarationStatementSyntax[]) : Nodes.BoundStructMemberDeclaration[]
+    {
+        let names = declarations.map ( d => d.identifier.lexeme );
+        let nameToDeclaration : { [index:string] : AST.StructMemberDeclarationStatementSyntax } = {};        
+        let nameCount : { [index:string] : number } = {};
+
+        for(let declaration of declarations)
+        {
+            nameToDeclaration[declaration.identifier.lexeme] = declaration;
+            nameCount[declaration.identifier.lexeme] = (nameCount[declaration.identifier.lexeme] | 0) + 1;
+        }
+
+        for(let name of names)
+        {
+            if(nameCount[name] > 1)
+                this.diagnostics.reportDuplicateStructMember(structSyntax.identifier.lexeme, name, nameToDeclaration[name].span());
+        }
+
+        const boundDeclarations : Nodes.BoundStructMemberDeclaration [] = [];
+
+        for(let declaration of declarations)
+        {
+            const memberType = TypeQuery.getTypeFromName(declaration.typeName.identifier.lexeme, this.scope, true);            
+
+            if(memberType.type === PredefinedValueTypes.Unit.type)
+            {
+                this.diagnostics.reportInvalidTypeName(nameToDeclaration[name].typeName.identifier);
+            }
+
+            boundDeclarations.push(new Nodes.BoundStructMemberDeclaration(
+                declaration.identifier.lexeme,
+                memberType
+            ));
+        }
+
+        return boundDeclarations;
     }
 
     private BindDefaultExpressionForType(typeName: AST.TypeNameSyntax): Nodes.BoundExpression {        

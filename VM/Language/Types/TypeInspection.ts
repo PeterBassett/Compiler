@@ -29,7 +29,7 @@ export default class TypeQuery
                     else
                         throw new Error("Undefined Type");
 
-                if(!identifier.type.isClass)
+                if(!identifier.type.isClass && !identifier.type.isStruct)
                     if(returnUnitOnFailure)
                         return PredefinedValueTypes.Unit;
                     else

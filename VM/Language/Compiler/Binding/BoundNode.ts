@@ -30,7 +30,8 @@ export enum BoundNodeKind {
     GotoStatement,
     ConditionalGotoStatement,
     ConversionExpression,
-    SetExpression
+    SetExpression,
+    StructMemberDeclaration
 }
 
 export enum BoundBinaryOperatorKind {
@@ -255,24 +256,19 @@ export class BoundBlockStatement extends BoundStatement
 
 export class BoundGlobalScope
 {
-    constructor(diagnostics : Diagnostics, variables : BoundVariableDeclaration[], classes : BoundClassDeclaration[], functions : BoundFunctionDeclaration[])
+    constructor(
+        public readonly diagnostics : Diagnostics, 
+        public readonly variables : BoundVariableDeclaration[], 
+        public readonly classes : BoundClassDeclaration[], 
+        public readonly structs : BoundStructDeclaration[], 
+        public readonly functions : BoundFunctionDeclaration[])
     {
-        this.diagnostics = diagnostics;
-        this.variables = variables;
-        this.classes = classes;
-        this.functions = functions;
-
         this.functionMap = {};
-
         this.functions.forEach( f => this.functionMap[f.identifier] = f );
     }
 
     public get success() : boolean { return this.diagnostics.length === 0; }    
-    public readonly variables : BoundVariableDeclaration[];
-    public readonly classes : BoundClassDeclaration[];
-    public readonly functions : BoundFunctionDeclaration[];
     public readonly functionMap : { [index:string] : BoundFunctionDeclaration };
-    public readonly diagnostics : Diagnostics;
 }
 
 export class BoundLiteralExpression extends BoundExpression
@@ -555,6 +551,26 @@ export class BoundClassDeclaration extends BoundStatement
     public readonly fields : BoundVariableDeclaration[];
     public readonly classes : BoundClassDeclaration[];
     public readonly members : BoundFunctionDeclaration[];
+}
+
+export class BoundStructDeclaration extends BoundStatement
+{
+    constructor(public readonly name:string, public readonly fields : BoundStructMemberDeclaration[])
+    {
+        super()
+    }
+    
+    public get kind() { return BoundNodeKind.ClassDeclaration; };
+}
+
+export class BoundStructMemberDeclaration extends BoundStatement
+{
+    constructor(public readonly name:string, public readonly type : Type)
+    {
+        super()
+    }
+    
+    public get kind() { return BoundNodeKind.StructMemberDeclaration; };
 }
 
 export class BoundErrorExpression extends BoundExpression 
