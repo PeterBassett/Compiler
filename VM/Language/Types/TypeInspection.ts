@@ -52,6 +52,8 @@ export default class TypeQuery
                 return "";            
             case ValueType.Class:
                 return null;    
+            case ValueType.Struct:
+                return null;
         }
         
         throw new Error("Undefined Type");        

@@ -2,7 +2,7 @@ import { Diagnostics } from "../Diagnostics/Diagnostics";
 import CompilationUnit from "../Syntax/CompilationUnit";
 import * as AST from "../Syntax/AST/ASTNode";
 import { SyntaxType } from "../Syntax/SyntaxType";
-import { Type, FunctionDetails } from "../../Types/TypeInformation";
+import { Type, FunctionDetails, StructDetails } from "../../Types/TypeInformation";
 import { ValueType } from "../../Types/ValueType";
 import { PredefinedValueTypes } from "../../Types/PredefinedValueTypes";
 import { using } from "../../../misc/disposable";
@@ -349,9 +349,12 @@ export default class Binder
     {
         const name = syntax.identifier.lexeme;
 
-        this.scope.DefineType(name, new Type(ValueType.Struct, name));
+        const type = new Type(ValueType.Struct, name);
+        this.scope.DefineType(name, type);
+        
+        const boundDeclarations = this.BindStructMemberDeclarations(syntax, syntax.declarations);
 
-        const boundDeclarations = this.BindStructMemberDeclarations(syntax, syntax.declarations);        
+        type.structDetails = new StructDetails(name, boundDeclarations);
 
         return new Nodes.BoundStructDeclaration(name, boundDeclarations);
     }
@@ -605,37 +608,21 @@ export default class Binder
     private BindGetExpression(syntax: AST.GetExpressionSyntax) : Nodes.BoundExpression {
         const left = this.BindExpression(syntax.left);
         
-        if(!left.type.isClass)
+        if(!left.type.isStruct)
         {
             this.diagnostics.reportExpectedClass(syntax.left.span(), syntax.name.lexeme);
             return new Nodes.BoundErrorExpression();
         }
 
-        const classDetails = left.type.classDetails!;
-
-        const result = classDetails.get(syntax.name.lexeme);
+        const structDetails = left.type.structDetails!;
+        const result = structDetails.get(syntax.name.lexeme);
 
         if(result)
         {
-            switch(result.kind)
-            {
-                case Nodes.BoundNodeKind.VariableDeclaration:
-                {
-                    const variable = result as Nodes.BoundVariableDeclaration;
-                    return new Nodes.BoundVariableExpression(new Identifier(variable.variable.name, variable.variable.type, variable.variable));
-                }
-         /*       case Nodes.BoundNodeKind.ClassDeclaration:
-                {                    
-                    return result as Nodes.BoundClassDeclaration;
-                }
-                case Nodes.BoundNodeKind.FunctionDefinition:
-                {
-                    return result as Nodes.BoundFunctionDeclaration;
-                }                 
-                default:
-                    return result;
-                    */
-            }
+            // TODO : this needs to return a BoundGetExpression which captures the parent and the references member.
+
+            return new Nodes.BoundVariableExpression(new Identifier(result.name, result.type,
+                new Nodes.VariableSymbol(result.name, false, result.type, false)));        
         }    
 
         this.diagnostics.reportUndefinedName(syntax.name.span, syntax.name.lexeme);

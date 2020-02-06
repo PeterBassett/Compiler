@@ -499,12 +499,12 @@ struct leaf3
 
 func main() : int
 {
-    let d1 : leaf3;
-    let b1 : leaf2;
+    let l3 : leaf3;
+    let l2 : leaf2;
 
-    d1.d2.c2.b2.a1 = b1.b2.a1;
+    l3.d2.c2.b2.a1 = l2.c2.b2.a1;
 
-    return d1.d2.c2.b2.a1;
+    return l3.d2.c2.b2.a1;
 }`, ``
 ]
 /*,[`

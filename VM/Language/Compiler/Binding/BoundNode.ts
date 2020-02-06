@@ -23,7 +23,6 @@ export enum BoundNodeKind {
     UnaryExpression,
     VariableExpression,
     AssignmentExpression,
-    ClassDeclaration,
     ErrorExpression,
     CallExpression,
     LabelStatement,
@@ -31,7 +30,9 @@ export enum BoundNodeKind {
     ConditionalGotoStatement,
     ConversionExpression,
     SetExpression,
-    StructMemberDeclaration
+    StructMemberDeclaration,
+    StructDeclaration,
+    ClassDeclaration
 }
 
 export enum BoundBinaryOperatorKind {
@@ -560,7 +561,7 @@ export class BoundStructDeclaration extends BoundStatement
         super()
     }
     
-    public get kind() { return BoundNodeKind.ClassDeclaration; };
+    public get kind() { return BoundNodeKind.StructDeclaration; };
 }
 
 export class BoundStructMemberDeclaration extends BoundStatement

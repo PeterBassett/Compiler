@@ -1,5 +1,5 @@
 import { IScope, Scope } from "../Scope/Scope";
-import { BoundFunctionDeclaration, BoundVariableDeclaration, BoundClassDeclaration } from "../Compiler/Binding/BoundNode";
+import { BoundFunctionDeclaration, BoundVariableDeclaration, BoundClassDeclaration, BoundStructMemberDeclaration } from "../Compiler/Binding/BoundNode";
 import { GetKeywordType } from "../Compiler/Syntax/SyntaxFacts";
 import { ScopeInfo, Identifier } from "../Scope/DefinitionScope";
 import { PredefinedValueTypes } from "../Types/PredefinedValueTypes";
@@ -89,7 +89,28 @@ export class ClassDetails
     }
 }
 
+export class StructDetails
+{
+    constructor(public readonly structName : string, public readonly fields : BoundStructMemberDeclaration[])    
+    {
+    }
 
+    get(memberName:string) : BoundStructMemberDeclaration | null
+    {
+        let field = this.fields.filter(f => f.name == memberName);        
+        if(field.length)
+            return field[0];        
+
+        return null;
+    }
+
+    clone(): StructDetails
+    {
+        return new StructDetails(
+            this.structName,
+            this.fields);
+    }
+}
 
 export class Type
 {    
@@ -101,6 +122,7 @@ export class Type
     variable?: VariableDetails;
     function?: FunctionDetails;
     classDetails?: ClassDetails;
+    structDetails?: StructDetails;
 
     clone(): Type {
         let a = new Type(this.type, this.name);
@@ -112,6 +134,9 @@ export class Type
 
         if(this.classDetails)
             a.classDetails = this.classDetails.clone();
+            
+        if(this.structDetails)
+            a.structDetails = this.structDetails.clone();            
 
         if(this.variable)
             a.variable = this.variable.clone();            

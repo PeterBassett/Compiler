@@ -70,6 +70,20 @@ export default class BoundTreeStructureVisitor
                 value = "<" + exp.name + ">";
                 break;
             }
+            case Nodes.BoundNodeKind.StructDeclaration:
+            {
+                let exp = node as Nodes.BoundStructDeclaration;
+
+                value = "<" + exp.name + ">";
+                break;
+            } 
+            case Nodes.BoundNodeKind.StructMemberDeclaration:
+            {
+                let exp = node as Nodes.BoundStructMemberDeclaration;
+
+                value = "<" + exp.name + ":" + exp.type.name + ">";
+                break;
+            }                        
             case Nodes.BoundNodeKind.AssignmentExpression:
             {
                 let exp = node as Nodes.BoundAssignmentExpression;
