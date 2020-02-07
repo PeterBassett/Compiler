@@ -556,6 +556,32 @@ func main() : int
 
     return l3.d2.c2.b2.a1;
 }`, 3],
+[`struct leaf 
+{
+    a : int;
+}
+
+struct branch 
+{
+    a : int;
+    b: leaf;
+}
+
+struct root 
+{
+    a : int;
+    b:branch;
+}
+
+func main() : int
+{
+    let r : root;
+    r.a = 5;
+    r.b.a = 15;
+    r.b.b.a = 25;
+
+    return r.b.a;
+}`, 15],
 [`struct root 
 {
     a : int;

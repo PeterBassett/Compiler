@@ -5,6 +5,7 @@ import { StructDeclarationStatementSyntax, IfStatementSyntax } from "../Syntax/A
 import GeneratedCode from "./GeneratedCode";
 import Stack from "../../../misc/Stack";
 import BuiltinFunctions from "../BuiltinFunctions";
+import { Type } from "../../Types/TypeInformation";
 
 export default class CodeGenerator
 {
@@ -173,7 +174,7 @@ export default class CodeGenerator
 
         let offset = 0;
         func.parameters.forEach( p => {
-            const size = this.typeSize(p.type.type);
+            const size = this.typeSize(p.type);
             this.variableMap.peek()[p.name] = { offset:offset, size:size };            
             offset += size;
         })
@@ -254,7 +255,7 @@ export default class CodeGenerator
                     this.instruction("MOV R1 0")
                 }
             
-                const size = this.typeSize(stmt.variable.type.type);
+                const size = this.typeSize(stmt.variable.type);
                 this.variableMap.peek()[stmt.variable.name] = { offset:this.stackIndex, size:size };
                 this.stackIndex += size;                
 
@@ -272,11 +273,9 @@ export default class CodeGenerator
         this.instruction("MOV SP R6", "unwind the stack for variables declared in this function");
     }
     
-    typeSize(type : ValueType) : number {
+    typeSize(type : Type) : number {
 
-        //return 4;
-
-        switch(type)
+        switch(type.type)
         {
             case ValueType.Int :
                 return 4;
@@ -284,10 +283,27 @@ export default class CodeGenerator
                 return 8;
             case ValueType.Boolean :
                 return 1;
+            case ValueType.Struct :
+                return this.structSize(type);
             default : 
-                this.diagnostics.reportUnsupportedType(type);
+                this.diagnostics.reportUnsupportedType(type.type);
                 return 4;                       
         }
+    }
+
+
+    structSize(type: Type): number 
+    {
+        let size = 0;
+
+        let fields = type.structDetails!.fields;
+
+        for(let field of fields)
+        {
+            size += this.typeSize(field.type);
+        }
+
+        return size;
     }
 
     mnemonicForType(type: ValueType) : string
@@ -346,6 +362,8 @@ export default class CodeGenerator
                         break;
                     case ValueType.Struct :
                         /// TEMPORARY
+                        // calculate size of structure
+                        // subtract size from SP
                         this.diagnostics.reportUnsupportedType(exp.type.type);
                         break;                        
                     default : 
