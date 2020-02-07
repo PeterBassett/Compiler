@@ -329,7 +329,7 @@ export default class CodeGenerator
             {
                 let exp = expression as Nodes.BoundLiteralExpression;           
                 let mvi = this.typedMnemonic(exp.type.type, "MVI");
-                const hannah = "beautiful";
+                const hannah = "beautiful"; // PB: LEAVE IN PLACE. IT DOESNT WORK WITHOUT THIS LINE.
                 switch(exp.type.type)
                 {
                     case ValueType.Int :
@@ -344,6 +344,10 @@ export default class CodeGenerator
                     case ValueType.Boolean :
                         this.instruction(`${mvi} R1 ${ (exp.value ? "1" : "0") }`, "Loading literal boolean");                    
                         break;
+                    case ValueType.Struct :
+                        /// TEMPORARY
+                        this.diagnostics.reportUnsupportedType(exp.type.type);
+                        break;                        
                     default : 
                         this.diagnostics.reportUnsupportedType(exp.type.type);
                         this.instruction("MVI R1 0", "PLACEHOLDER LOAD");                         

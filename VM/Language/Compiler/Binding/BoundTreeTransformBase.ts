@@ -306,6 +306,16 @@ export default class BoundTreeTransformBase
                 let expr = this.transformConversionExpression(expression as Nodes.BoundConversionExpression);
                 return (expr !== expression) ? expr : expression;                
             }
+            case Nodes.BoundNodeKind.GetExpression:
+            {
+                let expr = this.transformGetExpression(expression as Nodes.BoundGetExpression);
+                return (expr !== expression) ? expr : expression;                
+            }
+            case Nodes.BoundNodeKind.SetExpression:
+            {
+                let expr = this.transformSetExpression(expression as Nodes.BoundSetExpression);
+                return (expr !== expression) ? expr : expression;                
+            }                        
             default:
                 throw new Error(`Unhandled expression type ${expression.kind}`);
         }
@@ -386,4 +396,12 @@ export default class BoundTreeTransformBase
     protected transformConversionExpression(expression: Nodes.BoundConversionExpression) : Nodes.BoundExpression {
         return expression;
     }
+
+    protected transformGetExpression(expression: Nodes.BoundGetExpression) : Nodes.BoundExpression {
+        return expression;
+    }
+
+    protected transformSetExpression(expression: Nodes.BoundSetExpression) : Nodes.BoundExpression {
+        return expression;
+    }    
 }

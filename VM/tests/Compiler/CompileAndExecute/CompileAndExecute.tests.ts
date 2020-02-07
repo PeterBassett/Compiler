@@ -522,7 +522,52 @@ func main() : int
     return McCarthy(45);
 }
 `, 91],
+[`struct root 
+{
+    a1 : int;
+}
 
+struct leaf1
+{
+    b1 : int;
+    b2 : root;
+}
+
+struct leaf2
+{
+    c1 : int;
+    c2 : leaf1;
+}
+
+struct leaf3
+{
+    d1 : int;
+    d2 : leaf2;
+}
+
+func main() : int
+{
+    let l3 : leaf3;
+    let l2 : leaf2;
+
+    l2.c2.b2.a1 = 3;
+
+    l3.d2.c2.b2.a1 = l2.c2.b2.a1;
+
+    return l3.d2.c2.b2.a1;
+}`, 3],
+[`struct root 
+{
+    a : int;
+}
+
+func main() : int
+{
+    let r : root;
+    r.a = 5;
+
+    return r.a;
+}`, 5]
 /*,
 [`func main() : string {
     return string(3.14159);
