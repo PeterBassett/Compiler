@@ -505,7 +505,44 @@ func main() : int
     l3.d2.c2.b2.a1 = l2.c2.b2.a1;
 
     return l3.d2.c2.b2.a1;
-}`, ``
+}`, 
+`BoundGlobalScope
+    StructDeclaration<root>
+        StructMemberDeclaration<a1:int>
+    StructDeclaration<leaf1>
+        StructMemberDeclaration<b1:int>
+        StructMemberDeclaration<b2:root>
+    StructDeclaration<leaf2>
+        StructMemberDeclaration<c1:int>
+        StructMemberDeclaration<c2:leaf1>
+    StructDeclaration<leaf3>
+        StructMemberDeclaration<d1:int>
+        StructMemberDeclaration<d2:leaf2>
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<l3:leaf3>
+                LiteralExpression<null:leaf3>
+            VariableDeclaration<l2:leaf2>
+                LiteralExpression<null:leaf2>
+            ExpressionStatement
+                SetExpression
+                    GetExpression<a1:int>
+                        GetExpression<b2:root>
+                            GetExpression<c2:leaf1>
+                                GetExpression<d2:leaf2>
+                                    VariableExpression<l3:leaf3>
+                    GetExpression<a1:int>
+                        GetExpression<b2:root>
+                            GetExpression<c2:leaf1>
+                                VariableExpression<l2:leaf2>
+            ReturnStatement
+                GetExpression<a1:int>
+                    GetExpression<b2:root>
+                        GetExpression<c2:leaf1>
+                            GetExpression<d2:leaf2>
+                                VariableExpression<l3:leaf3>
+`
 ]
 /*,[`
 class test

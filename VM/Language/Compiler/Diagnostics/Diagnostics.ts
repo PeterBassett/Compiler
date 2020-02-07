@@ -28,7 +28,8 @@ export enum DiagnosticType {
     ExpectedClassType,
     EntryPointNotFound,
     NotAllPathsReturn,
-    DuplicateStructMember
+    DuplicateStructMember,
+    UndefinedStructMember
 }
 
 export class Diagnostic
@@ -181,6 +182,11 @@ export class Diagnostics
     reportDuplicateStructMember(structName: string, membername: string, span:TextSpan)
     {
         this.report(`Struct ${structName} contains duplicate member ${membername}.`, DiagnosticType.DuplicateStructMember, span);
+    }
+
+    reportUndefinedStructMember(structName: string, memberName: string, span: TextSpan) 
+    {
+        this.report(`Member ${memberName} does not exist on struct ${structName}.`, DiagnosticType.UndefinedStructMember, span);
     }
 
     public get text() : SourceText

@@ -129,6 +129,12 @@ export default class BoundTreeStructureVisitor
                 value = "<" + exp.type.name + ">";
                 break;                
             }
+            case Nodes.BoundNodeKind.GetExpression:
+            {
+                let exp = node as Nodes.BoundGetExpression;
+                value = "<" + exp.member + ":" + exp.type.name + ">";
+                break;                
+            }
             case Nodes.BoundNodeKind.IfStatement:
             {
                 let exp = node as Nodes.BoundIfStatement;

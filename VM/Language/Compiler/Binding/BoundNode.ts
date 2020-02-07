@@ -32,7 +32,8 @@ export enum BoundNodeKind {
     SetExpression,
     StructMemberDeclaration,
     StructDeclaration,
-    ClassDeclaration
+    ClassDeclaration,
+    GetExpression
 }
 
 export enum BoundBinaryOperatorKind {
@@ -479,6 +480,17 @@ export class BoundSetExpression extends BoundExpression
 
     public get kind(): BoundNodeKind { return BoundNodeKind.SetExpression; };
     public get type(): Type { return this.left.type; }
+}
+
+export class BoundGetExpression extends BoundExpression
+{    
+    constructor(public readonly left : BoundExpression, public type: Type, public readonly member : string)
+    {
+        super();
+    }
+
+    public get kind(): BoundNodeKind { return BoundNodeKind.GetExpression; };
+   // public get type(): Type { return this.left.type; }
 }
 
 export class BoundCallExpression extends BoundExpression 

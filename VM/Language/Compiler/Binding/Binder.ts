@@ -615,18 +615,17 @@ export default class Binder
         }
 
         const structDetails = left.type.structDetails!;
+        const structName = structDetails.structName;
         const result = structDetails.get(syntax.name.lexeme);
 
-        if(result)
-        {
-            // TODO : this needs to return a BoundGetExpression which captures the parent and the references member.
+        if(!result)
+        {                        
 
-            return new Nodes.BoundVariableExpression(new Identifier(result.name, result.type,
-                new Nodes.VariableSymbol(result.name, false, result.type, false)));        
-        }    
-
-        this.diagnostics.reportUndefinedName(syntax.name.span, syntax.name.lexeme);
-        return new Nodes.BoundErrorExpression();        
+            this.diagnostics.reportUndefinedStructMember(structName, syntax.name.lexeme, syntax.span());
+            return new Nodes.BoundErrorExpression();        
+        }   
+        
+        return new Nodes.BoundGetExpression(left, result.type, result.name);
     }
 
     private BindSetExpression(syntax: AST.SetExpressionSyntax) : Nodes.BoundExpression {
