@@ -128,6 +128,7 @@ export class Type
         let a = new Type(this.type, this.name);
         a.isClass = this.isClass;
         a.isStruct = this.isStruct;
+        a.typeid = this.typeid;
         
         if(this.function)
             a.function = this.function.clone();
@@ -159,6 +160,7 @@ export class Type
 
     constructor(type: ValueType, name? : string, func? : FunctionDetails, isPredefined? : boolean)
     {
+        this.typeid = Type._id++;
         this.type = type;
         this.name = name;
         this.isClass = type == ValueType.Class;
@@ -167,6 +169,8 @@ export class Type
         this.isPredefined = isPredefined || false;
     }
 
+    private static _id : number = 0;
+    public typeid: number;    
     public type: ValueType
     public name? : string;
     public isClass : boolean;    
