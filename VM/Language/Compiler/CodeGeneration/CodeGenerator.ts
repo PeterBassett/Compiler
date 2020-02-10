@@ -6,6 +6,7 @@ import GeneratedCode from "./GeneratedCode";
 import Stack from "../../../misc/Stack";
 import BuiltinFunctions from "../BuiltinFunctions";
 import { Type } from "../../Types/TypeInformation";
+import { Value } from "../../Scope/ExecutionScope";
 
 export default class CodeGenerator
 {
@@ -244,28 +245,71 @@ export default class CodeGenerator
                 let stmt = statement as Nodes.BoundVariableDeclaration;            
 
                 this.comment(`declare variable ${stmt.variable.name}`);
-                if(stmt.initialiser)
+                if(stmt.variable.type.type != ValueType.Struct)
                 {
-                    this.comment(`calculate initialisation value for variable ${stmt.variable.name}`);
-                    this.writeExpression(stmt.initialiser);
-                }
-                else
-                {
-                    this.comment(`default initialisation value for variable ${stmt.variable.name}`);
-                    this.instruction("MOV R1 0")
+                    if(stmt.initialiser)
+                    {
+                        this.comment(`calculate initialisation value for variable ${stmt.variable.name}`);
+                        this.writeExpression(stmt.initialiser);
+                    }
+                    else
+                    {
+                        this.comment(`default initialisation value for variable ${stmt.variable.name}`);
+                        this.instruction("MOV R1 0")
+                    }
                 }
             
                 const size = this.typeSize(stmt.variable.type);
                 this.variableMap.peek()[stmt.variable.name] = { offset:this.stackIndex, size:size };
                 this.stackIndex += size;                
 
-                this.comment(`reserve space on stack for variable ${stmt.variable.name}`);                            
+                this.comment(`reserve space on stack for variable ${stmt.variable.name} type ${stmt.variable.type.name}`);                            
 
-                const push = this.typedMnemonic(stmt.variable.type.type, "PUSH");
-                const type = this.mnemonicForType(stmt.variable.type.type);
-                this.instruction(`${push} R1`, `reserve space for a ${type} variable ${stmt.variable.name}`);                
+                if(stmt.variable.type.type != ValueType.Struct)
+                {
+                    const push = this.typedMnemonic(stmt.variable.type.type, "PUSH");
+                    const type = this.mnemonicForType(stmt.variable.type.type);
+                    this.instruction(`${push} R1`, `reserve space for a ${type} variable ${stmt.variable.name}`);                
+                }
+                else
+                {
+                    this.instruction(`SUB SP ${size}`, `reserve ${size} bytes space for struct ${stmt.variable.name} of type ${stmt.variable.type.name}`); 
+                    this.zeroStackbytes(size);
+                }
                 break;
             }                  
+        }
+    }
+
+    zeroStackbytes(size: number) 
+    {        
+        let remaining = size;
+
+        while(remaining > 0)
+        {
+            let inst = `MOVf`;
+            let chunk = 8;
+
+            if(remaining < chunk)
+            {
+                inst = `MOV`
+                chunk = 4;
+            }
+
+            if(remaining < chunk)
+            {
+                inst = `MOVw`
+                chunk = 2;
+            }
+
+            if(remaining < chunk)
+            {
+                inst = `MOVb`                            
+                chunk = 1;
+            }
+
+            this.instruction(`${inst} [SP+${size - remaining}] 0`, `initialise ${chunk} byte${chunk > 1 ? "s" : ""} on stack`); 
+            remaining -= chunk;
         }
     }
     
@@ -273,6 +317,8 @@ export default class CodeGenerator
         this.instruction("MOV SP R6", "unwind the stack for variables declared in this function");
     }
     
+    private typeSizeCache : { [index:number] : number } = {};
+
     typeSize(type : Type) : number {
 
         switch(type.type)
@@ -284,13 +330,17 @@ export default class CodeGenerator
             case ValueType.Boolean :
                 return 1;
             case ValueType.Struct :
-                return this.structSize(type);
+            {
+                if(!this.typeSizeCache[type.typeid])
+                    this.typeSizeCache[type.typeid] = this.structSize(type);
+                
+                return this.typeSizeCache[type.typeid];
+            }
             default : 
                 this.diagnostics.reportUnsupportedType(type.type);
                 return 4;                       
         }
     }
-
 
     structSize(type: Type): number 
     {
@@ -304,6 +354,21 @@ export default class CodeGenerator
         }
 
         return size;
+    }
+
+    structMemberOffset(type:Type, member:string) : number{
+        let offset = 0;
+        let fields = type.structDetails!.fields;
+
+        for(let field of fields)
+        {
+            if(field.name == member)
+                return offset;
+
+            offset += this.typeSize(field.type);
+        }
+    
+        throw new Error(`Member ${member} not found on struct ${type.name}`);
     }
 
     mnemonicForType(type: ValueType) : string
@@ -341,11 +406,45 @@ export default class CodeGenerator
     writeExpression(expression: Nodes.BoundExpression) {
         switch(expression.kind)
         {    
+            case Nodes.BoundNodeKind.GetExpression:
+            {
+                let exp = expression as Nodes.BoundGetExpression;
+                this.writeExpression(exp.left);
+                const offset = this.structMemberOffset(exp.left.type, exp.member);
+                        
+                let mov = "MOV";
+                
+                if(exp.type.type != ValueType.Struct)
+                {
+                    mov = this.typedMnemonic(exp.type.type, "MOV");
+                    this.instruction(`${mov} R1 [R1+${offset}]`, "Loading struct member");
+                }
+                else
+                {
+                    this.instruction(`ADD R1 ${offset}`, "Loading struct position");
+                }
+                break;
+            }
+            case Nodes.BoundNodeKind.SetExpression:
+            {
+                let exp = expression as Nodes.BoundSetExpression;
+                this.writeExpression(exp.right);
+                this.instruction("PUSH R1");
+                this.writeExpression(exp.left);
+                this.instruction("POP R2");
+
+                break;
+            }            
             case Nodes.BoundNodeKind.LiteralExpression:
             {
                 let exp = expression as Nodes.BoundLiteralExpression;           
-                let mvi = this.typedMnemonic(exp.type.type, "MVI");
+                let mvi = "";
+                
+                if(exp.type.type !== ValueType.Struct)
+                    mvi = this.typedMnemonic(exp.type.type, "MVI");
+
                 const hannah = "beautiful"; // PB: LEAVE IN PLACE. IT DOESNT WORK WITHOUT THIS LINE.
+
                 switch(exp.type.type)
                 {
                     case ValueType.Int :
@@ -361,10 +460,11 @@ export default class CodeGenerator
                         this.instruction(`${mvi} R1 ${ (exp.value ? "1" : "0") }`, "Loading literal boolean");                    
                         break;
                     case ValueType.Struct :
-                        /// TEMPORARY
                         // calculate size of structure
-                        // subtract size from SP
-                        this.diagnostics.reportUnsupportedType(exp.type.type);
+                        const size = this.structSize(exp.type);
+                        // reserve space on the stack for this
+                        this.instruction(`SUB SP ${size}`, "Reserve space on stack for struct");                    
+                        
                         break;                        
                     default : 
                         this.diagnostics.reportUnsupportedType(exp.type.type);
@@ -385,8 +485,16 @@ export default class CodeGenerator
                 this.comment(`Pushing ${args.length} arguments onto the stack`);
                 args.forEach( arg => {
                     this.writeExpression( arg );
-                    const push = this.typedMnemonic(arg.type.type, "PUSH");
-                    this.instruction(`${push} R1`); 
+
+                    if(arg.type.type != ValueType.Struct)
+                    {
+                        const push = this.typedMnemonic(arg.type.type, "PUSH");
+                        this.instruction(`${push} R1`); 
+                    }
+                    else
+                    {
+                        this.pushStruct(arg.type);
+                    }
                 });
 
                 if(!!exp.type.function && exp.type.function.isBuiltin)
@@ -499,6 +607,19 @@ export default class CodeGenerator
             {
                 throw new Error(`Unexpected Expression Type ${expression.kind}`);
             }
+        }
+    }
+    
+    pushStruct(struct: Type, comment:string = "") {
+        const fields = struct.structDetails!.fields;
+        for(let field of fields)
+        {
+            if(field.type.type != ValueType.Struct)
+            {
+                const push = this.mnemonicForType(field.type.type);
+                this.instruction(`${push} R1`);
+            }
+            else this.pushStruct(field.type, `nested struct ${field.type.name}`);
         }
     }
 

@@ -550,6 +550,7 @@ func main() : int
     let l3 : leaf3;
     let l2 : leaf2;
 
+    // complex multilevel referencing
     l2.c2.b2.a1 = 3;
 
     l3.d2.c2.b2.a1 = l2.c2.b2.a1;
@@ -573,8 +574,54 @@ struct root
     b:branch;
 }
 
+func foo() : int
+{
+    let a : root;
+    let b : leaf;
+    let c : branch;
+
+    return 1+2;
+}
+
 func main() : int
 {
+    // local variables only
+    let a : root;
+    let b : leaf;
+    let c : branch;
+
+    return foo();
+}`, 3],
+[`struct leaf 
+{
+    a : int;
+}
+func main() : int
+{
+    let b : leaf;
+    b.a = 3;
+    return b.a;
+}`, 3],
+[`struct leaf 
+{
+    a : int;
+}
+
+struct branch 
+{
+    a : int;
+    b: leaf;
+}
+
+struct root 
+{
+    a : int;
+    b:branch;
+}
+
+func main() : int
+{
+    // multilevel assignment
     let r : root;
     r.a = 5;
     r.b.a = 15;
@@ -589,6 +636,7 @@ func main() : int
 
 func main() : int
 {
+    // simple assignment and member referencing
     let r : root;
     r.a = 5;
 
