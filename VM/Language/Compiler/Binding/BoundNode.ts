@@ -473,7 +473,7 @@ export class BoundVariableExpression extends BoundExpression
 
 export class BoundSetExpression extends BoundExpression
 {    
-    constructor(public readonly left : BoundExpression, public readonly right : BoundExpression)
+    constructor(public readonly left : BoundGetExpression, public readonly right : BoundExpression)
     {
         super();
     }

@@ -428,13 +428,36 @@ export default class CodeGenerator
             case Nodes.BoundNodeKind.SetExpression:
             {
                 let exp = expression as Nodes.BoundSetExpression;
-                this.writeExpression(exp.right);
-                this.instruction("PUSH R1");
-                this.writeExpression(exp.left);
-                this.instruction("POP R2");
+
+                const memberRoot = this.structMemberRoot(exp.left);
+
+                const spec = this.variableMap.peek()[memberRoot.variable.name];
+
+                let offset = this.stackOffset + spec.offset;                                     
+
+                const memberOffset = this.structMemberOffset(memberRoot.variable.type, exp.left.member);
+                const memberSize = this.typeSize(memberRoot.variable.type.structDetails!.get(exp.left.member)!.type);
+
+                this.writeExpression(exp.right);            
+                
+                if(memberRoot.variable.type.type === ValueType.Struct)
+                {
+                    for (let i = 0; i < memberSize; i++)
+                    {
+                        this.instruction(`MOVb [R6+${offset + memberOffset + i}] R1`);                    
+                    }                                
+                }
+                else
+                {
+                    const mov = this.typedMnemonic(exp.type.type, "MOV");
+                    for (let i = 0; i < memberSize; i++)
+                    {
+                        this.instruction(`${mov} [R6+${offset + memberOffset + i}] R1`);                    
+                    }                                
+                }
 
                 break;
-            }            
+            }
             case Nodes.BoundNodeKind.LiteralExpression:
             {
                 let exp = expression as Nodes.BoundLiteralExpression;           
@@ -608,6 +631,25 @@ export default class CodeGenerator
                 throw new Error(`Unexpected Expression Type ${expression.kind}`);
             }
         }
+    }
+
+    structMemberRoot(left: Nodes.BoundGetExpression) : Nodes.BoundVariableExpression {
+        let current : Nodes.BoundExpression = left;
+
+        while(current)
+        {
+            if(current.kind === Nodes.BoundNodeKind.GetExpression)
+            {
+                current = (current as Nodes.BoundGetExpression).left;
+            }
+
+            if(current && current.kind === Nodes.BoundNodeKind.VariableExpression)
+            {
+                return current as Nodes.BoundVariableExpression;
+            }
+        }
+
+        throw new Error("Expected variable expression")
     }
     
     pushStruct(struct: Type, comment:string = "") {

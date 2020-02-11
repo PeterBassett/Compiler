@@ -629,7 +629,7 @@ export default class Binder
     }
 
     private BindSetExpression(syntax: AST.SetExpressionSyntax) : Nodes.BoundExpression {
-        const left = this.BindExpression(syntax.left);
+        const left = this.BindGetExpression(syntax.left) as Nodes.BoundGetExpression;
         const right = this.BindExpression(syntax.right);
         
         const convertedExpression = this.BindConversion(syntax.right.span(), right, left.type);
