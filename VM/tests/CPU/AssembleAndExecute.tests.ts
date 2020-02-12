@@ -520,6 +520,22 @@ describe("Assemble and execute", () => {
         expect(registers.R1).toEqual(registers.SP);
     });
 
+    it("subtract from the stack pointer", () => {
+        execute(`
+    .data
+    .text
+    .global start:
+        start:
+        sub sp 12
+        halt`, undefined,
+        (cpu : CPU, ram : RAM, registers : RegisterBank, flags: Flags) =>
+        {
+            registers.SP = 50;
+        });
+
+        expect(registers.SP).toEqual(38);
+    }, );
+
     it("MOV with relative addressed source", () => {        
         execute(`
         .data
