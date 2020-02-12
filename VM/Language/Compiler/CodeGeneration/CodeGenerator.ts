@@ -356,19 +356,23 @@ export default class CodeGenerator
         return size;
     }
 
-    structMemberOffset(type:Type, member:string) : number{
+    structMemberOffset(type:Type, memberPath:string[]) : number{
         let offset = 0;
-        let fields = type.structDetails!.fields;
 
-        for(let field of fields)
+        for(let field of type.structDetails!.fields)
         {
-            if(field.name == member)
+            if(field.name == memberPath[0])
+            {
+                if(field.type.type === ValueType.Struct) 
+                    return offset + this.structMemberOffset(field.type, memberPath.slice(1));
+
                 return offset;
+            }
 
             offset += this.typeSize(field.type);
         }
     
-        throw new Error(`Member ${member} not found on struct ${type.name}`);
+        throw new Error(`Member not found on struct ${type.name}`);
     }
 
     mnemonicForType(type: ValueType) : string
@@ -408,20 +412,33 @@ export default class CodeGenerator
         {    
             case Nodes.BoundNodeKind.GetExpression:
             {
-                let exp = expression as Nodes.BoundGetExpression;
-                this.writeExpression(exp.left);
-                const offset = this.structMemberOffset(exp.left.type, exp.member);
-                        
+                let exp = expression as Nodes.BoundGetExpression;                
+                const memberRoot = this.structMemberRoot(exp);                
+
+                const memberPath = this.getExpressionPath(exp as Nodes.BoundGetExpression);                    
+                const memberOffset = this.structMemberOffset(memberRoot.variable.type, memberPath);
+                const member = memberRoot.variable.type.structDetails!.get(exp.member)!;
+                const memberType = member.type;
+                const memberSize = this.typeSize(memberType);  
+
+                const spec = this.variableMap.peek()[memberRoot.variable.name];
+                let offset = this.stackOffset + spec.offset;          
                 let mov = "MOV";
                 
                 if(exp.type.type != ValueType.Struct)
                 {
                     mov = this.typedMnemonic(exp.type.type, "MOV");
-                    this.instruction(`${mov} R1 [R1+${offset}]`, "Loading struct member");
+                    this.instruction(`${mov} R1 [R6-${offset + memberOffset}]`, "Loading struct member");
                 }
                 else
                 {
-                    this.instruction(`ADD R1 ${offset}`, "Loading struct position");
+                    /*
+                    for (let i = 0; i < memberSize; i++)
+                    {
+                        this.instruction(`MOVb [R6+${offset + memberOffset + 1}] [R6+${sourceStackOffset + sourceOffset + i}]`);                    
+                    } 
+                    this.instruction(`MOVb [R6+${offset + memberOffset + 1}] [R6+${sourceStackOffset + sourceOffset + i}]`);                                        
+                    */
                 }
                 break;
             }
@@ -435,25 +452,33 @@ export default class CodeGenerator
 
                 let offset = this.stackOffset + spec.offset;                                     
 
-                const memberOffset = this.structMemberOffset(memberRoot.variable.type, exp.left.member);
-                const memberSize = this.typeSize(memberRoot.variable.type.structDetails!.get(exp.left.member)!.type);
-
-                this.writeExpression(exp.right);            
+                const memberPath = this.getExpressionPath(exp.left);  
+                const memberOffset = this.structMemberOffset(memberRoot.variable.type, memberPath);
+                const member = memberRoot.variable.type.structDetails!.get(exp.left.member)!;
+                const memberType = member.type;
+                const memberSize = this.typeSize(memberType);                            
                 
-                if(memberRoot.variable.type.type === ValueType.Struct)
+                if(memberType.type === ValueType.Struct)
                 {
+                    const sourceRoot = this.structMemberRoot(exp.right as Nodes.BoundGetExpression);
+                    
+                    const sourceSpec = this.variableMap.peek()[sourceRoot.variable.name];
+                    let sourceStackOffset = this.stackOffset + sourceSpec.offset;   
+
+                    const sourceMemberPath = this.getExpressionPath(exp.right as Nodes.BoundGetExpression);
+                    const sourceOffset = this.structMemberOffset(sourceRoot.variable.type, sourceMemberPath);
+                    const source = memberRoot.variable.type.structDetails!.get(exp.left.member)!;
+                    
                     for (let i = 0; i < memberSize; i++)
                     {
-                        this.instruction(`MOVb [R6+${offset + memberOffset + i}] R1`);                    
+                        this.instruction(`MOVb [R6-${offset + memberOffset + i}] [R6-${sourceStackOffset + sourceOffset + i}]`);                    
                     }                                
                 }
                 else
                 {
-                    const mov = this.typedMnemonic(exp.type.type, "MOV");
-                    for (let i = 0; i < memberSize; i++)
-                    {
-                        this.instruction(`${mov} [R6+${offset + memberOffset + i}] R1`);                    
-                    }                                
+                    this.writeExpression(exp.right);
+                    const mov = this.typedMnemonic(memberType.type, "MOV");
+                    this.instruction(`${mov} [R6-${offset + memberOffset}] R1`);                    
                 }
 
                 break;
@@ -631,6 +656,14 @@ export default class CodeGenerator
                 throw new Error(`Unexpected Expression Type ${expression.kind}`);
             }
         }
+    }
+    
+    getExpressionPath(left: Nodes.BoundGetExpression) : string[]
+    {
+        if(left.left && left.left.kind === Nodes.BoundNodeKind.GetExpression)
+            return [...this.getExpressionPath(left.left as Nodes.BoundGetExpression), left.member];        
+
+        return [left.member];
     }
 
     structMemberRoot(left: Nodes.BoundGetExpression) : Nodes.BoundVariableExpression {
