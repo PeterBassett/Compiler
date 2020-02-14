@@ -641,6 +641,65 @@ func main() : int
     r.a = 5;
 
     return r.a;
+}`, 5],
+[`struct root 
+{
+    a : int;
+}
+
+func main() : int
+{
+    // struct assignment
+    let s1 : root;
+    let s2 : root;
+    s1.a = 6;
+ 
+    // create copy of struct
+    s2 = s1;
+
+    return s2.a;
+}`, 6],
+[`struct root 
+{
+    a : int;
+}
+
+func main() : int
+{
+    // struct assignment
+    let s1 : root;
+    let s2 : root;
+    s1.a = 6;
+    s2.a = 4;
+    
+    // create copy of struct
+    s2 = s1;
+
+    s1.a = 5;
+
+    return s2.a;
+}`, 6],
+[`struct root 
+{
+    a : int;
+    b : int;
+    c : int;
+}
+
+func foo(s : root) : int
+{
+    return s.b;
+}
+
+func main() : int
+{
+    // simple struct parameter and member referencing
+    let r : root;
+    r.a = 1;
+    r.b = 5;
+    r.c = 12;
+
+    return foo(r);
 }`, 5]
 /*,
 [`func main() : string {

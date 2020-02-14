@@ -1016,6 +1016,58 @@ describe("Assemble and execute", () => {
         expect(registers.R4).toEqual(60);
     });
 
+    it("a compiled struct example", () => {
+        execute(`
+    .data
+    .text
+    .global __entrypoint:
+    __entrypoint:
+        MOV R6 SP				; Initialise Base Pointer
+        CALL main:
+        HALT
+
+    main:
+        PUSH R6				; save old value of stack pointer
+        MOV R6 SP				; R6 is bottom of stack. Make current top of stack the bottom of the new stack frame
+    ; declare variable r
+    ; reserve space on stack for variable r type root
+        SUB SP 12				; reserve 12 bytes space for struct r of type root
+        MOVf [SP+0] 0				; initialise 8 bytes on stack
+        MOV [SP+8] 0				; initialise 4 bytes on stack
+        MVI R1 4				; Loading literal int
+        MOV [R6-12] R1
+        MVI R1 5				; Loading literal int
+        MOV [R6-16] R1
+        MVI R1 6				; Loading literal int
+        MOV [R6-20] R1
+    ; Preparing to call foo
+    ; Pushing 1 arguments onto the stack
+        SUB SP 12
+        MOV [SP+0] [R6-12]
+        MOV [SP+4] [R6-16]
+        MOV [SP+8] [R6-20]
+    ; Calling foo
+        CALL foo:				; call function
+    ; Removing arguments from stack
+        ADD SP 12
+    main_epilogue:
+        MOV SP R6				; restore SP; now it points to old R6
+        POP R6				; restore old R6; now SP is where it was before prologue
+        RET
+
+    foo:
+        PUSH R6				; save old value of stack pointer
+        MOV R6 SP				; R6 is bottom of stack. Make current top of stack the bottom of the new stack frame
+        MOV R1 [R6+12]				; Loading struct member
+    foo_epilogue:
+        MOV SP R6				; restore SP; now it points to old R6
+        POP R6				; restore old R6; now SP is where it was before prologue
+        RET`
+        );
+
+        expect(registers.R1).toEqual(5);
+    });
+
     it("a multiplication program using round float values in the data section", () => {
         execute(`
     .data

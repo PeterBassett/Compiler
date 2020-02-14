@@ -7,6 +7,7 @@ import Stack from "../../../misc/Stack";
 import BuiltinFunctions from "../BuiltinFunctions";
 import { Type } from "../../Types/TypeInformation";
 import { Value } from "../../Scope/ExecutionScope";
+import { Identifier } from "../../Scope/DefinitionScope";
 
 export default class CodeGenerator
 {
@@ -312,6 +313,32 @@ export default class CodeGenerator
             remaining -= chunk;
         }
     }
+
+    emitStackCopy(to:(offset:number, size:number)=>string, from:(offset:number, size:number)=>string, size: number) 
+    {        
+        let remaining = size;
+
+        while(remaining > 0)
+        {
+            let inst = `MOV`;
+            let chunk = 4;
+
+            if(remaining < chunk)
+            {
+                inst = `MOVw`
+                chunk = 2;
+            }
+
+            if(remaining < chunk)
+            {
+                inst = `MOVb`                            
+                chunk = 1;
+            }
+
+            this.instruction(`${inst} ${to(size - remaining, chunk)} ${from(size - remaining, chunk)}`); 
+            remaining -= chunk;
+        }
+    }
     
     popDeclaredVariables() {
         this.instruction("MOV SP R6", "unwind the stack for variables declared in this function");
@@ -356,17 +383,27 @@ export default class CodeGenerator
         return size;
     }
 
-    structMemberOffset(type:Type, memberPath:string[]) : number{
+    structMember(type:Type, memberPath:string[]) : { type: Type, offset : number} {
         let offset = 0;
 
         for(let field of type.structDetails!.fields)
         {
             if(field.name == memberPath[0])
             {
-                if(field.type.type === ValueType.Struct) 
-                    return offset + this.structMemberOffset(field.type, memberPath.slice(1));
+                if(field.type.type === ValueType.Struct)                 
+                {
+                    const result = this.structMember(field.type, memberPath.slice(1));
 
-                return offset;
+                    return {
+                        type : result.type,
+                        offset : offset + result.offset
+                    };
+                }
+
+                return {
+                    type : field.type,
+                    offset
+                };
             }
 
             offset += this.typeSize(field.type);
@@ -416,19 +453,13 @@ export default class CodeGenerator
                 const memberRoot = this.structMemberRoot(exp);                
 
                 const memberPath = this.getExpressionPath(exp as Nodes.BoundGetExpression);                    
-                const memberOffset = this.structMemberOffset(memberRoot.variable.type, memberPath);
-                const member = memberRoot.variable.type.structDetails!.get(exp.member)!;
-                const memberType = member.type;
-                const memberSize = this.typeSize(memberType);  
-
-                const spec = this.variableMap.peek()[memberRoot.variable.name];
-                let offset = this.stackOffset + spec.offset;          
-                let mov = "MOV";
+                const member = this.structMember(memberRoot.variable.type, memberPath);
                 
                 if(exp.type.type != ValueType.Struct)
-                {
-                    mov = this.typedMnemonic(exp.type.type, "MOV");
-                    this.instruction(`${mov} R1 [R6-${offset + memberOffset}]`, "Loading struct member");
+                {                    
+                    const mov = this.typedMnemonic(exp.type.type, "MOV");
+                    const source = this.getDataReference(memberRoot.variable)(member.offset,0);                    
+                    this.instruction(`${mov} R1 ${source}`, "Loading struct member");
                 }
                 else
                 {
@@ -453,8 +484,7 @@ export default class CodeGenerator
                 let offset = this.stackOffset + spec.offset;                                     
 
                 const memberPath = this.getExpressionPath(exp.left);  
-                const memberOffset = this.structMemberOffset(memberRoot.variable.type, memberPath);
-                const member = memberRoot.variable.type.structDetails!.get(exp.left.member)!;
+                const member = this.structMember(memberRoot.variable.type, memberPath);                
                 const memberType = member.type;
                 const memberSize = this.typeSize(memberType);                            
                 
@@ -466,19 +496,20 @@ export default class CodeGenerator
                     let sourceStackOffset = this.stackOffset + sourceSpec.offset;   
 
                     const sourceMemberPath = this.getExpressionPath(exp.right as Nodes.BoundGetExpression);
-                    const sourceOffset = this.structMemberOffset(sourceRoot.variable.type, sourceMemberPath);
-                    const source = memberRoot.variable.type.structDetails!.get(exp.left.member)!;
+                    const source = this.structMember(sourceRoot.variable.type, sourceMemberPath);
                     
                     for (let i = 0; i < memberSize; i++)
                     {
-                        this.instruction(`MOVb [R6-${offset + memberOffset + i}] [R6-${sourceStackOffset + sourceOffset + i}]`);                    
+                        this.instruction(`MOVb [R6-${offset + member.offset + i}] [R6-${sourceStackOffset + source.offset + i}]`);                    
                     }                                
                 }
                 else
                 {
                     this.writeExpression(exp.right);
+                    
                     const mov = this.typedMnemonic(memberType.type, "MOV");
-                    this.instruction(`${mov} [R6-${offset + memberOffset}] R1`);                    
+                    const dest = this.getDataReference(memberRoot.variable)(member.offset, 0);                    
+                    this.instruction(`${mov} ${dest} R1`);                
                 }
 
                 break;
@@ -532,16 +563,19 @@ export default class CodeGenerator
                 this.comment(`Preparing to call ${targetFunction}`);
                 this.comment(`Pushing ${args.length} arguments onto the stack`);
                 args.forEach( arg => {
-                    this.writeExpression( arg );
-
                     if(arg.type.type != ValueType.Struct)
                     {
+                        this.writeExpression(arg);
                         const push = this.typedMnemonic(arg.type.type, "PUSH");
                         this.instruction(`${push} R1`); 
                     }
                     else
                     {
-                        this.pushStruct(arg.type);
+                        const source = this.getStructDataReference(arg);
+                        const argumentSize = this.typeSize(arg.type);                        
+                        this.instruction(`SUB SP ${argumentSize}`);                         
+                        const dest = (i:number, chunk:number) => `[SP+${i}]`;
+                        this.emitStackCopy(dest, source, argumentSize);
                     }
                 });
 
@@ -570,8 +604,16 @@ export default class CodeGenerator
 
                 this.comment(`Removing arguments from stack`);
                 args.forEach( arg => {
-                    const pop = this.typedMnemonic(arg.type.type, "POP");
-                    this.instruction(`${pop} R3`);    
+                    if(arg.type.type != ValueType.Struct)
+                    {
+                        const pop = this.typedMnemonic(arg.type.type, "POP");
+                        this.instruction(`${pop} R3`);
+                    }
+                    else
+                    {
+                        const size = this.typeSize(arg.type);                        
+                        this.instruction(`ADD SP ${size}`);
+                    }
                 });
 
                 break;
@@ -610,27 +652,40 @@ export default class CodeGenerator
             case Nodes.BoundNodeKind.AssignmentExpression:
             {
                 let exp = expression as Nodes.BoundAssignmentExpression;
-                this.writeExpression(exp.expression);
 
-                const mov = this.typedMnemonic(exp.type.type, "MOV");
-
-                if(exp.identifier.variable!.isParameter)
+                if(exp.type.isStruct)
                 {
+                    // assigning to struct parameter
                     let spec = this.variableMap.peek()[exp.identifier.name];
-                    let offset = this.stackOffset + spec.offset;
-                    this.instruction(`${mov} [R6+${offset}] R1`, `assignt to parameter ${exp.identifier.name} on the stack`);
-                }
-                else if(exp.identifier.variable && exp.identifier.variable!.isGlobal)
-                {
-                    const str = this.typedMnemonic(exp.identifier.type.type, "STR");
-                    this.instruction(`${str} R1 .${exp.identifier.name}`, "read global variable");                       
-                    //this.instruction(`${mov} .${exp.identifier.name} R1`, "assign to global variable");
+                    const dest = this.getDataReference(exp.identifier);
+                    const source = this.getStructDataReference(exp.expression);
+
+                    this.emitStackCopy(dest, source, spec.size);
                 }
                 else
                 {
-                    let spec = this.variableMap.peek()[exp.identifier.name];
-                    let offset = spec.offset + spec.size;
-                    this.instruction(`${mov} [R6-${offset}] R1`, `assign to variable ${exp.identifier.name} on the stack`);
+                    this.writeExpression(exp.expression);
+
+                    const mov = this.typedMnemonic(exp.type.type, "MOV");
+
+                    if(exp.identifier.variable!.isParameter)
+                    {
+                        let spec = this.variableMap.peek()[exp.identifier.name];
+                        let offset = this.stackOffset + spec.offset;
+                        this.instruction(`${mov} [R6+${offset}] R1`, `assignt to parameter ${exp.identifier.name} on the stack`);
+                    }
+                    else if(exp.identifier.variable && exp.identifier.variable!.isGlobal)
+                    {
+                        const str = this.typedMnemonic(exp.identifier.type.type, "STR");
+                        this.instruction(`${str} R1 .${exp.identifier.name}`, "read global variable");                       
+                        //this.instruction(`${mov} .${exp.identifier.name} R1`, "assign to global variable");
+                    }
+                    else
+                    {
+                        let spec = this.variableMap.peek()[exp.identifier.name];
+                        let offset = spec.offset + spec.size;
+                        this.instruction(`${mov} [R6-${offset}] R1`, `assign to variable ${exp.identifier.name} on the stack`);
+                    }
                 }
                 break;
             }      
@@ -655,6 +710,44 @@ export default class CodeGenerator
             {
                 throw new Error(`Unexpected Expression Type ${expression.kind}`);
             }
+        }
+    }
+    
+    getStructDataReference(expression: Nodes.BoundExpression) {
+        switch(expression.kind)
+        {
+            case Nodes.BoundNodeKind.VariableExpression:
+            {
+                const exp = expression as Nodes.BoundVariableExpression;
+                return this.getDataReference(exp.variable);
+            }
+            default:
+            {
+                throw new Error("Unhanlded expression type")   ;
+            }            
+        }
+    }
+
+    getDataReference(identifier : Identifier) : (offset:number, chunk:number)=>string
+    {
+        // assignments for structs are always simple byte copys
+        // from a variable, parameter or global.
+        if(identifier.variable!.isParameter)
+        {
+            // assigning to struct parameter
+            let spec = this.variableMap.peek()[identifier.name];
+            let offset = this.stackOffset + spec.offset;
+            return (i,c) => `[R6+${offset+i}]`;
+        }
+        else if(identifier.variable && identifier.variable!.isGlobal)
+        {           
+            return (offset) => `.${identifier.name}`;
+        }
+        else
+        {
+            let spec = this.variableMap.peek()[identifier.name];
+            let offset = spec.offset + spec.size;
+            return (i, c) => `[R6-${offset+i}]`;
         }
     }
     
