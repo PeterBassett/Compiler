@@ -721,10 +721,44 @@ func foo() : root
 func main() : int
 {
     let r : root;
+    // struct return types!
     r = foo();
     return r.b;
 }`, 5]
+
 /*,
+[`struct root 
+{
+    a : int;    
+    b : float;
+    c : bool;
+    d: int;
+    e: float;
+}
+
+func foo() : root
+{
+    let r : root;
+    r.a = 1;
+    r.b = 3.14159;
+    r.c = true;
+    r.d = 7;
+    r.e = 0.7171;
+
+    return r; // struct return type
+}
+
+func foo2() : float
+{
+    let r : root = foo();
+    return r.b;
+}
+
+func main() : float
+{
+    return foo2();
+}`, 3,14159]
+,
 [`func main() : string {
     return string(3.14159);
 }`,

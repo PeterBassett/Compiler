@@ -212,7 +212,7 @@ export default class CodeGenerator
                 let stmt = statement as Nodes.BoundReturnStatement;            
 
                 if(stmt.expression)
-                    this.writeExpression(stmt.expression);
+                    this.writeReturnStatement(stmt.expression);                
 
                 this.writeJumpToStackFrameEpilogue(this.functionName);
                       
@@ -288,6 +288,20 @@ export default class CodeGenerator
                 break;
             }                  
         }
+    }
+
+    writeReturnStatement(expression: Nodes.BoundExpression) 
+    {    
+        if(expression.type.isStruct)
+        {
+            // we are returning a struct, ok. lets copy to the address stored in R3
+            const size = this.typeSize(expression.type);
+            const dest = (i: number, _: number) => `[R3+${i}]`;
+            const source = this.getStructDataReference(expression);
+            this.emitStackCopy(dest, source, size);
+        }
+        else
+            this.writeExpression(expression);
     }
 
     zeroStackbytes(size: number) 
@@ -570,32 +584,12 @@ export default class CodeGenerator
                 
                 this.comment(`Preparing to call ${targetFunction}`);
                 
+                this.writeStructReturnTypeSetup(exp);
+
                 const argumentStackSize = this.pushFunctionCallArgumentsToStack(args);
 
-                if(!!exp.type.function && exp.type.function.isBuiltin)
-                {
-                    let builtin = BuiltinFunctions.find(targetFunction);
-
-                    this.comment(`Adding INTERUPT FUNC ${targetFunction} params`);
-                    this.comment(`Pushing 2 arguments onto the stack, interupt number and param count`);                    
-
-                    this.instruction(`MVI R1 ${args.length}`);
-                    this.instruction("PUSH R1")
+                this.writeCallExpression(exp, targetFunction, args);
                 
-                    this.instruction(`MVI R1 ${builtin!.interupt}`);
-                    this.instruction("PUSH R1")
-                
-                    this.instruction(`INT 1`, "call interupt builtin functions");
-                    
-                    this.instruction(`POP R0`);    
-                    this.instruction(`POP R0`);
-                }
-                else
-                {        
-                    this.comment(`Calling ${targetFunction}`);
-                    this.instruction(`CALL ${targetFunction}:`, "call function");
-                }
-
                 this.popFunctionCallArguments(args, argumentStackSize);
                 
                 break;
@@ -638,7 +632,8 @@ export default class CodeGenerator
                 if(exp.type.isStruct)
                 {
                     // assigning to struct parameter
-                    let spec = this.variableMap.peek()[exp.identifier.name];
+                    let spec = this.variableMap.peek()[exp.identifier.name];                    
+
                     const dest = this.getDataReference(exp.identifier);
                     const source = this.getStructDataReference(exp.expression);
 
@@ -695,6 +690,38 @@ export default class CodeGenerator
         }
     }
     
+    private writeStructReturnTypeSetup(exp: Nodes.BoundCallExpression) {
+        if (!exp.returnType.isStruct) 
+            return;
+            
+        // struct return types are pushed to the stack, essentially as the first parameter
+        // and the location is stored in R3 for easy addressing
+        const returnTypeSize = this.typeSize(exp.returnType);
+        this.instruction(`SUB SP ${returnTypeSize}`);
+        this.zeroStackbytes(returnTypeSize);
+        // record the position of the return value in R3
+        this.instruction(`MOV R3 SP`);        
+    }
+
+    private writeCallExpression(exp: Nodes.BoundCallExpression, targetFunction: string, args: Nodes.BoundExpression[]) {
+        if (!!exp.type.function && exp.type.function.isBuiltin) {
+            let builtin = BuiltinFunctions.find(targetFunction);
+            this.comment(`Adding INTERUPT FUNC ${targetFunction} params`);
+            this.comment(`Pushing 2 arguments onto the stack, interupt number and param count`);
+            this.instruction(`MVI R1 ${args.length}`);
+            this.instruction("PUSH R1");
+            this.instruction(`MVI R1 ${builtin!.interupt}`);
+            this.instruction("PUSH R1");
+            this.instruction(`INT 1`, "call interupt builtin functions");
+            this.instruction(`POP R0`);
+            this.instruction(`POP R0`);
+        }
+        else {
+            this.comment(`Calling ${targetFunction}`);
+            this.instruction(`CALL ${targetFunction}:`, "call function");
+        }
+    }
+
     private pushFunctionCallArgumentsToStack(args: Nodes.BoundExpression[]) : number
     {
         let argumentStackSize: number = 0;
@@ -755,7 +782,7 @@ export default class CodeGenerator
         }
     }
     
-    getStructDataReference(expression: Nodes.BoundExpression) {
+    getStructDataReference(expression: Nodes.BoundExpression) : (offset:number, chunk:number)=>string {
         switch(expression.kind)
         {
             case Nodes.BoundNodeKind.VariableExpression:
@@ -766,7 +793,18 @@ export default class CodeGenerator
             case Nodes.BoundNodeKind.CallExpression:
             {
                 const exp = expression as Nodes.BoundCallExpression;
-                exp.returnType
+                
+                if(exp.returnType.isStruct)
+                {
+                    // We have a call returning a structure.
+                    // once the call is done the returned structure will be on the stack
+                    // and its address will be in R3
+                    this.writeExpression(exp);
+
+                    // now R3 holds the address of the structure!
+                    return (i, _c) => `[R3+${i}]`;
+                }
+                throw new Error("Expected Struct Type");
             }
             default:
             {

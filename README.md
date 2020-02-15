@@ -5,7 +5,7 @@ all written in TypeScript
 
 Functionality implemented so far.
 
-* Very simple Procedural language with syntax similar to TypeScript or Go. 
+* Simple Procedural language with syntax similar to TypeScript or Go. 
 * Parsing
 * A full Syntax tree, representing every typed character in the input program, comments, whitespace and errors included.
 * Type Checking produces a Bound tree. This strips lexical details and includes symantic details and type information.
@@ -21,4 +21,10 @@ at the moment precomputes the output of expressions involving literals.
 * Virtual Machine to execute the binaries.
 * The VM is "low level" in that it does not provide some higher level VM
 primitives, it simulates a fairly restricted 16 bit computer.
-* Currently the code generator only supports generating code for integer varables and parameters. I need to figure out the details around emitting the right opcodes for different data types and keeping track of the stack positions etc.
+* Currently the code generator supports generating code for integer, float, boolean and struct varables and parameters. There are some details around structure member referencing to be completed.
+
+Next Steps
+* structs member referencing directly from function call
+* global struct variables
+* Pointers
+* Arrays
