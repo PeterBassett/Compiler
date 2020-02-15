@@ -700,6 +700,29 @@ func main() : int
     r.c = 12;
 
     return foo(r);
+}`, 5],
+[`struct root 
+{
+    a : int;
+    b : int;
+    c : int;
+}
+
+func foo() : root
+{
+    let r : root;
+    r.a = 1;
+    r.b = 5;
+    r.c = 12;
+
+    return r; // struct return type
+}
+
+func main() : int
+{
+    let r : root;
+    r = foo();
+    return r.b;
 }`, 5]
 /*,
 [`func main() : string {

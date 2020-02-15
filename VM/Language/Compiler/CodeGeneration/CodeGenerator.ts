@@ -18,8 +18,6 @@ export default class CodeGenerator
     private stackIndex : number = 0;
     private variableMap! : Stack< { [index:string] : { offset:number, size:number } } >;
     private labelCount:number = 0;
-    private writeComments : boolean;
-    private writeBlankLines : boolean;
     private globalLiterals : { name :string, type: ValueType, value : any }[] = [];
 
     private dataSection = 0;
@@ -28,16 +26,26 @@ export default class CodeGenerator
     private codeSection = 0;
     
     private readonly stackOffset : number = 8;
+    
+    private readonly writeComments : boolean;
+    private readonly writeBlankLines : boolean;
+    private readonly optimiseForSize: boolean;
 
-    constructor( options? : { comments:boolean, blankLines:boolean} )
+    constructor( options? : { 
+        comments:boolean, 
+        blankLines:boolean,
+        optimiseForSize:boolean
+    })
     {
         this.writeComments = true;
         this.writeBlankLines = true;
+        this.optimiseForSize = true;
 
         if(options)
         {
             this.writeComments = options.comments;
             this.writeBlankLines = options.blankLines;
+            this.optimiseForSize = options.optimiseForSize;
         }
     }
 
@@ -561,23 +569,8 @@ export default class CodeGenerator
                 let args = [...exp.callArguments].reverse();
                 
                 this.comment(`Preparing to call ${targetFunction}`);
-                this.comment(`Pushing ${args.length} arguments onto the stack`);
-                args.forEach( arg => {
-                    if(arg.type.type != ValueType.Struct)
-                    {
-                        this.writeExpression(arg);
-                        const push = this.typedMnemonic(arg.type.type, "PUSH");
-                        this.instruction(`${push} R1`); 
-                    }
-                    else
-                    {
-                        const source = this.getStructDataReference(arg);
-                        const argumentSize = this.typeSize(arg.type);                        
-                        this.instruction(`SUB SP ${argumentSize}`);                         
-                        const dest = (i:number, chunk:number) => `[SP+${i}]`;
-                        this.emitStackCopy(dest, source, argumentSize);
-                    }
-                });
+                
+                const argumentStackSize = this.pushFunctionCallArgumentsToStack(args);
 
                 if(!!exp.type.function && exp.type.function.isBuiltin)
                 {
@@ -593,8 +586,9 @@ export default class CodeGenerator
                     this.instruction("PUSH R1")
                 
                     this.instruction(`INT 1`, "call interupt builtin functions");
-                    this.instruction(`POP R3`);    
-                    this.instruction(`POP R3`);
+                    
+                    this.instruction(`POP R0`);    
+                    this.instruction(`POP R0`);
                 }
                 else
                 {        
@@ -602,20 +596,8 @@ export default class CodeGenerator
                     this.instruction(`CALL ${targetFunction}:`, "call function");
                 }
 
-                this.comment(`Removing arguments from stack`);
-                args.forEach( arg => {
-                    if(arg.type.type != ValueType.Struct)
-                    {
-                        const pop = this.typedMnemonic(arg.type.type, "POP");
-                        this.instruction(`${pop} R3`);
-                    }
-                    else
-                    {
-                        const size = this.typeSize(arg.type);                        
-                        this.instruction(`ADD SP ${size}`);
-                    }
-                });
-
+                this.popFunctionCallArguments(args, argumentStackSize);
+                
                 break;
             }                    
             case Nodes.BoundNodeKind.VariableExpression:
@@ -713,6 +695,66 @@ export default class CodeGenerator
         }
     }
     
+    private pushFunctionCallArgumentsToStack(args: Nodes.BoundExpression[]) : number
+    {
+        let argumentStackSize: number = 0;
+
+        this.comment(`Pushing ${args.length} arguments onto the stack`);
+                
+        args.forEach(arg => {
+            // accumulate the size of the arguments pushed to the stack for later use.
+            const argumentSize = this.typeSize(arg.type);
+            argumentStackSize += argumentSize;
+        
+            if (arg.type.type != ValueType.Struct) {
+                // emit the sub expression, which may be arbitrarily complex
+                this.writeExpression(arg);
+                // push the result, which will always be in R1, to the stack
+                const push = this.typedMnemonic(arg.type.type, "PUSH");
+                this.instruction(`${push} R1`);
+            }
+            else 
+            {
+                // structs types cannot be part of a artithmetic expression
+                // so this amounts to only a few possible source memory locations 
+                // to copy from
+                const source = this.getStructDataReference(arg);
+                this.instruction(`SUB SP ${argumentSize}`);
+                const dest = (i: number, _: number) => `[SP+${i}]`;
+                this.emitStackCopy(dest, source, argumentSize);
+            }
+        });
+
+        return argumentStackSize;
+    }
+
+    popFunctionCallArguments(args: Nodes.BoundExpression[], argumentStackSize: number) {
+        if(!args.length)
+            return;
+
+        if(this.optimiseForSize)
+        {
+            this.instruction(`ADD SP ${argumentStackSize}`, `Quickly remove ${argumentStackSize} bytes from stack for pushed arguments.`);
+        }
+        else
+        {
+            this.comment(`Removing arguments from stack`);
+
+            args.forEach( arg => {
+                if(arg.type.type != ValueType.Struct)
+                {
+                    const pop = this.typedMnemonic(arg.type.type, "POP");
+                    this.instruction(`${pop} R0`);
+                }
+                else
+                {
+                    const size = this.typeSize(arg.type);                        
+                    this.instruction(`ADD SP ${size}`);
+                }
+            });
+        }
+    }
+    
     getStructDataReference(expression: Nodes.BoundExpression) {
         switch(expression.kind)
         {
@@ -720,6 +762,11 @@ export default class CodeGenerator
             {
                 const exp = expression as Nodes.BoundVariableExpression;
                 return this.getDataReference(exp.variable);
+            }
+            case Nodes.BoundNodeKind.CallExpression:
+            {
+                const exp = expression as Nodes.BoundCallExpression;
+                exp.returnType
             }
             default:
             {

@@ -21,7 +21,8 @@ describe("A CodeGenerator object", () => {
         let newBoundTree = lowerer.lower(boundTree);
         let codeGenerator = new CodeGenerator({
             comments:false,
-            blankLines:false
+            blankLines:false,
+            optimiseForSize:false
         });
         let result = codeGenerator.generate(newBoundTree);
         
@@ -274,11 +275,11 @@ main:
     LDRf R1 .floatLiteral_0
     PUSHf R1
     CALL test:
-    POPf R3
-    POPf R3
-    POPf R3
-    POP R3
-    POPf R3
+    POPf R0
+    POPf R0
+    POPf R0
+    POP R0
+    POPf R0
 main_epilogue:
     MOV SP R6
     POP R6
