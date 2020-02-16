@@ -24,7 +24,6 @@ primitives, it simulates a fairly restricted 16 bit computer.
 * Currently the code generator supports generating code for integer, float, boolean and struct varables and parameters. There are some details around structure member referencing to be completed.
 
 Next Steps
-* structs member referencing directly from function call
 * global struct variables
 * Pointers
 * Arrays
