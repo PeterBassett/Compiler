@@ -832,7 +832,7 @@ export default class CodeGenerator
         {
             let spec = this.variableMap.peek()[identifier.name];
             let offset = spec.offset + spec.size;
-            return (i, c) => `[R6-${offset+i}]`;
+            return (i, c) => `[R6-${offset-i}]`;
         }
     }
     

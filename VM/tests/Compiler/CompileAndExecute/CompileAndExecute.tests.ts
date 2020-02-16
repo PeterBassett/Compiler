@@ -661,6 +661,108 @@ func main() : int
 }`, 6],
 [`struct root 
 {
+    flag : bool;
+    a : int;
+}
+
+func main() : int
+{
+    // struct assignment
+    let s1 : root;
+    let s2 : root;
+    s1.a = 6;
+ 
+    // create copy of struct
+    s2 = s1;
+
+    return s2.a;
+}`, 6],
+[`struct root 
+{
+    b:float;
+    flag : bool;
+    a : int;
+}
+
+func main() : int
+{
+    // struct assignment
+    let s1 : root;
+    let s2 : root;
+    s1.a = 6;
+    s1.b = 5.3;
+    s1.flag = false;
+ 
+    // create copy of struct
+    s2 = s1;
+
+    return s2.a;
+}`, 6],
+[`struct root 
+{
+    b:float;
+    flag : bool;
+    a : int;
+}
+
+func main() : float
+{
+    // struct assignment
+    let s1 : root;
+    let s2 : root;
+    s1.a = 6;
+    s1.b = 5.3;
+    s1.flag = false;
+ 
+    // create copy of struct
+    s2 = s1;
+
+    return s2.b;
+}`, 5.3],
+[`struct root 
+{
+    b:float;
+    flag : bool;
+    a : int;
+}
+
+func main() : bool
+{
+    // struct assignment
+    let s1 : root;
+    let s2 : root;
+    s1.a = 6;
+    s1.b = 5.3;
+    s1.flag = false;
+ 
+    // create copy of struct
+    s2 = s1;
+
+    return s2.flag;
+}`, 0],
+[`struct root 
+{
+    b:float;
+    flag : bool;
+    a : int;
+}
+
+func main() : bool
+{
+    // struct assignment
+    let s1 : root;
+    let s2 : root;
+    s1.a = 6;
+    s1.b = 5.3;
+    s1.flag = true;
+ 
+    // create copy of struct
+    s2 = s1;
+
+    return s2.flag;
+}`, 1],
+[`struct root 
+{
     a : int;
 }
 
