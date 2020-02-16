@@ -9,8 +9,16 @@ import { Identifier } from "../../Scope/DefinitionScope";
 
 export default class BoundTreeTransformBase
 {
+    protected _currentStatementList: Nodes.BoundStatement[][] = [];
+    protected get currentStatementList() : Nodes.BoundStatement[]
+    {
+        return this._currentStatementList[this._currentStatementList.length - 1];
+    }
+
     public transform(root : Nodes.BoundGlobalScope) : Nodes.BoundGlobalScope
     {
+        this._currentStatementList = [];
+
         let newFuncs : boolean = false;
         let funcs = root.functions.map(f => {
             let newParameters = this.transformParameterDeclarations(f.parameters);            
@@ -136,20 +144,32 @@ export default class BoundTreeTransformBase
         let statements : Nodes.BoundStatement[] = [];
         let newStatement : boolean = false;
 
-        statements = body.statements.map(s => {
+        this.pushCurrentStatementList(statements);
+
+        for(let s of body.statements)
+        {
             let newS = this.transformStatement(s);
 
-            if(newS === s)
-                return s;
-            
-            newStatement = true;
-            return newS;
-        });
+            statements.push(newS);
+
+            if(newS !== s)
+                newStatement = true;
+        }
+        
+        this.popCurrentStatementList();
 
         if(newStatement)
             return new Nodes.BoundBlockStatement(statements);
         else
             return body;
+    }
+    
+    pushCurrentStatementList(statements: Nodes.BoundStatement[]) {
+        this._currentStatementList.push(statements);
+    }
+
+    popCurrentStatementList() {
+        this._currentStatementList.pop();
     }
 
     protected transformStatement(statement: Nodes.BoundStatement): Nodes.BoundStatement {
@@ -398,10 +418,22 @@ export default class BoundTreeTransformBase
     }
 
     protected transformGetExpression(expression: Nodes.BoundGetExpression) : Nodes.BoundExpression {
+        let left = this.transformExpression(expression.left);        
+
+        if(left !== expression.left)
+            return new Nodes.BoundGetExpression(left, expression.type, expression.member);
+
         return expression;
     }
 
     protected transformSetExpression(expression: Nodes.BoundSetExpression) : Nodes.BoundExpression {
+        let left = this.transformExpression(expression.left);       
+        let right = this.transformExpression(expression.right);         
+
+        if(left !== expression.left ||
+            right != expression.right)
+            return new Nodes.BoundSetExpression(left as Nodes.BoundGetExpression, right);
+
         return expression;
     }    
 }

@@ -283,7 +283,26 @@ export default class CodeGenerator
                 else
                 {
                     this.instruction(`SUB SP ${size}`, `reserve ${size} bytes space for struct ${stmt.variable.name} of type ${stmt.variable.type.name}`); 
-                    this.zeroStackbytes(size);
+                    
+                    if(stmt.initialiser && stmt.initialiser.kind != Nodes.BoundNodeKind.LiteralExpression)
+                    {
+                        this.comment(`calculate initialisation value for variable ${stmt.variable.name}`);
+                        this.writeExpression(stmt.initialiser);
+
+                        const spec = this.variableMap.peek()[stmt.variable.name];
+                        // find the variable on the stack.
+                        // since we are going down the stack below the base pointer
+                        // we need to use both the offset and the size of the variable
+                        let offset = spec.offset; 
+                        
+                        // need to find a more effective memory copy than a string of byte copies.
+                        for (let i = 0; i < size; i++)
+                        {
+                            this.instruction(`MOVb [R6-${offset + i}] [R3+${size-i}]`);                    
+                        } 
+                    }
+                    else
+                        this.zeroStackbytes(size);
                 }
                 break;
             }                  
@@ -477,9 +496,9 @@ export default class CodeGenerator
                 const memberPath = this.getExpressionPath(exp as Nodes.BoundGetExpression);                    
                 const member = this.structMember(memberRoot.variable.type, memberPath);
                 
-                if(exp.type.type != ValueType.Struct)
+                if(member.type.type != ValueType.Struct)
                 {                    
-                    const mov = this.typedMnemonic(exp.type.type, "MOV");
+                    const mov = this.typedMnemonic(member.type.type, "MOV");
                     const source = this.getDataReference(memberRoot.variable)(member.offset,0);                    
                     this.instruction(`${mov} R1 ${source}`, "Loading struct member");
                 }
@@ -808,7 +827,7 @@ export default class CodeGenerator
             }
             default:
             {
-                throw new Error("Unhanlded expression type")   ;
+                throw new Error("Unhandled expression type")   ;
             }            
         }
     }
@@ -846,11 +865,14 @@ export default class CodeGenerator
 
     structMemberRoot(left: Nodes.BoundGetExpression) : Nodes.BoundVariableExpression {
         let current : Nodes.BoundExpression = left;
+        let last = current;
 
         while(current)
         {
+            last = current;
+            
             if(current.kind === Nodes.BoundNodeKind.GetExpression)
-            {
+            {                
                 current = (current as Nodes.BoundGetExpression).left;
             }
 
@@ -858,6 +880,9 @@ export default class CodeGenerator
             {
                 return current as Nodes.BoundVariableExpression;
             }
+
+            if(current.id === last.id)
+                throw new Error("No progress made");
         }
 
         throw new Error("Expected variable expression")

@@ -16,6 +16,7 @@ import RegisterBank from "../../../VirtualMachine/CPU/RegisterBank";
 import CPU from "../../../VirtualMachine/CPU/CPU";
 import InstructionCoderVariable from "../../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
 import { AssembledOutput } from "../../../Assembler/AssembledOutput";
+import TextSpan from "../../../Language/Compiler/Syntax/Text/TextSpan";
 
 describe("Complie Assemble and Execute", () => {
 
@@ -826,6 +827,57 @@ func main() : int
     // struct return types!
     r = foo();
     return r.b;
+}`, 5],
+[`struct root 
+{
+    a : float;
+    b : int;
+    c : bool;
+}
+
+func foo() : root
+{
+    let r : root;
+    r.a = 3.14159;
+    r.b = 5;
+    r.c = true;
+    return r;
+}
+
+func main() : int
+{
+    // rvalue member reference
+    return foo().b;
+}`, 5],
+[`struct root 
+{
+    a : float;
+    b : int;
+    c : bool;
+}
+
+func foo() : root
+{
+    let bar1:int;
+    let bar2:bool;
+    let r : root;
+    let bar3:float;
+
+    r.a = 3.14159;
+    r.b = 5;
+    r.c = true;
+    return r;
+}
+
+func main() : int
+{
+    let bar1:int;
+    let bar2:bool;
+    let bar3:float;
+    let bar4:float;
+
+    // rvalue member reference with complex stack allocations
+    return foo().b;
 }`, 5]
 
 /*,

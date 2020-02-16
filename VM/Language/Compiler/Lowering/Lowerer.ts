@@ -182,4 +182,44 @@ export default class Lowerer extends BoundTreeTransformBase
 
         return this.transformBlockStatement(result);
     }    
+
+    transformGetExpression(expression: Nodes.BoundGetExpression) : Nodes.BoundExpression {
+        // if we are performing a get from a function call return value
+        if(expression.left.kind === Nodes.BoundNodeKind.CallExpression)
+            return this.transformGetExpressionOnCall(expression);
+            
+        let left = this.transformExpression(expression.left);        
+
+        if(left !== expression.left)
+            return new Nodes.BoundGetExpression(left, expression.type, expression.member);
+
+        return expression;
+    }
+
+    transformGetExpressionOnCall(expression: Nodes.BoundGetExpression): Nodes.BoundExpression {
+        // get expression directly off a call expression.
+        // lets introduce a temporary variable to make things simpler
+        // in the code generator. An explicit variable declaration
+        // means we dont have to deal with this mechanisim as it will be 
+        // dealt with in existing code.
+        const statements = this.currentStatementList;
+
+        const callExpression = expression.left as Nodes.BoundCallExpression;
+        const functionName = callExpression.name;
+
+        // double underscores are reserved in this language. As of now.
+        const temporaryName = `__${functionName}_${callExpression.id}`;
+        const variableSymbol = new Nodes.VariableSymbol(temporaryName, false, callExpression.returnType, false, false);        
+        const variable = new Identifier(temporaryName, callExpression.returnType, variableSymbol);
+
+        const variableDeclaration = new Nodes.BoundVariableDeclaration(variableSymbol, callExpression);
+
+        statements.push(variableDeclaration);
+
+        const variableExpression = new Nodes.BoundVariableExpression(variable);
+        
+        const getExpression = new Nodes.BoundGetExpression(variableExpression, expression.type, expression.member);
+
+        return getExpression;
+    }
 }
