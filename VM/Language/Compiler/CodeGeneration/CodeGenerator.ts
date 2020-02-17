@@ -284,18 +284,27 @@ export default class CodeGenerator
                 {
                     this.instruction(`SUB SP ${size}`, `reserve ${size} bytes space for struct ${stmt.variable.name} of type ${stmt.variable.type.name}`); 
                     
-                    if(stmt.initialiser && stmt.initialiser.kind != Nodes.BoundNodeKind.LiteralExpression)
+                    this.writeStructComment(stmt);
+
+                    if(stmt.initialiser && stmt.initialiser.kind === Nodes.BoundNodeKind.CallExpression)
                     {
                         this.comment(`calculate initialisation value for variable ${stmt.variable.name}`);
                         this.writeExpression(stmt.initialiser);
 
                         const spec = this.variableMap.peek()[stmt.variable.name];
-                        // find the variable on the stack.
-                        // since we are going down the stack below the base pointer
-                        // we need to use both the offset and the size of the variable
+
                         let offset = spec.offset; 
                         
                         // need to find a more effective memory copy than a string of byte copies.
+                        /*
+                        const dest = (i:number, _:number) => `[R6-${i - offset - 1 + _}]`;
+                        const source = (i:number, _:number) => `[R3+${size-i-_+1}]`;
+
+                        this.comment(`Copy ${size} bytes on the stack`)
+                        this.emitStackCopy(dest, source, size);
+
+                        this.comment(`OLD CODE to copy ${size} bytes on the stack`)
+                        */
                         for (let i = 0; i < size; i++)
                         {
                             this.instruction(`MOVb [R6-${offset + i}] [R3+${size-i}]`);                    
@@ -306,6 +315,21 @@ export default class CodeGenerator
                 }
                 break;
             }                  
+        }
+    }
+
+    private writeStructComment(stmt: Nodes.BoundVariableDeclaration) 
+    {
+        if (this.writeComments) 
+        {
+            this.comment("struct " + stmt.variable.type.name);
+            this.comment("{");
+            for (let field of stmt.variable.type.structDetails!.fields) {
+                const member = this.structMember(stmt.variable.type, [field.name]);
+                const memberSize = this.typeSize(member.type);
+                this.comment("\t" + field.name + " : " + field.type.name + "; \t // at [R6-" + member.offset + "]");
+            }
+            this.comment("}");
         }
     }
 
@@ -361,8 +385,14 @@ export default class CodeGenerator
 
         while(remaining > 0)
         {
-            let inst = `MOV`;
-            let chunk = 4;
+            let inst = `MOVf`;
+            let chunk = 8;
+
+            if(remaining < chunk)
+            {
+                inst = `MOV`
+                chunk = 4;
+            }
 
             if(remaining < chunk)
             {
@@ -431,7 +461,7 @@ export default class CodeGenerator
         {
             if(field.name == memberPath[0])
             {
-                if(field.type.type === ValueType.Struct)                 
+                if(field.type.type === ValueType.Struct && memberPath.length > 1)                 
                 {
                     const result = this.structMember(field.type, memberPath.slice(1));
 

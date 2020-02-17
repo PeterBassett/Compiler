@@ -70,7 +70,7 @@ describe("Complie Assemble and Execute", () => {
         let ram : RAM;
         let flags : Flags;
         let registers : RegisterBank;
-        const ramSize = 1 << 10;
+        const ramSize = 1 << 16;
         let cpu : CPU;
         let ip : number;
 
@@ -878,9 +878,36 @@ func main() : int
 
     // rvalue member reference with complex stack allocations
     return foo().b;
-}`, 5]
+}`, 5],
+[`struct root 
+{
+    a : float;
+    b : int;
+    c : bool;
+}
 
-/*,
+func makeRoot() : root
+{
+    let r : root;
+
+    r.a = 3.14159;
+    r.b = 4;
+    r.c = true;
+    
+    return r;
+}
+
+func main() : int
+{
+    let bar1:int;
+
+    // struct initialisation from function call
+    let r:root = makeRoot();
+    let bar3:float;
+    let bar4:float;
+
+    return r.b;
+}`, 4],
 [`struct root 
 {
     a : int;    
@@ -911,7 +938,8 @@ func foo2() : float
 func main() : float
 {
     return foo2();
-}`, 3,14159]
+}`, 3.14159]
+/*
 ,
 [`func main() : string {
     return string(3.14159);
