@@ -257,9 +257,8 @@ func main() : int
         BlockStatement
             VariableDeclaration<n:int>
                 LiteralExpression<0:int>
-            ExpressionStatement
-                AssignmentExpression<n:int>
-                    LiteralExpression<5:int>
+            AssignmentStatement<n:int>
+                LiteralExpression<5:int>
             ReturnStatement
                 VariableExpression<n:int>
 ` ],
@@ -439,24 +438,21 @@ func main() : int
                 LiteralExpression<0:int>
             VariableDeclaration<i:int>
                 LiteralExpression<1:int>
-            ExpressionStatement
-                AssignmentExpression<i:int>
-                    LiteralExpression<1:int>
+            AssignmentStatement<i:int>
+                LiteralExpression<1:int>
             VariableDeclaration<upperBound1:int>
                 LiteralExpression<100:int>
             GotoStatement<Label1>
             LabelStatement<Label2>
-            ExpressionStatement
-                AssignmentExpression<n:int>
-                    BinaryExpression<+>
-                        VariableExpression<n:int>
-                        VariableExpression<i:int>
+            AssignmentStatement<n:int>
+                BinaryExpression<+>
+                    VariableExpression<n:int>
+                    VariableExpression<i:int>
             LabelStatement<continue1>
-            ExpressionStatement
-                AssignmentExpression<i:int>
-                    BinaryExpression<+>
-                        VariableExpression<i:int>
-                        LiteralExpression<1:int>
+            AssignmentStatement<i:int>
+                BinaryExpression<+>
+                    VariableExpression<i:int>
+                    LiteralExpression<1:int>
             LabelStatement<Label1>
             ConditionalGotoStatement<Label2:JIT=true>
                 BinaryExpression<<=>
@@ -494,24 +490,21 @@ func main() : int
                 LiteralExpression<true:bool>
             VariableDeclaration<i:int>
                 LiteralExpression<1:int>
-            ExpressionStatement
-                AssignmentExpression<i:int>
-                    LiteralExpression<1:int>
+            AssignmentStatement<i:int>
+                LiteralExpression<1:int>
             VariableDeclaration<upperBound1:int>
                 LiteralExpression<100:int>
             GotoStatement<Label3>
             LabelStatement<Label4>
-            ExpressionStatement
-                AssignmentExpression<n:int>
-                    BinaryExpression<+>
-                        VariableExpression<n:int>
-                        VariableExpression<i:int>
+            AssignmentStatement<n:int>
+                BinaryExpression<+>
+                    VariableExpression<n:int>
+                    VariableExpression<i:int>
             LabelStatement<continue1>
-            ExpressionStatement
-                AssignmentExpression<i:int>
-                    BinaryExpression<+>
-                        VariableExpression<i:int>
-                        LiteralExpression<1:int>
+            AssignmentStatement<i:int>
+                BinaryExpression<+>
+                    VariableExpression<i:int>
+                    LiteralExpression<1:int>
             LabelStatement<Label3>
             ConditionalGotoStatement<Label4:JIT=true>
                 BinaryExpression<<=>
@@ -522,24 +515,21 @@ func main() : int
             LabelStatement<Label1>
             VariableDeclaration<i:int>
                 LiteralExpression<100:int>
-            ExpressionStatement
-                AssignmentExpression<i:int>
-                    LiteralExpression<100:int>
+            AssignmentStatement<i:int>
+                LiteralExpression<100:int>
             VariableDeclaration<upperBound2:int>
                 LiteralExpression<1000:int>
             GotoStatement<Label5>
             LabelStatement<Label6>
-            ExpressionStatement
-                AssignmentExpression<n:int>
-                    BinaryExpression<+>
-                        VariableExpression<n:int>
-                        VariableExpression<i:int>
+            AssignmentStatement<n:int>
+                BinaryExpression<+>
+                    VariableExpression<n:int>
+                    VariableExpression<i:int>
             LabelStatement<continue2>
-            ExpressionStatement
-                AssignmentExpression<i:int>
-                    BinaryExpression<+>
-                        VariableExpression<i:int>
-                        LiteralExpression<1:int>
+            AssignmentStatement<i:int>
+                BinaryExpression<+>
+                    VariableExpression<i:int>
+                    LiteralExpression<1:int>
             LabelStatement<Label5>
             ConditionalGotoStatement<Label6:JIT=true>
                 BinaryExpression<<=>
@@ -569,35 +559,31 @@ func main() : int
                 LiteralExpression<0:int>
             VariableDeclaration<x:int>
                 LiteralExpression<1:int>
-            ExpressionStatement
-                AssignmentExpression<x:int>
-                    LiteralExpression<1:int>
+            AssignmentStatement<x:int>
+                LiteralExpression<1:int>
             VariableDeclaration<upperBound1:int>
                 LiteralExpression<100:int>
             GotoStatement<Label1>
             LabelStatement<Label2>
             VariableDeclaration<y:int>
                 LiteralExpression<100:int>
-            ExpressionStatement
-                AssignmentExpression<y:int>
-                    LiteralExpression<100:int>
+            AssignmentStatement<y:int>
+                LiteralExpression<100:int>
             VariableDeclaration<upperBound2:int>
                 LiteralExpression<1000:int>
             GotoStatement<Label3>
             LabelStatement<Label4>
-            ExpressionStatement
-                AssignmentExpression<n:int>
+            AssignmentStatement<n:int>
+                BinaryExpression<+>
                     BinaryExpression<+>
-                        BinaryExpression<+>
-                            VariableExpression<n:int>
-                            VariableExpression<x:int>
-                        VariableExpression<y:int>
+                        VariableExpression<n:int>
+                        VariableExpression<x:int>
+                    VariableExpression<y:int>
             LabelStatement<continue2>
-            ExpressionStatement
-                AssignmentExpression<y:int>
-                    BinaryExpression<+>
-                        VariableExpression<y:int>
-                        LiteralExpression<1:int>
+            AssignmentStatement<y:int>
+                BinaryExpression<+>
+                    VariableExpression<y:int>
+                    LiteralExpression<1:int>
             LabelStatement<Label3>
             ConditionalGotoStatement<Label4:JIT=true>
                 BinaryExpression<<=>
@@ -605,11 +591,10 @@ func main() : int
                     VariableExpression<upperBound2:int>
             LabelStatement<break2>
             LabelStatement<continue1>
-            ExpressionStatement
-                AssignmentExpression<x:int>
-                    BinaryExpression<+>
-                        VariableExpression<x:int>
-                        LiteralExpression<1:int>
+            AssignmentStatement<x:int>
+                BinaryExpression<+>
+                    VariableExpression<x:int>
+                    LiteralExpression<1:int>
             LabelStatement<Label1>
             ConditionalGotoStatement<Label2:JIT=true>
                 BinaryExpression<<=>
@@ -640,9 +625,8 @@ func main() : int
                 LiteralExpression<0:int>
             VariableDeclaration<x:int>
                 LiteralExpression<1:int>
-            ExpressionStatement
-                AssignmentExpression<x:int>
-                    LiteralExpression<1:int>
+            AssignmentStatement<x:int>
+                LiteralExpression<1:int>
             VariableDeclaration<upperBound1:int>
                 LiteralExpression<100:int>
             GotoStatement<Label1>
@@ -653,9 +637,8 @@ func main() : int
                     LiteralExpression<50:int>
             VariableDeclaration<y:int>
                 LiteralExpression<100:int>
-            ExpressionStatement
-                AssignmentExpression<y:int>
-                    LiteralExpression<100:int>
+            AssignmentStatement<y:int>
+                LiteralExpression<100:int>
             VariableDeclaration<upperBound2:int>
                 LiteralExpression<1000:int>
             GotoStatement<Label4>
@@ -664,20 +647,18 @@ func main() : int
                 BinaryExpression<>>
                     VariableExpression<y:int>
                     LiteralExpression<50:int>
-            ExpressionStatement
-                AssignmentExpression<n:int>
+            AssignmentStatement<n:int>
+                BinaryExpression<+>
                     BinaryExpression<+>
-                        BinaryExpression<+>
-                            VariableExpression<n:int>
-                            VariableExpression<x:int>
-                        VariableExpression<y:int>
+                        VariableExpression<n:int>
+                        VariableExpression<x:int>
+                    VariableExpression<y:int>
             LabelStatement<Label6>
             LabelStatement<continue2>
-            ExpressionStatement
-                AssignmentExpression<y:int>
-                    BinaryExpression<+>
-                        VariableExpression<y:int>
-                        LiteralExpression<1:int>
+            AssignmentStatement<y:int>
+                BinaryExpression<+>
+                    VariableExpression<y:int>
+                    LiteralExpression<1:int>
             LabelStatement<Label4>
             ConditionalGotoStatement<Label5:JIT=true>
                 BinaryExpression<<=>
@@ -686,11 +667,10 @@ func main() : int
             LabelStatement<break2>
             LabelStatement<Label3>
             LabelStatement<continue1>
-            ExpressionStatement
-                AssignmentExpression<x:int>
-                    BinaryExpression<+>
-                        VariableExpression<x:int>
-                        LiteralExpression<1:int>
+            AssignmentStatement<x:int>
+                BinaryExpression<+>
+                    VariableExpression<x:int>
+                    LiteralExpression<1:int>
             LabelStatement<Label1>
             ConditionalGotoStatement<Label2:JIT=true>
                 BinaryExpression<<=>
@@ -720,11 +700,10 @@ func main() : int
                 LiteralExpression<0:int>
             GotoStatement<continue1>
             LabelStatement<Label1>
-            ExpressionStatement
-                AssignmentExpression<n:int>
-                    BinaryExpression<+>
-                        VariableExpression<n:int>
-                        LiteralExpression<1:int>
+            AssignmentStatement<n:int>
+                BinaryExpression<+>
+                    VariableExpression<n:int>
+                    LiteralExpression<1:int>
             LabelStatement<continue1>
             ConditionalGotoStatement<Label1:JIT=true>
                 BinaryExpression<<>

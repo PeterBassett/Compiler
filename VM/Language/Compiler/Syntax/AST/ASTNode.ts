@@ -62,7 +62,7 @@ export interface StringLiteralExpressionSyntax extends SyntaxNodeBase { kind:"St
 export interface NullLiteralExpressionSyntax extends SyntaxNodeBase { kind:"NullLiteralExpressionSyntax"; nullLiteralToken: Token; };
 export interface UnaryExpressionSyntax extends SyntaxNodeBase { kind:"UnaryExpressionSyntax"; operatorToken: Token; operand:ExpressionNode; };
 export interface BinaryExpressionSyntax extends SyntaxNodeBase { kind:"BinaryExpressionSyntax"; left:ExpressionNode; operatorToken: Token; right:ExpressionNode; };
-export interface AssignmentExpressionSyntax extends SyntaxNodeBase { kind:"AssignmentExpressionSyntax"; identifierToken:Token; equalsToken : Token; expression : ExpressionNode; };
+export interface AssignmentStatementSyntax extends SyntaxNodeBase { kind:"AssignmentStatementSyntax"; identifierToken:Token; equalsToken : Token; expression : ExpressionNode; };
 export interface ParenthesizedExpressionSyntax extends SyntaxNodeBase { kind:"ParenthesizedExpressionSyntax"; leftParen : Token, expression:ExpressionNode, rightParent:Token; };
 export interface NameExpressionSyntax extends SyntaxNodeBase { kind:"NameExpressionSyntax"; identifierToken : Token; };
 export interface CallExpressionSyntax extends SyntaxNodeBase { kind:"CallExpressionSyntax"; nameExpression : NameExpressionSyntax, leftParenToken : Token, callArguments : ExpressionNode[], rightParenToken : Token; };
@@ -112,7 +112,8 @@ export type StatementNode  =    DeclarationSyntax |
                                 ParameterDeclarationListSyntax |
                                 StructMemberDeclarationStatementSyntax |
                                 SetStatementSyntax |
-                                DereferenceAssignmentStatementSyntax;
+                                DereferenceAssignmentStatementSyntax |                                 
+                                AssignmentStatementSyntax;
 
 export type ExpressionNode  =   BooleanLiteralExpressionSyntax |
                                 IntegerLiteralExpressionSyntax |
@@ -121,7 +122,6 @@ export type ExpressionNode  =   BooleanLiteralExpressionSyntax |
                                 NullLiteralExpressionSyntax |
                                 UnaryExpressionSyntax |
                                 BinaryExpressionSyntax |
-                                AssignmentExpressionSyntax |
                                 ParenthesizedExpressionSyntax |
                                 NameExpressionSyntax |
                                 CallExpressionSyntax | 
@@ -143,11 +143,11 @@ export const StringLiteralExpressionSyntax = (literalToken:Token): StringLiteral
 export const NullLiteralExpressionSyntax = (nullLiteralToken:Token): NullLiteralExpressionSyntax => ({kind:"NullLiteralExpressionSyntax", nullLiteralToken, span:spanCalculator });
 export const UnaryExpressionSyntax = (operatorToken:Token, operand:ExpressionNode): UnaryExpressionSyntax => ({kind:"UnaryExpressionSyntax", operatorToken, operand, span:spanCalculator });
 export const BinaryExpressionSyntax = (left:ExpressionNode, operatorToken:Token, right:ExpressionNode): BinaryExpressionSyntax => ({kind:"BinaryExpressionSyntax", left, operatorToken, right, span:spanCalculator });                
-export const AssignmentExpressionSyntax = (identifierToken:Token, equalsToken : Token, expression : ExpressionNode): AssignmentExpressionSyntax => ({kind:"AssignmentExpressionSyntax", identifierToken, equalsToken, expression, span:spanCalculator });                
 export const ParenthesizedExpressionSyntax = (leftParen : Token, expression:ExpressionNode, rightParent:Token) : ParenthesizedExpressionSyntax => ({kind:"ParenthesizedExpressionSyntax", leftParen, expression, rightParent, span:spanCalculator });
 export const NameExpressionSyntax = (identifierToken : Token) : NameExpressionSyntax => ({kind:"NameExpressionSyntax", identifierToken, span:spanCalculator });
 export const CallExpressionSyntax = (nameExpression : NameExpressionSyntax, leftParenToken : Token, callArguments : ExpressionNode[], rightParenToken : Token)  : CallExpressionSyntax => ({kind:"CallExpressionSyntax", nameExpression, leftParenToken, callArguments, rightParenToken, span:spanCalculator });
 
+export const AssignmentStatementSyntax = (identifierToken:Token, equalsToken : Token, expression : ExpressionNode): AssignmentStatementSyntax => ({kind:"AssignmentStatementSyntax", identifierToken, equalsToken, expression, span:spanCalculator });
 export const ExpressionStatementSyntax = (expression:ExpressionNode, semiColonToken:Token): ExpressionStatementSyntax => ({kind:"ExpressionStatementSyntax", expression, semiColonToken, span:spanCalculator });
 export const BlockStatementSyntax = (openBraceToken : Token, statements:StatementNode[], closeBraceToken:Token): BlockStatementSyntax => ({kind:"BlockStatementSyntax", openBraceToken, statements, closeBraceToken, span:spanCalculator });                
 export const IfStatementSyntax = (ifKeyword : Token, condition:ExpressionNode, trueBranch:StatementNode, falseBranch:ElseStatementSyntax | null): IfStatementSyntax => ({kind:"IfStatementSyntax", ifKeyword, condition, trueBranch, falseBranch, span:spanCalculator });                

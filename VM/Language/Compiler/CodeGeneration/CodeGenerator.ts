@@ -356,6 +356,47 @@ export default class CodeGenerator
 
                 break;
             }
+            case Nodes.BoundNodeKind.AssignmentStatement:
+            {
+                let stmt = statement as Nodes.BoundAssignmentStatement;
+
+                if(stmt.type.isStruct)
+                {
+                    // assigning to struct parameter
+                    let spec = this.variableMap.peek()[stmt.identifier.name];                    
+
+                    const dest = this.getDataReference(stmt.identifier);
+                    const source = this.getStructDataReference(stmt.expression);
+
+                    this.emitStackCopy(dest, source, spec.size);
+                }
+                else
+                {
+                    this.writeExpression(stmt.expression);
+
+                    const mov = this.typedMnemonic(stmt.type.type, "MOV");
+
+                    if(stmt.identifier.variable!.isParameter)
+                    {
+                        let spec = this.variableMap.peek()[stmt.identifier.name];
+                        let offset = this.stackOffset + spec.offset;
+                        this.instruction(`${mov} [R6+${offset}] R1`, `assignt to parameter ${stmt.identifier.name} on the stack`);
+                    }
+                    else if(stmt.identifier.variable && stmt.identifier.variable!.isGlobal)
+                    {
+                        const str = this.typedMnemonic(stmt.identifier.type.type, "STR");
+                        this.instruction(`${str} R1 .${stmt.identifier.name}`, "read global variable");                       
+                        //this.instruction(`${mov} .${exp.identifier.name} R1`, "assign to global variable");
+                    }
+                    else
+                    {
+                        let spec = this.variableMap.peek()[stmt.identifier.name];
+                        let offset = spec.offset + spec.size;
+                        this.instruction(`${mov} [R6-${offset}] R1`, `assign to variable ${stmt.identifier.name} on the stack`);
+                    }
+                }
+                break;
+            }
         }
     }
 
@@ -673,48 +714,7 @@ export default class CodeGenerator
                     this.instruction(`${mov} R1 [R6-${offset}]`, `read variable ${exp.variable.name} from the stack`);
                 }
                 break;
-            }
-            case Nodes.BoundNodeKind.AssignmentExpression:
-            {
-                let exp = expression as Nodes.BoundAssignmentExpression;
-
-                if(exp.type.isStruct)
-                {
-                    // assigning to struct parameter
-                    let spec = this.variableMap.peek()[exp.identifier.name];                    
-
-                    const dest = this.getDataReference(exp.identifier);
-                    const source = this.getStructDataReference(exp.expression);
-
-                    this.emitStackCopy(dest, source, spec.size);
-                }
-                else
-                {
-                    this.writeExpression(exp.expression);
-
-                    const mov = this.typedMnemonic(exp.type.type, "MOV");
-
-                    if(exp.identifier.variable!.isParameter)
-                    {
-                        let spec = this.variableMap.peek()[exp.identifier.name];
-                        let offset = this.stackOffset + spec.offset;
-                        this.instruction(`${mov} [R6+${offset}] R1`, `assignt to parameter ${exp.identifier.name} on the stack`);
-                    }
-                    else if(exp.identifier.variable && exp.identifier.variable!.isGlobal)
-                    {
-                        const str = this.typedMnemonic(exp.identifier.type.type, "STR");
-                        this.instruction(`${str} R1 .${exp.identifier.name}`, "read global variable");                       
-                        //this.instruction(`${mov} .${exp.identifier.name} R1`, "assign to global variable");
-                    }
-                    else
-                    {
-                        let spec = this.variableMap.peek()[exp.identifier.name];
-                        let offset = spec.offset + spec.size;
-                        this.instruction(`${mov} [R6-${offset}] R1`, `assign to variable ${exp.identifier.name} on the stack`);
-                    }
-                }
-                break;
-            }      
+            }                  
             case Nodes.BoundNodeKind.UnaryExpression:
             {
                 this.writeUnaryExpression(expression as Nodes.BoundUnaryExpression);   

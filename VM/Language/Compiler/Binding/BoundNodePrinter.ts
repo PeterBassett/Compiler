@@ -58,8 +58,8 @@ export class BoundNodePrinter
             case BoundNodeKind.VariableExpression:
                 this.WriteVariableExpression(node as Nodes.BoundVariableExpression, writer);
                 break;
-            case BoundNodeKind.AssignmentExpression:
-                this.WriteAssignmentExpression(node as Nodes.BoundAssignmentExpression, writer);
+            case BoundNodeKind.AssignmentStatement:
+                this.WriteAssignmentExpression(node as Nodes.BoundAssignmentStatement, writer);
                 break;
             case BoundNodeKind.UnaryExpression:
                 this.WriteUnaryExpression(node as Nodes.BoundUnaryExpression, writer);
@@ -264,7 +264,7 @@ export class BoundNodePrinter
         this.WriteIdentifier(writer, node.variable.name);
     }
 
-    private static WriteAssignmentExpression(node : Nodes.BoundAssignmentExpression, writer : IndentedTextWriter)
+    private static WriteAssignmentExpression(node : Nodes.BoundAssignmentStatement, writer : IndentedTextWriter)
     {
         this.WriteIdentifier(writer, node.identifier.name);
         this.WriteSpace(writer);

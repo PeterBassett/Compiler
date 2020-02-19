@@ -290,9 +290,9 @@ export default class BoundTreeTransformBase
     protected transformExpression(expression: Nodes.BoundExpression) : Nodes.BoundExpression {
         switch(expression.kind)
         {
-            case Nodes.BoundNodeKind.AssignmentExpression:
+            case Nodes.BoundNodeKind.AssignmentStatement:
             {
-                const expr = this.transformAssignmentExpression(expression as Nodes.BoundAssignmentExpression);
+                const expr = this.transformAssignmentExpression(expression as Nodes.BoundAssignmentStatement);
                 return (expr !== expression) ? expr : expression;
             }                
             case Nodes.BoundNodeKind.BinaryExpression:
@@ -335,11 +335,11 @@ export default class BoundTreeTransformBase
         }
     }    
 
-    protected transformAssignmentExpression(expression: Nodes.BoundAssignmentExpression) : Nodes.BoundExpression {
+    protected transformAssignmentExpression(expression: Nodes.BoundAssignmentStatement) : Nodes.BoundExpression {
         let exp = this.transformExpression(expression.expression);
 
         if(exp !== expression.expression)
-            return new Nodes.BoundAssignmentExpression(expression.identifier, exp);
+            return new Nodes.BoundAssignmentStatement(expression.identifier, exp);
 
         return expression;
     }

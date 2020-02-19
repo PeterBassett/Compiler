@@ -327,9 +327,8 @@ func main() : int
         BlockStatement
             VariableDeclaration<n:int>
                 LiteralExpression<0:int>
-            ExpressionStatement
-                AssignmentExpression<n:int>
-                    LiteralExpression<5:int>
+            AssignmentStatement<n:int>
+                LiteralExpression<5:int>
             ReturnStatement
                 VariableExpression<n:int>
 ` ],
@@ -352,11 +351,10 @@ func main() : int
             ForStatement
                 LiteralExpression<1:int>
                 LiteralExpression<100:int>
-                ExpressionStatement
-                    AssignmentExpression<n:int>
-                        BinaryExpression<+>
-                            VariableExpression<n:int>
-                            VariableExpression<i:int>
+                AssignmentStatement<n:int>
+                    BinaryExpression<+>
+                        VariableExpression<n:int>
+                        VariableExpression<i:int>
             ReturnStatement
                 VariableExpression<n:int>
 `],
@@ -383,11 +381,10 @@ func main() : int
                     VariableExpression<n:int>
                     LiteralExpression<100:int>
                 BlockStatement
-                    ExpressionStatement
-                        AssignmentExpression<n:int>
-                            BinaryExpression<+>
-                                VariableExpression<n:int>
-                                LiteralExpression<1:int>
+                    AssignmentStatement<n:int>
+                        BinaryExpression<+>
+                            VariableExpression<n:int>
+                            LiteralExpression<1:int>
             ReturnStatement
                 VariableExpression<n:int>
 `],
@@ -628,10 +625,9 @@ func main() : int
                 LiteralExpression<5:int>
             VariableDeclaration<ap:*int>
                 LiteralExpression<0:*int>
-            ExpressionStatement
-                AssignmentExpression<ap:*int>
-                    UnaryExpression<&>
-                        VariableExpression<a:int>
+            AssignmentStatement<ap:*int>
+                UnaryExpression<&>
+                    VariableExpression<a:int>
             DereferenceAssignmentStatement
                 UnaryExpression<*>
                     VariableExpression<ap:*int>

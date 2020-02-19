@@ -165,8 +165,6 @@ export default class Interpreter
                 return this.VisitNullLiteralStatementSyntax(node);                
             case "ExpressionStatementSyntax" :
                 return this.VisitExpressionStatementSyntax(node);
-            case "AssignmentExpressionSyntax":
-                return this.VisitAssignmentExpressionSyntax(node);
             case "ParenthesizedExpressionSyntax":
                 return this.VisitParenthesizedExpressionSyntax(node);
             case "NameExpressionSyntax" :
@@ -191,6 +189,8 @@ export default class Interpreter
                 return this.VisitCallExpressionSyntax(node);    
             case "TypeNameSyntax":
                 return this.VisitTypeNameSyntax(node);
+            case "AssignmentStatementSyntax":                       
+                return this.VisitAssignmentStatementSyntax(node);                
             case "StructDeclarationStatementSyntax" :   
             case "StructMemberDeclarationStatementSyntax" :             
             case "ClassDeclarationStatementSyntax" :           
@@ -329,7 +329,7 @@ export default class Interpreter
         return this.VisitExpressionNode(node.expression);
     }
 
-    VisitAssignmentExpressionSyntax(node : AST.AssignmentExpressionSyntax): Value {
+    VisitAssignmentStatementSyntax(node : AST.AssignmentStatementSyntax): Value {
         let name = node.identifierToken.lexeme;
         let variable = this.scope.FindIdentifier(name);
 
@@ -340,7 +340,7 @@ export default class Interpreter
 
         this.scope.AssignIdentifierValue(name, value);
 
-        return value;
+        return Value.Unit;
     }
     
     VisitBinaryExpressionSyntax(node : AST.BinaryExpressionSyntax) : Value {
@@ -543,9 +543,7 @@ export default class Interpreter
             case "NullLiteralExpressionSyntax":
                 return this.VisitNullLiteralStatementSyntax(node);                                
             case "ParenthesizedExpressionSyntax":
-                return this.VisitParenthesizedExpressionSyntax(node);
-            case "AssignmentExpressionSyntax":                       
-                return this.VisitAssignmentExpressionSyntax(node);                         
+                return this.VisitParenthesizedExpressionSyntax(node);                         
             case "NameExpressionSyntax":                       
                 return this.VisitNameExpressionSyntax(node);            
             case "CallExpressionSyntax":                       

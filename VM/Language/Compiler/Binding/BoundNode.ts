@@ -23,7 +23,7 @@ export enum BoundNodeKind {
     ParameterDeclaration,
     UnaryExpression,
     VariableExpression,
-    AssignmentExpression,
+    AssignmentStatement,
     ErrorExpression,
     CallExpression,
     LabelStatement,
@@ -556,7 +556,7 @@ export class BoundCallExpression extends BoundExpression
     public get type(): Type { return this.returnType; }
 }
 
-export class BoundAssignmentExpression extends BoundExpression 
+export class BoundAssignmentStatement extends BoundStatement 
 {
     constructor(public readonly identifier : Identifier, 
                 public readonly expression : BoundExpression)
@@ -564,7 +564,7 @@ export class BoundAssignmentExpression extends BoundExpression
         super();
     }
 
-    public get kind(): BoundNodeKind { return BoundNodeKind.AssignmentExpression; };
+    public get kind(): BoundNodeKind { return BoundNodeKind.AssignmentStatement; };
     public get type(): Type { return this.expression.type; }
 }
 

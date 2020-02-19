@@ -18,7 +18,7 @@ export default class Lowerer extends BoundTreeTransformBase
     private _labelCount : number = 0;
     private generateLabel() : Nodes.BoundLabel
     {
-        let name = `Label${++this._labelCount}`;
+        const name = `Label${++this._labelCount}`;
         return new Nodes.BoundLabel(name);
     }
 
@@ -40,10 +40,10 @@ export default class Lowerer extends BoundTreeTransformBase
             // gotoFalse <condition> end
             // <then>
             // end:
-            let endLabel = this.generateLabel();
-            let gotoFalse = new Nodes.BoundConditionalGotoStatement(endLabel, node.condition, false);
-            let endLabelStatement = new Nodes.BoundLabelStatement(endLabel);
-            let result = new Nodes.BoundBlockStatement([gotoFalse, node.trueBranch, endLabelStatement]);
+            const endLabel = this.generateLabel();
+            const gotoFalse = new Nodes.BoundConditionalGotoStatement(endLabel, node.condition, false);
+            const endLabelStatement = new Nodes.BoundLabelStatement(endLabel);
+            const result = new Nodes.BoundBlockStatement([gotoFalse, node.trueBranch, endLabelStatement]);
             
             return this.transformStatement(result);
         }
@@ -63,14 +63,14 @@ export default class Lowerer extends BoundTreeTransformBase
             // <else>
             // end:
 
-            let elseLabel = this.generateLabel();
-            let endLabel = this.generateLabel();
+            const elseLabel = this.generateLabel();
+            const endLabel = this.generateLabel();
 
-            let gotoFalse = new Nodes.BoundConditionalGotoStatement(elseLabel, node.condition, false);
-            let gotoEndStatement = new Nodes.BoundGotoStatement(endLabel);
-            let elseLabelStatement = new Nodes.BoundLabelStatement(elseLabel);
-            let endLabelStatement = new Nodes.BoundLabelStatement(endLabel);
-            let result = new Nodes.BoundBlockStatement([
+            const gotoFalse = new Nodes.BoundConditionalGotoStatement(elseLabel, node.condition, false);
+            const gotoEndStatement = new Nodes.BoundGotoStatement(endLabel);
+            const elseLabelStatement = new Nodes.BoundLabelStatement(elseLabel);
+            const endLabelStatement = new Nodes.BoundLabelStatement(endLabel);
+            const result = new Nodes.BoundBlockStatement([
                 gotoFalse,
                 node.trueBranch,
                 gotoEndStatement,
@@ -97,15 +97,15 @@ export default class Lowerer extends BoundTreeTransformBase
         // gotoTrue <condition> body
         // break:
 
-        let bodyLabel = this.generateLabel();
+        const bodyLabel = this.generateLabel();
 
-        let gotoContinue = new Nodes.BoundGotoStatement(node.continueLabel);
-        let bodyLabelStatement = new Nodes.BoundLabelStatement(bodyLabel);
-        let continueLabelStatement = new Nodes.BoundLabelStatement(node.continueLabel);
-        let gotoTrue = new Nodes.BoundConditionalGotoStatement(bodyLabel, node.condition);
-        let breakLabelStatement = new Nodes.BoundLabelStatement(node.breakLabel);
+        const gotoContinue = new Nodes.BoundGotoStatement(node.continueLabel);
+        const bodyLabelStatement = new Nodes.BoundLabelStatement(bodyLabel);
+        const continueLabelStatement = new Nodes.BoundLabelStatement(node.continueLabel);
+        const gotoTrue = new Nodes.BoundConditionalGotoStatement(bodyLabel, node.condition);
+        const breakLabelStatement = new Nodes.BoundLabelStatement(node.breakLabel);
 
-        let result = new Nodes.BoundBlockStatement([
+        const result = new Nodes.BoundBlockStatement([
             gotoContinue,
             bodyLabelStatement,
             node.body,
@@ -134,34 +134,31 @@ export default class Lowerer extends BoundTreeTransformBase
         //      }
         // }
 
-        let loopVariable = new Identifier(forStatement.variable.name, forStatement.variable.type, forStatement.variable);
-        let variableDeclaration = new Nodes.BoundVariableDeclaration(loopVariable.variable!, forStatement.lowerBound);
-        let variableInit = new Nodes.BoundAssignmentExpression(loopVariable, forStatement.lowerBound);
-        let varianleInitStatement = new Nodes.BoundExpressionStatement(variableInit);
-        let variableExpression = new Nodes.BoundVariableExpression(loopVariable);
-        let upperboundSymbolName = this.generateVariable("upperBound");
-        let upperBoundSymbol = new Nodes.VariableSymbol(upperboundSymbolName, true, PredefinedValueTypes.Integer, false);
-        let upperBoundDeclaration = new Nodes.BoundVariableDeclaration(upperBoundSymbol, forStatement.upperBound);
+        const loopVariable = new Identifier(forStatement.variable.name, forStatement.variable.type, forStatement.variable);
+        const variableDeclaration = new Nodes.BoundVariableDeclaration(loopVariable.variable!, forStatement.lowerBound);
+        const varianleInitStatement = new Nodes.BoundAssignmentStatement(loopVariable, forStatement.lowerBound);
+        const variableExpression = new Nodes.BoundVariableExpression(loopVariable);
+        const upperboundSymbolName = this.generateVariable("upperBound");
+        const upperBoundSymbol = new Nodes.VariableSymbol(upperboundSymbolName, true, PredefinedValueTypes.Integer, false);
+        const upperBoundDeclaration = new Nodes.BoundVariableDeclaration(upperBoundSymbol, forStatement.upperBound);
 
-        let condition = new Nodes.BoundBinaryExpression(
+        const condition = new Nodes.BoundBinaryExpression(
             variableExpression,
             BoundBinaryOperator.Bind(SyntaxType.LessThanOrEqual, PredefinedValueTypes.Integer, PredefinedValueTypes.Integer)!,
             new Nodes.BoundVariableExpression(new Identifier(upperBoundSymbol.name, upperBoundSymbol.type, upperBoundSymbol))
         );
 
-        let continueLabelStatement = new Nodes.BoundLabelStatement(forStatement.continueLabel);
-        let increment = new Nodes.BoundExpressionStatement(
-            new Nodes.BoundAssignmentExpression(
-                new Identifier(forStatement.variable.name, forStatement.variable.type, forStatement.variable),
-                new Nodes.BoundBinaryExpression(
-                    variableExpression,
-                    BoundBinaryOperator.Bind(SyntaxType.Plus, PredefinedValueTypes.Integer, PredefinedValueTypes.Integer)!,
-                    new Nodes.BoundLiteralExpression(1, PredefinedValueTypes.Integer)
-                )
-            )
+        const continueLabelStatement = new Nodes.BoundLabelStatement(forStatement.continueLabel);
+        const increment = new Nodes.BoundAssignmentStatement(
+            new Identifier(forStatement.variable.name, forStatement.variable.type, forStatement.variable),
+            new Nodes.BoundBinaryExpression(
+                variableExpression,
+                BoundBinaryOperator.Bind(SyntaxType.Plus, PredefinedValueTypes.Integer, PredefinedValueTypes.Integer)!,
+                new Nodes.BoundLiteralExpression(1, PredefinedValueTypes.Integer)
+            )            
         );
 
-        let whileBody = new Nodes.BoundBlockStatement(
+        const whileBody = new Nodes.BoundBlockStatement(
             [
                 forStatement.body,
                 continueLabelStatement,
@@ -169,9 +166,9 @@ export default class Lowerer extends BoundTreeTransformBase
             ]
         );
 
-        let whileStatement = new Nodes.BoundWhileStatement(condition, whileBody, forStatement.breakLabel, this.generateLabel());
+        const whileStatement = new Nodes.BoundWhileStatement(condition, whileBody, forStatement.breakLabel, this.generateLabel());
 
-        let result = new Nodes.BoundBlockStatement(
+        const result = new Nodes.BoundBlockStatement(
             [
                 variableDeclaration,
                 varianleInitStatement,
@@ -188,7 +185,7 @@ export default class Lowerer extends BoundTreeTransformBase
         if(expression.left.kind === Nodes.BoundNodeKind.CallExpression)
             return this.transformGetExpressionOnCall(expression);
             
-        let left = this.transformExpression(expression.left);        
+        const left = this.transformExpression(expression.left);        
 
         if(left !== expression.left)
             return new Nodes.BoundGetExpression(left, expression.type, expression.member);

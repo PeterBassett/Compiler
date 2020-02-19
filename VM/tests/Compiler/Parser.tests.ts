@@ -368,9 +368,8 @@ func main() : int
             VariableDeclarationSyntax<n>
                 TypeNameSyntax<int>
                 IntegerLiteralExpressionSyntax<0>
-            ExpressionStatementSyntax
-                AssignmentExpressionSyntax<n>
-                    IntegerLiteralExpressionSyntax<5>
+            AssignmentStatementSyntax<n>
+                IntegerLiteralExpressionSyntax<5>
             ReturnStatementSyntax
                 NameExpressionSyntax<n>
 ` ],
@@ -395,11 +394,10 @@ func main() : int
             ForStatementSyntax
                 IntegerLiteralExpressionSyntax<1>
                 IntegerLiteralExpressionSyntax<100>
-                ExpressionStatementSyntax
-                    AssignmentExpressionSyntax<n>
-                        BinaryExpressionSyntax<+>
-                            NameExpressionSyntax<n>
-                            NameExpressionSyntax<i>
+                AssignmentStatementSyntax<n>
+                    BinaryExpressionSyntax<+>
+                        NameExpressionSyntax<n>
+                        NameExpressionSyntax<i>
             ReturnStatementSyntax
                 NameExpressionSyntax<n>
 `],
@@ -537,11 +535,10 @@ func main() : int
                     NameExpressionSyntax<n>
                     IntegerLiteralExpressionSyntax<100>
                 BlockStatementSyntax
-                    ExpressionStatementSyntax
-                        AssignmentExpressionSyntax<n>
-                            BinaryExpressionSyntax<+>
-                                NameExpressionSyntax<n>
-                                IntegerLiteralExpressionSyntax<1>
+                    AssignmentStatementSyntax<n>
+                        BinaryExpressionSyntax<+>
+                            NameExpressionSyntax<n>
+                            IntegerLiteralExpressionSyntax<1>
             ReturnStatementSyntax
                 NameExpressionSyntax<n>
 `],
@@ -787,10 +784,9 @@ func main() : int
             VariableDeclarationSyntax<ap>
                 TypeNameSyntax<*int>
                     TypeNameSyntax<int>
-            ExpressionStatementSyntax
-                AssignmentExpressionSyntax<ap>
-                    UnaryExpressionSyntax<&>
-                        NameExpressionSyntax<a>
+            AssignmentStatementSyntax<ap>
+                UnaryExpressionSyntax<&>
+                    NameExpressionSyntax<a>
             DereferenceAssignmentStatementSyntax
                 UnaryExpressionSyntax<*>
                     NameExpressionSyntax<ap>

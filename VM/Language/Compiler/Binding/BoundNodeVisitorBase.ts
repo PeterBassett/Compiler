@@ -49,7 +49,7 @@ export class BoundNodeVisitorBase implements IBoundNodeVisitor
     visitBoundCallExpression(node: Nodes.BoundCallExpression): void {
         throw new Error("Method not implemented.");
     }
-    visitBoundAssignmentExpression(node: Nodes.BoundAssignmentExpression): void {
+    visitBoundAssignmentStatement(node: Nodes.BoundAssignmentStatement): void {
         throw new Error("Method not implemented.");
     }
     visitBoundClassDeclaration(node: Nodes.BoundClassDeclaration): void {

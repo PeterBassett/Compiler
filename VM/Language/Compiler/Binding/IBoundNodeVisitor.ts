@@ -15,7 +15,7 @@ export interface IBoundNodeVisitor {
     visitBoundWhileStatement(node: Nodes.BoundWhileStatement): void;
     visitBoundVariableExpression(node: Nodes.BoundVariableExpression): void;
     visitBoundCallExpression(node: Nodes.BoundCallExpression): void;
-    visitBoundAssignmentExpression(node: Nodes.BoundAssignmentExpression): void;
+    visitBoundAssignmentStatement(node: Nodes.BoundAssignmentStatement): void;
     visitBoundClassDeclaration(node: Nodes.BoundClassDeclaration): void;
     visitBoundErrorExpression(node: Nodes.BoundErrorExpression): void;
 }

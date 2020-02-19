@@ -36,6 +36,9 @@ export class BasicBlockBuilder
                     break;
                 case BoundNodeKind.VariableDeclaration:
                 case BoundNodeKind.ExpressionStatement:
+                case BoundNodeKind.AssignmentStatement:
+                case BoundNodeKind.SetStatement:
+                case BoundNodeKind.DereferenceAssignmentStatement:
                     this._statements.push(statement);
                     break;
                 default:

@@ -69,6 +69,9 @@ export class GraphBuilder
                     case BoundNodeKind.VariableDeclaration:
                     case BoundNodeKind.LabelStatement:
                     case BoundNodeKind.ExpressionStatement:
+                    case BoundNodeKind.AssignmentStatement:
+                    case BoundNodeKind.SetStatement:
+                    case BoundNodeKind.DereferenceAssignmentStatement:
                         if (isLastStatementInBlock)
                             this.Connect(current, next);
                         break;

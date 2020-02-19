@@ -512,10 +512,11 @@ export default class Parser
             const identifierToken = this.next();
             const operatorToken = this.next();
             const right = this.parseBinaryExpression();
+            const semiColon = this.match(SyntaxType.SemiColon);
 
             return {
-                expression : AST.AssignmentExpressionSyntax(identifierToken, operatorToken, right),
-                statement : null
+                expression : null,
+                statement : AST.AssignmentStatementSyntax(identifierToken, operatorToken, right)
             };
         }
 
@@ -783,7 +784,6 @@ export default class Parser
             switch(expression.kind)
             {
                 case "CallExpressionSyntax":
-                case "AssignmentExpressionSyntax":
                     break;
                 default:
                     this._diagnostics.reportUnexpectedStatementExpression(expression.span());
@@ -795,7 +795,8 @@ export default class Parser
         else if(statement)
         {
             switch(statement.kind)
-            {
+            {                
+                case "AssignmentStatementSyntax":
                 case "SetStatementSyntax":
                 case "DereferenceAssignmentStatementSyntax":     
                     break;

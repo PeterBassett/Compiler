@@ -66,6 +66,10 @@ export default class Evaluator
                     this.EvaluateExpressionStatement(s as Nodes.BoundExpressionStatement);
                     index++;
                     break;
+                case Nodes.BoundNodeKind.AssignmentStatement:
+                    this.EvaluateAssignmentStatement(s as Nodes.BoundAssignmentStatement);
+                    index++;
+                    break;                    
                 case Nodes.BoundNodeKind.GotoStatement:
                     var gs = s as Nodes.BoundGotoStatement;
                     index = labelToIndex[gs.label.id];
@@ -84,7 +88,7 @@ export default class Evaluator
                 case Nodes.BoundNodeKind.ReturnStatement:
                     var rs = s as Nodes.BoundReturnStatement;
                     this._lastValue = rs.expression == null ? Value.Unit : this.EvaluateExpression(rs.expression);
-                    return this._lastValue;
+                    return this._lastValue;                    
                 default:
                     throw new Error(`Unexpected node {s.kind}`);
             }
@@ -126,8 +130,6 @@ export default class Evaluator
                 return this.EvaluateLiteralExpression(node as Nodes.BoundLiteralExpression);
             case Nodes.BoundNodeKind.VariableExpression:
                 return this.EvaluateVariableExpression(node as Nodes.BoundVariableExpression);
-            case Nodes.BoundNodeKind.AssignmentExpression:
-                return this.EvaluateAssignmentExpression(node as Nodes.BoundAssignmentExpression);
             case Nodes.BoundNodeKind.UnaryExpression:
                 return this.EvaluateUnaryExpression(node as Nodes.BoundUnaryExpression);
             case Nodes.BoundNodeKind.BinaryExpression:
@@ -161,7 +163,7 @@ export default class Evaluator
         }
     }
 
-    private EvaluateAssignmentExpression(a : Nodes.BoundAssignmentExpression) : Value
+    private EvaluateAssignmentStatement(a : Nodes.BoundAssignmentStatement) : Value
     {
         var value = this.EvaluateExpression(a.expression);
 

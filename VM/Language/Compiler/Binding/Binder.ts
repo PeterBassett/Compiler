@@ -153,7 +153,9 @@ export default class Binder
             case "SetStatementSyntax":               
                 return this.BindSetStatement(syntax);
             case "DereferenceAssignmentStatementSyntax":               
-                return this.BindDereferenceAssignmentStatementSyntax(syntax);                  
+                return this.BindDereferenceAssignmentStatementSyntax(syntax);  
+            case "AssignmentStatementSyntax":               
+                return this.BindAssignmentStatement(syntax);                                
             case "ElseStatementSyntax" :
             case "ParameterDeclarationSyntax" : 
             case "ParameterDeclarationListSyntax" :               
@@ -603,8 +605,6 @@ export default class Binder
                 return this.BindNameExpression(syntax);
             case "CallExpressionSyntax":                 
                 return this.BindCallExpression(syntax);                        
-            case "AssignmentExpressionSyntax":               
-                return this.BindAssignmentExpression(syntax);
             case "GetExpressionSyntax":               
                 return this.BindGetExpression(syntax);              
             case "TypeNameSyntax":
@@ -844,7 +844,7 @@ export default class Binder
         return new Nodes.BoundUnaryExpression(boundOperator, boundOperand);
     }
 
-    private BindAssignmentExpression(syntax : AST.AssignmentExpressionSyntax) : Nodes.BoundAssignmentExpression
+    private BindAssignmentStatement(syntax : AST.AssignmentStatementSyntax) : Nodes.BoundStatement
     {
         const identifier = this.scope.FindVariable(syntax.identifierToken.lexeme);
         
@@ -857,7 +857,7 @@ export default class Binder
 
         const convertedExpression = this.BindConversion(syntax.expression.span(), expression, identifier.type);
 
-        return new Nodes.BoundAssignmentExpression(identifier, convertedExpression);
+        return new Nodes.BoundAssignmentStatement(identifier, convertedExpression);
     }
 
     private BindErrorStatement() : Nodes.BoundStatement
