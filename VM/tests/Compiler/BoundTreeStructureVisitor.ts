@@ -39,7 +39,8 @@ export default class BoundTreeStructureVisitor
             case Nodes.BoundNodeKind.UnaryExpression:
             {
                 let exp = node as Nodes.BoundUnaryExpression;
-                value = "<" + exp.operator.syntaxKind + ">";
+                let op = SyntaxFacts.GetText(exp.operator.syntaxKind);
+                value = "<" + op + ">";
                 break;
             }
             case Nodes.BoundNodeKind.FunctionDefinition:

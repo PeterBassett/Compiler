@@ -4,20 +4,23 @@ import { Type } from "../../Types/TypeInformation";
 
 export default class Conversion
 {
-    public static readonly None = new Conversion(false, false, false);
-    public static readonly Identity = new Conversion(true, true, true);
-    public static readonly Implicit = new Conversion(true, false, true);
-    public static readonly Explicit = new Conversion(true, false, false);
+    public static readonly None = new Conversion(false, false, false, false);
+    public static readonly Identity = new Conversion(true, true, true, false);
+    public static readonly Implicit = new Conversion(true, false, true, false);
+    public static readonly Explicit = new Conversion(true, false, false, false);
+    public static readonly Immediate = new Conversion(true, false, false, true);
 
     private constructor(
         public readonly Exists : boolean, 
         public readonly IsIdentity : boolean, 
         public readonly IsImplicit : boolean,
-        public readonly ConvertTo : Type = PredefinedValueTypes.Unit)
+        public readonly IsImmediate : boolean,
+        public readonly ConvertTo : Type = PredefinedValueTypes.Unit,
+        public readonly ConvertToValue : any  = null)
     {
     }
 
-    public get IsExplicit() { return this.Exists && !this.IsImplicit };
+    public get IsExplicit() { return this.Exists && !this.IsImplicit && !this.IsImmediate; };
 
     public static classifyConversion(from : Type, to : Type) : Conversion
     {
@@ -42,7 +45,7 @@ export default class Conversion
 
         if(from.equals(PredefinedValueTypes.Integer) && 
              to.equals(PredefinedValueTypes.Float))
-            return new Conversion(true, false, true, PredefinedValueTypes.Float);
+            return new Conversion(true, false, true, false, PredefinedValueTypes.Float);
 
         if (from.equals(PredefinedValueTypes.Float))
         {
@@ -50,6 +53,13 @@ export default class Conversion
                 to.equals(PredefinedValueTypes.Integer) ||
                 to.equals(PredefinedValueTypes.String) )
                 return Conversion.Explicit;
+        }
+
+        // you can always assign null to any pointer type.
+        if(from.type === ValueType.Null &&
+            to.isPointer)
+        {
+            return new Conversion(true, false, false, true, to, null);
         }
 
         return Conversion.None;

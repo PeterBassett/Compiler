@@ -1,4 +1,4 @@
-import { FunctionDetails, Type } from "../Types/TypeInformation";
+import { FunctionDetails, Type, FunctionType } from "../Types/TypeInformation";
 import { PredefinedValueTypes } from "../Types/PredefinedValueTypes";
 
 export class BuiltinFunction
@@ -29,7 +29,7 @@ export default class BuiltinFunctions
 
     public static readonly rnd : BuiltinFunction = new BuiltinFunction(
         1,
-        new Type(BuiltinFunctions.rndDetails.returnType.type, "int", BuiltinFunctions.rndDetails),
+        new FunctionType(BuiltinFunctions.rndDetails.returnType.type, "int", BuiltinFunctions.rndDetails),
         BuiltinFunctions.rndDetails,
         (parameters : number[]) => {
             if(parameters.length != 2)

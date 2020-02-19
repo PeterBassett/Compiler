@@ -41,6 +41,7 @@ const lexemes : { lexeme : string, type : SyntaxType } [] = [
     { lexeme : "in", type : SyntaxType.InKeyword },
     { lexeme : "true", type : SyntaxType.TrueKeyword },
     { lexeme : "false", type : SyntaxType.FalseKeyword },
+    { lexeme : "null", type : SyntaxType.NullKeyword },
     { lexeme : "func", type : SyntaxType.FuncKeyword },
     { lexeme : "var", type : SyntaxType.VarKeyword },
     { lexeme : "let", type : SyntaxType.LetKeyword },
@@ -86,6 +87,7 @@ export function GetKeywordType(lexeme : string) : SyntaxType
         case "in" : return SyntaxType.InKeyword;
         case "true" : return SyntaxType.TrueKeyword;
         case "false" : return SyntaxType.FalseKeyword;
+        case "null" : return SyntaxType.NullKeyword;
         case "func" : return SyntaxType.FuncKeyword;
         case "var" : return SyntaxType.VarKeyword;
         case "let" : return SyntaxType.LetKeyword;
@@ -141,6 +143,8 @@ export function GetUnaryOperatorPrecedence(type : SyntaxType) : number{
         case SyntaxType.Minus:
         case SyntaxType.Bang:
         case SyntaxType.Tilde:
+        case SyntaxType.Star:
+        case SyntaxType.Ampersand:
             return 7;
         default:
             return 0;

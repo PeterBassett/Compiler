@@ -184,7 +184,7 @@ export default class Evaluator
     {
         var operand = this.EvaluateExpression(u.operand);
 
-        switch (u.operator.kind)
+        switch (u.operator.operatorKind)
         {
             case Nodes.BoundUnaryOperatorKind.Identity:
                 return operand;

@@ -29,7 +29,8 @@ export enum DiagnosticType {
     EntryPointNotFound,
     NotAllPathsReturn,
     DuplicateStructMember,
-    UndefinedStructMember
+    UndefinedStructMember,
+    AssignmentRequiresLValue
 }
 
 export class Diagnostic
@@ -60,7 +61,7 @@ export class Diagnostic
 }
 
 export class Diagnostics
-{
+{    
     private readonly _diagnostics : Diagnostic[];
     private readonly _source : SourceText;
 
@@ -129,7 +130,7 @@ export class Diagnostics
         this.report(`Binary operator '${operator}' is not defined for types '${leftType.name}' and '${rightType.name}'.`, DiagnosticType.UndefinedBinaryOperator, span);
     }
 
-    reportUndefinedUnaryOperator(span: TextSpan, operator: string, type: Type): any {
+    public reportUndefinedUnaryOperator(span: TextSpan, operator: string, type: Type): void {
         this.report(`Unary operator '${operator}' is not defined for types '${type}.`, DiagnosticType.UndefinedUnaryOperator, span);
     }    
 
@@ -159,34 +160,38 @@ export class Diagnostics
         this.report(`An expression convertable to '${returnType.name}' is required.`, DiagnosticType.ExpressionConvertableToTypeRequired, span);
     }
 
-    reportInvalidBreakOrContinue(span: TextSpan, lexeme: string) {
+    public reportInvalidBreakOrContinue(span: TextSpan, lexeme: string) : void {
         this.report(`The keyword '${lexeme}' can only be used inside of loops.`, DiagnosticType.InvalidBreakOrContinue, span);
     }
 
-    reportExpectedClass(span: TextSpan, lexeme:string) {
+    public reportExpectedClass(span: TextSpan, lexeme:string) : void {
         this.report(`expression to the left does not exavluate to a class type. '${lexeme}'.`, DiagnosticType.ExpectedClassType, span);
     }
 
-    reportEntryPointNotFound(entryPoint: string) {
+    public reportEntryPointNotFound(entryPoint: string) : void {
         this.report(`Program entry point '${entryPoint}' not found.`, DiagnosticType.EntryPointNotFound, TextSpan.Empty);
     }
 
-    reportAllPathsMustReturn(func: BoundFunctionDeclaration) {
+    public reportAllPathsMustReturn(func: BoundFunctionDeclaration) : void {
         this.report(`Not all code paths return a value in function ${func.identifier}.`, DiagnosticType.NotAllPathsReturn, TextSpan.Empty);
     }
     
-    reportUnsupportedType(type: ValueType) {
+    public reportUnsupportedType(type: ValueType) : void {
         throw new Error("Method not implemented.");
     }
 
-    reportDuplicateStructMember(structName: string, membername: string, span:TextSpan)
+    public reportDuplicateStructMember(structName: string, membername: string, span:TextSpan)
     {
         this.report(`Struct ${structName} contains duplicate member ${membername}.`, DiagnosticType.DuplicateStructMember, span);
     }
 
-    reportUndefinedStructMember(structName: string, memberName: string, span: TextSpan) 
+    public reportUndefinedStructMember(structName: string, memberName: string, span: TextSpan) 
     {
         this.report(`Member ${memberName} does not exist on struct ${structName}.`, DiagnosticType.UndefinedStructMember, span);
+    }
+
+    public reportAssignmentRequiresLValue(kind: string, span: TextSpan) : void {        
+        this.report(`lvalue required as left operand of assignment, found ${kind}`, DiagnosticType.AssignmentRequiresLValue, span);
     }
 
     public get text() : SourceText

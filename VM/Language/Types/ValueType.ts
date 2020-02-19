@@ -1,5 +1,6 @@
 export enum ValueType {
     Unit,
+    Null,
     Error,
     Function,
     Boolean,

@@ -58,6 +58,7 @@ require(["jasmine-boot"], () =>
             "./Compiler/CompileAndExecute/CompileAndExecute.tests",
             "./Compiler/CompileAndExecute/CompilerIntrinsicExecute.tests",
             "./Compiler/CompileAndExecute/CompileAndExecute.struct.tests",
+            "./Compiler/CompileAndExecute/CompileAndExecute.pointer.tests",
             "./Compiler/Optimisation/ExpressionOptimiser.tests",
             "./Compiler/Binding/ControlFlowAnalysis/ControlFlowAnalyser.tests",
           ], () => {

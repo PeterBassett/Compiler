@@ -1,9 +1,10 @@
 import { IScope } from "../Scope/Scope";
 import { ScopeInfo, Identifier } from "../Scope/DefinitionScope";
-import { Type, FunctionDetails, ClassDetails, VariableDetails } from "./TypeInformation";
+import { Type, FunctionDetails, ClassDetails, VariableDetails, FunctionType, ClassType, PointerType } from "./TypeInformation";
 import { PredefinedValueTypes } from "./PredefinedValueTypes";
 import { ValueType } from "./ValueType";
 import { BoundFunctionDeclaration, BoundClassDeclaration, BoundVariableDeclaration } from "../Compiler/Binding/BoundNode";
+import { TypeNameSyntax } from "../Compiler/Syntax/AST/ASTNode";
 
 export default class TypeQuery
 {
@@ -38,6 +39,22 @@ export default class TypeQuery
                 return identifier.type;
             }
         }    
+    }
+
+    public static getTypeFromTypeSyntax(type : TypeNameSyntax, scope:IScope<ScopeInfo>, returnUnitOnFailure:boolean = false) : Type
+    {
+        // are we dealing with a pointer to some type?
+        if(type.pointerToType !== null)
+        {
+            const baseType = TypeQuery.getTypeFromTypeSyntax(type.pointerToType, scope, returnUnitOnFailure);
+            
+            const pointerToType = new PointerType(baseType);
+
+            return pointerToType;
+        }
+        else
+            // base case
+            return this.getTypeFromName(type.identifier.lexeme, scope, returnUnitOnFailure);
     }
     
     static getDefaultValueForType(type: Type, scope: IScope<ScopeInfo>): any {
@@ -74,9 +91,10 @@ export default class TypeQuery
     }*/
 
     public static declaredFunctionType(declaration: BoundFunctionDeclaration): Type {
-        let type : Type;
-        type = new Type(ValueType.Function);
-        type.function = new FunctionDetails(declaration.parameters.map( p => p.type.clone()), declaration.returnType);
+        const type = new FunctionType(ValueType.Function, 
+            declaration.identifier,
+            new FunctionDetails(declaration.parameters.map( p => p.type.clone()), declaration.returnType) );
+
         return type;
     }
 
@@ -89,8 +107,7 @@ export default class TypeQuery
     }
 
     public static declaredClassType(declaration: BoundClassDeclaration): Type {
-        let type : Type;
-        type = new Type(ValueType.Class);
+        const type = new ClassType(declaration.name);
         type.classDetails = new ClassDetails(declaration.name, declaration.classes, declaration.fields, declaration.members);
         return type;
     }

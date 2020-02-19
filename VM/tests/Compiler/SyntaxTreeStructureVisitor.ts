@@ -47,7 +47,14 @@ export default class SyntaxTreeStructureVisitor
             {
                 let pointer = "";
                 if(node.starToken)
-                    pointer = "*";
+                {                    
+                    let n = node;
+                    while(n.pointerToType)
+                    {
+                        n = n.pointerToType;
+                        pointer += "*";
+                    }
+                }
 
                 value = "<" + pointer + node.identifier.lexeme + ">";
                 break;

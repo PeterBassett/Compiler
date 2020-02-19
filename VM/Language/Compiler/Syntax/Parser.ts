@@ -301,7 +301,7 @@ export default class Parser
                 new Token(SyntaxType.Identifier, name.lexeme + "<CONTAINS ERRORS>", name.position, name.line, name.character),
                 parameterList, 
                 new Token(SyntaxType.Colon, ":", 0, 0, 0),
-                AST.TypeNameSyntax(null, new Token(SyntaxType.IntKeyword, "int", 0, 0, 0), true),
+                AST.TypeNameSyntax(null, new Token(SyntaxType.IntKeyword, "int", 0, 0, 0), true, null),
                 AST.BlockStatementSyntax(
                     new Token(SyntaxType.LeftBrace, "{", 0,0,0),
                     [
@@ -324,14 +324,20 @@ export default class Parser
         switch(token.kind)
         {
             case SyntaxType.Identifier:
-                return AST.TypeNameSyntax(null, this.match(SyntaxType.Identifier), false);
+                return AST.TypeNameSyntax(null, this.match(SyntaxType.Identifier), false, null);
             case SyntaxType.IntKeyword:
             case SyntaxType.FloatKeyword:
             case SyntaxType.StringKeyword:
             case SyntaxType.BoolKeyword:
                 this.next();
-                return AST.TypeNameSyntax(null, token, true);
-
+                return AST.TypeNameSyntax(null, token, true, null);
+            case SyntaxType.Star:
+            {
+                const starToken = this.next();
+                const type = this.parsePredefinedTypeOrIdentifier();
+            
+                return AST.TypeNameSyntax(starToken, type.identifier, type.isPredefined, type);
+            }
             default:
                 this.next();
                 this._diagnostics.reportInvalidTypeName(token);
@@ -341,7 +347,7 @@ export default class Parser
                     token.line, 
                     token.character, 
                     token.leadingTrivia, 
-                    token.trailingTrivia), false)
+                    token.trailingTrivia), false, null)
         }
     }
 
@@ -498,29 +504,52 @@ export default class Parser
     }
 
     private parseAssignmentExpression(): AST.ExpressionNode {
+        // are we doing a straight variable assignment?
+        // this is the fast path.
         if(this.peek(0).kind == SyntaxType.Identifier && 
            this.peek(1).kind == SyntaxType.Equals)
         {
             const identifierToken = this.next();
             const operatorToken = this.next();
-            const right = this.parseAssignmentExpression();
+            const right = this.parseBinaryExpression();
 
             return AST.AssignmentExpressionSyntax(identifierToken, operatorToken, right);
         }
 
+        // either a more complex assignment or an expression statement of some type.
         const expression = this.parseBinaryExpression();
 
-        // if we did a series of dot expressions
-        if(expression.kind === "GetExpressionSyntax")
+        // are we are assigning to the expression returned?                
+        if(this.peek(0).kind == SyntaxType.Equals)
         {
-            // and we are assigning to it
-            if(this.peek(0).kind == SyntaxType.Equals)
+        
+            switch(expression.kind)
             {
-                // convert the get expression into a set expression
-                const operatorToken = this.next();
-                const right = this.parseAssignmentExpression();
-    
-                return AST.SetExpressionSyntax(expression, operatorToken, right);
+                // if we did one or more dot expressions
+                case "GetExpressionSyntax":
+                {
+                    // convert the get expression into a set expression
+                    const equalsToken = this.next();
+                    const right = this.parseAssignmentExpression();
+        
+                    return AST.SetExpressionSyntax(expression, equalsToken, right);
+                }
+                case "UnaryExpressionSyntax":
+                {
+                    const equalsToken = this.next();
+
+                    // if we are dereferencing some pointer arithmatic
+                    if(expression.operatorToken.lexeme === "*")
+                    {
+                        const right = this.parseBinaryExpression();
+                        return AST.DereferenceAssignmentExpressionSyntax(expression, equalsToken, right);
+                    }
+                }
+                default:
+                {
+                    this._diagnostics.reportAssignmentRequiresLValue(expression.kind, expression.span());
+                    return expression;
+                }
             }
         }
 
@@ -579,6 +608,8 @@ export default class Parser
                 return this.parseFloatLiteral();
             case SyntaxType.StringLiteral :
                 return this.parseStringLiteral();
+            case SyntaxType.NullKeyword :
+                return this.parseNullLiteral();                
             case SyntaxType.Identifier:
             case SyntaxType.StringKeyword:
             case SyntaxType.IntKeyword:
@@ -616,6 +647,11 @@ export default class Parser
         const token = this.match(SyntaxType.StringLiteral);
         return AST.StringLiteralExpressionSyntax(token);
     }
+
+    private parseNullLiteral(): AST.ExpressionNode {
+        const token = this.match(SyntaxType.NullKeyword);
+        return AST.NullLiteralExpressionSyntax(token);
+    } 
     
     private parseCallExpression(): AST.ExpressionNode {        
         
@@ -733,7 +769,8 @@ export default class Parser
         {
             case "CallExpressionSyntax":
             case "AssignmentExpressionSyntax": 
-            case "SetExpressionSyntax":        
+            case "SetExpressionSyntax":
+            case "DereferenceAssignmentExpressionSyntax":     
                 break;     
             default:
                 this._diagnostics.reportUnexpectedStatementExpression(expression.span());

@@ -712,6 +712,96 @@ func main() : int
                         GetExpressionSyntax<c2>
                             GetExpressionSyntax<d2>
                                 NameExpressionSyntax<d1>
+`],
+[`func main() : int
+{
+    let ap : *int = null;
+    return 1;
+}`, 
+`CompilationUnitSyntax
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        TypeNameSyntax<int>
+        BlockStatementSyntax
+            VariableDeclarationSyntax<ap>
+                TypeNameSyntax<*int>
+                    TypeNameSyntax<int>
+                NullLiteralExpressionSyntax
+            ReturnStatementSyntax
+                IntegerLiteralExpressionSyntax<1>
+`],
+[`func main() : int
+{
+    let ap : **int = null;
+    return 1;
+}`, 
+`CompilationUnitSyntax
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        TypeNameSyntax<int>
+        BlockStatementSyntax
+            VariableDeclarationSyntax<ap>
+                TypeNameSyntax<**int>
+                    TypeNameSyntax<*int>
+                        TypeNameSyntax<int>
+                NullLiteralExpressionSyntax
+            ReturnStatementSyntax
+                IntegerLiteralExpressionSyntax<1>
+`],
+[`func main() : int
+{
+    let ap : *int;
+    *ap = 6; // test parsing of a dereference assignment
+    return a;
+}`, 
+`CompilationUnitSyntax
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        TypeNameSyntax<int>
+        BlockStatementSyntax
+            VariableDeclarationSyntax<ap>
+                TypeNameSyntax<*int>
+                    TypeNameSyntax<int>
+            ExpressionStatementSyntax
+                DereferenceAssignmentExpressionSyntax
+                    UnaryExpressionSyntax<*>
+                        NameExpressionSyntax<ap>
+                    IntegerLiteralExpressionSyntax<6>
+            ReturnStatementSyntax
+                NameExpressionSyntax<a>
+`],
+[`func main() : int
+{
+    let a : int = 5;
+    let ap : *int;
+    
+    ap = &a; // test parsing of taking the address of a variable
+    *ap = 6;
+
+    return a;
+}`, 
+`CompilationUnitSyntax
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        TypeNameSyntax<int>
+        BlockStatementSyntax
+            VariableDeclarationSyntax<a>
+                TypeNameSyntax<int>
+                IntegerLiteralExpressionSyntax<5>
+            VariableDeclarationSyntax<ap>
+                TypeNameSyntax<*int>
+                    TypeNameSyntax<int>
+            ExpressionStatementSyntax
+                AssignmentExpressionSyntax<ap>
+                    UnaryExpressionSyntax<&>
+                        NameExpressionSyntax<a>
+            ExpressionStatementSyntax
+                DereferenceAssignmentExpressionSyntax
+                    UnaryExpressionSyntax<*>
+                        NameExpressionSyntax<ap>
+                    IntegerLiteralExpressionSyntax<6>
+            ReturnStatementSyntax
+                NameExpressionSyntax<a>
 `]
     ].forEach((item) => {
         it(`should parse source : ` + item[0], () => {
@@ -813,14 +903,12 @@ func main() : int
     }
     
 [
-//[`func main() { return a; }`, [DiagnosticType.InvalidFunctionDefinition]],
 [`func main() :int 
 {
-    */%$ 324 fd garbage;
+    /%*$ 324 fd garbage;
 }`, [
         DiagnosticType.UnexpectedCharacter, 
         DiagnosticType.UnexpectedCharacter, 
-        DiagnosticType.UnexpectedToken, 
         DiagnosticType.UnexpectedToken, 
         DiagnosticType.InvalidStatementExpressionType, 
         DiagnosticType.UnexpectedToken, 

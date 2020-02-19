@@ -161,6 +161,8 @@ export default class Interpreter
                 return this.VisitFloatLiteralStatementSyntax(node);                
             case "StringLiteralExpressionSyntax" :
                 return this.VisitStringLiteralStatementSyntax(node);
+            case "NullLiteralExpressionSyntax" :
+                return this.VisitNullLiteralStatementSyntax(node);                
             case "ExpressionStatementSyntax" :
                 return this.VisitExpressionStatementSyntax(node);
             case "AssignmentExpressionSyntax":
@@ -194,10 +196,15 @@ export default class Interpreter
             case "ClassDeclarationStatementSyntax" :           
             case "GetExpressionSyntax":              
             case "SetExpressionSyntax":                         
+            case "DereferenceAssignmentExpressionSyntax":                         
                 throw new Error("Class execution not impletmented yet");                                
             default:
                 return exhaustiveCheck(node);
         }
+    }
+    
+    VisitNullLiteralStatementSyntax(node: AST.NullLiteralExpressionSyntax): Value {
+        return new Value(ValueType.Null, null);
     }
 
     VisitGetExpressionSyntax(syntax: AST.GetExpressionSyntax): Value {
@@ -207,6 +214,10 @@ export default class Interpreter
     VisitSetExpressionSyntax(syntax: AST.SetExpressionSyntax): Value {
         throw new Error("Method not implemented.");
     }
+
+    VisitDereferenceAssignmentExpressionSyntax(syntax: AST.DereferenceAssignmentExpressionSyntax): Value {
+        throw new Error("Method not implemented.");
+    }    
 
     VisitTypeNameSyntax(node: AST.TypeNameSyntax): Value {
         throw new Error("Method not implemented.");
@@ -528,7 +539,9 @@ export default class Interpreter
             case "FloatLiteralExpressionSyntax":
                 return this.VisitFloatLiteralStatementSyntax(node);        
             case "StringLiteralExpressionSyntax":
-                return this.VisitStringLiteralStatementSyntax(node);                
+                return this.VisitStringLiteralStatementSyntax(node); 
+            case "NullLiteralExpressionSyntax":
+                return this.VisitNullLiteralStatementSyntax(node);                                
             case "ParenthesizedExpressionSyntax":
                 return this.VisitParenthesizedExpressionSyntax(node);
             case "AssignmentExpressionSyntax":                       
@@ -542,7 +555,9 @@ export default class Interpreter
             case "GetExpressionSyntax":               
                 return this.VisitGetExpressionSyntax(node);   
             case "SetExpressionSyntax":               
-                return this.VisitSetExpressionSyntax(node);                                                                                                                     
+                return this.VisitSetExpressionSyntax(node);   
+            case "DereferenceAssignmentExpressionSyntax":               
+                return this.VisitDereferenceAssignmentExpressionSyntax(node);                                                                                                                                     
             default :
                 exhaustiveCheck(node, true);
                 throw RangeError("JUST HERE TO CLEAR A COMPILER ERROR. The call above will throw before this");

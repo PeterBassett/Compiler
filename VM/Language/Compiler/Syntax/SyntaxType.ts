@@ -59,6 +59,7 @@ export enum SyntaxType {
     FuncKeyword,
     LetKeyword,
     VarKeyword,
+    NullKeyword,
     EndOfLineTrivia,
     SingleLineCommentTrivia,
     MultiLineCommentTrivia,

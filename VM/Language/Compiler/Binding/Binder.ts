@@ -2,7 +2,7 @@ import { Diagnostics } from "../Diagnostics/Diagnostics";
 import CompilationUnit from "../Syntax/CompilationUnit";
 import * as AST from "../Syntax/AST/ASTNode";
 import { SyntaxType } from "../Syntax/SyntaxType";
-import { Type, FunctionDetails, StructDetails } from "../../Types/TypeInformation";
+import { Type, FunctionDetails, StructDetails, ClassType, StructType, ClassDetails } from "../../Types/TypeInformation";
 import { ValueType } from "../../Types/ValueType";
 import { PredefinedValueTypes } from "../../Types/PredefinedValueTypes";
 import { using } from "../../../misc/disposable";
@@ -279,11 +279,14 @@ export default class Binder
     private BindClassDeclaration(declaration: AST.ClassDeclarationStatementSyntax): Nodes.BoundClassDeclaration {
         const name = declaration.identifier.lexeme;
 
-        const type = new Type(ValueType.Class);
-
-        this.scope.DefineType(name, new Type(ValueType.Class, name));
+        const type = new ClassType(name);
+        this.scope.DefineType(name, type);
 
         const boundDeclarations = this.BindDeclarations(declaration.declarations);        
+        type.classDetails = new ClassDetails(name, 
+            boundDeclarations.classes,
+            boundDeclarations.variables,
+            boundDeclarations.functions);
 
         return new Nodes.BoundClassDeclaration(name,
             boundDeclarations.variables,
@@ -310,7 +313,7 @@ export default class Binder
 
         if(syntax.typeName)
         {
-            type = TypeQuery.getTypeFromName(syntax.typeName.identifier.lexeme, this.scope);
+            type = TypeQuery.getTypeFromTypeSyntax(syntax.typeName, this.scope);
         }
 
         let initialiser : Nodes.BoundExpression | null = null;        
@@ -349,7 +352,7 @@ export default class Binder
     {
         const name = syntax.identifier.lexeme;
 
-        const type = new Type(ValueType.Struct, name);
+        const type = new StructType(name);
         this.scope.DefineType(name, type);
         
         const boundDeclarations = this.BindStructMemberDeclarations(syntax, syntax.declarations);
@@ -381,7 +384,7 @@ export default class Binder
 
         for(let declaration of declarations)
         {
-            const memberType = TypeQuery.getTypeFromName(declaration.typeName.identifier.lexeme, this.scope, true);            
+            const memberType = TypeQuery.getTypeFromTypeSyntax(declaration.typeName, this.scope, true);            
 
             if(memberType.type === PredefinedValueTypes.Unit.type)
             {
@@ -398,7 +401,7 @@ export default class Binder
     }
 
     private BindDefaultExpressionForType(typeName: AST.TypeNameSyntax): Nodes.BoundExpression {        
-        const type = TypeQuery.getTypeFromName(typeName.identifier.lexeme, this.scope);
+        const type = TypeQuery.getTypeFromTypeSyntax(typeName, this.scope);
         const value = TypeQuery.getDefaultValueForType(type, this.scope);
 
         return new Nodes.BoundLiteralExpression(value, type);
@@ -458,7 +461,7 @@ export default class Binder
 
         let declaration : Nodes.BoundFunctionDeclaration;
 
-        const returnType = TypeQuery.getTypeFromName(returnValue.identifier.lexeme, this.scope);
+        const returnType = TypeQuery.getTypeFromTypeSyntax(returnValue, this.scope);
 
         declaration = new Nodes.BoundFunctionDeclaration(identifier.lexeme, parameters, returnType, undefined);
 
@@ -513,7 +516,7 @@ export default class Binder
     {        
         const parameters = this.BindFunctionParameterList(node.parameterList);
 
-        const returnType = TypeQuery.getTypeFromName(node.returnValue.identifier.lexeme, this.scope);
+        const returnType = TypeQuery.getTypeFromTypeSyntax(node.returnValue, this.scope);
 
         const declaration = new Nodes.BoundFunctionDeclaration(node.identifier.lexeme,
             parameters,          
@@ -553,7 +556,7 @@ export default class Binder
     {    
         const name = parameter.identifier.lexeme;        
         
-        const type = TypeQuery.getTypeFromName(parameter.typeName.identifier.lexeme, this.scope);
+        const type = TypeQuery.getTypeFromTypeSyntax(parameter.typeName, this.scope);
 
         const variable = new Nodes.VariableSymbol(name, false, type, false, true);
 
@@ -584,6 +587,8 @@ export default class Binder
                 return new Nodes.BoundLiteralExpression(syntax.literalToken.lexeme, PredefinedValueTypes.String);
             case "IntegerLiteralExpressionSyntax":
                 return new Nodes.BoundLiteralExpression(parseInt(syntax.literalToken.lexeme), PredefinedValueTypes.Integer);
+            case "NullLiteralExpressionSyntax":
+                return new Nodes.BoundLiteralExpression("null", PredefinedValueTypes.Null);                
             case "ParenthesizedExpressionSyntax":
                 return this.BindExpression(syntax.expression);                
             case "BinaryExpressionSyntax":
@@ -599,7 +604,9 @@ export default class Binder
             case "GetExpressionSyntax":               
                 return this.BindGetExpression(syntax);
             case "SetExpressionSyntax":               
-                return this.BindSetExpression(syntax);                                
+                return this.BindSetExpression(syntax);
+            case "DereferenceAssignmentExpressionSyntax":               
+                return this.BindDereferenceAssignmentExpressionSyntax(syntax);                
             case "TypeNameSyntax":
                 throw new Error("Not Implemented");
         }
@@ -635,6 +642,15 @@ export default class Binder
         const convertedExpression = this.BindConversion(syntax.right.span(), right, left.type);
 
         return new Nodes.BoundSetExpression(left, convertedExpression);
+    }
+
+    private BindDereferenceAssignmentExpressionSyntax(syntax: AST.DereferenceAssignmentExpressionSyntax) : Nodes.BoundExpression {
+        const left = this.BindExpression(syntax.left);
+        const right = this.BindExpression(syntax.right);
+        
+        const convertedExpression = this.BindConversion(syntax.right.span(), right, left.type);
+
+        return new Nodes.BoundDereferenceAssignmentExpression(left, convertedExpression);
     }
 
     BindNameExpression(syntax: AST.NameExpressionSyntax): Nodes.BoundExpression 
@@ -702,7 +718,7 @@ export default class Binder
         else
         {
             callName = declaration.identifier.lexeme;
-            returnType = TypeQuery.getTypeFromName(declaration.returnValue.identifier.lexeme, this.scope);
+            returnType = TypeQuery.getTypeFromTypeSyntax(declaration.returnValue, this.scope);
         }
 
         // if we have not found a definition and we are currently NOT allowed to make placeholders we have an error
@@ -869,6 +885,11 @@ export default class Binder
 
         if (conversion.IsIdentity)
             return expression;
+
+        if(conversion.IsImmediate)
+        {
+            return new Nodes.BoundLiteralExpression(conversion.ConvertToValue, type);
+        }
 
         if(conversion.IsImplicit)
         {

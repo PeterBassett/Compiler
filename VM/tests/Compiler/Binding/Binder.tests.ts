@@ -543,7 +543,106 @@ func main() : int
                             GetExpression<d2:leaf2>
                                 VariableExpression<l3:leaf3>
 `
-]
+],
+[`func main() : int
+{
+    let ap : *int = null;
+    return 1;
+}`, 
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<ap:*int>
+                LiteralExpression<null:*int>
+            ReturnStatement
+                LiteralExpression<1:int>
+`],
+[`func main() : int
+{
+    let ap : **int = null;
+    return 1;
+}`, 
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<ap:**int>
+                LiteralExpression<null:**int>
+            ReturnStatement
+                LiteralExpression<1:int>
+`],
+[`func main() : int
+{
+    let ap : *int;
+    *ap = 6; // test binding of a dereference assignment. doesnt matter that the pointer is currently null
+    return 1;
+}`, 
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<ap:*int>
+                LiteralExpression<0:*int>
+            ExpressionStatement
+                DereferenceAssignmentExpression
+                    UnaryExpression<*>
+                        VariableExpression<ap:*int>
+                    LiteralExpression<6:int>
+            ReturnStatement
+                LiteralExpression<1:int>
+`],
+[`func main() : int
+{
+    let ap : *int;
+    *ap = 6; // test binding of a dereference assignment. doesnt matter that the pointer is currently null
+    return *ap;
+}`, 
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<ap:*int>
+                LiteralExpression<0:*int>
+            ExpressionStatement
+                DereferenceAssignmentExpression
+                    UnaryExpression<*>
+                        VariableExpression<ap:*int>
+                    LiteralExpression<6:int>
+            ReturnStatement
+                UnaryExpression<*>
+                    VariableExpression<ap:*int>
+`],
+[`func main() : int
+{
+    let a : int = 5;
+    let ap : *int;
+    
+    ap = &a; // test parsing of taking the address of a variable
+    *ap = 6;
+
+    return a;
+}`, 
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<a:int>
+                LiteralExpression<5:int>
+            VariableDeclaration<ap:*int>
+                LiteralExpression<0:*int>
+            ExpressionStatement
+                AssignmentExpression<ap:*int>
+                    UnaryExpression<&>
+                        VariableExpression<a:int>
+            ExpressionStatement
+                DereferenceAssignmentExpression
+                    UnaryExpression<*>
+                        VariableExpression<ap:*int>
+                    LiteralExpression<6:int>
+            ReturnStatement
+                VariableExpression<a:int>
+`]
 /*,[`
 class test
 {

@@ -1,4 +1,4 @@
-import { Type } from "../../Types/TypeInformation";
+import { Type, PointerType } from "../../Types/TypeInformation";
 import { PredefinedValueTypes } from "../../Types/PredefinedValueTypes";
 import { SyntaxType } from "../Syntax/SyntaxType";
 import { Diagnostics } from "../Diagnostics/Diagnostics";
@@ -33,7 +33,8 @@ export enum BoundNodeKind {
     StructMemberDeclaration,
     StructDeclaration,
     ClassDeclaration,
-    GetExpression
+    GetExpression,
+    DereferenceAssignmentExpression
 }
 
 export enum BoundBinaryOperatorKind {
@@ -185,7 +186,9 @@ export class BoundBinaryOperator
 export enum BoundUnaryOperatorKind {
     LogicalNegation,
     Identity,
-    Negation
+    Negation,
+    Dereference,
+    Reference
 }
 
 export class BoundUnaryExpression extends BoundExpression
@@ -208,7 +211,7 @@ export class BoundUnaryOperator
     private constructor(syntaxKind : SyntaxType, kind : BoundUnaryOperatorKind, operandType : Type, resultType? : Type)
     {
         this.syntaxKind = syntaxKind;
-        this.kind = kind;
+        this.operatorKind = kind;
         this.operandType = operandType;
 
         if(!resultType)
@@ -218,7 +221,7 @@ export class BoundUnaryOperator
     }
 
     public readonly syntaxKind : SyntaxType;
-    public readonly kind : BoundUnaryOperatorKind;
+    public readonly operatorKind : BoundUnaryOperatorKind;
     public readonly operandType : Type;
     public readonly type : Type;
 
@@ -234,6 +237,23 @@ export class BoundUnaryOperator
         {
             if (op.syntaxKind == syntaxKind && op.operandType.equals(operandType))
                 return op;
+        }
+
+        if(syntaxKind === SyntaxType.Star &&
+           operandType.pointerToType)
+        {
+            return new BoundUnaryOperator(SyntaxType.Star, 
+                BoundUnaryOperatorKind.Dereference, 
+                operandType, 
+                operandType.pointerToType);
+        }
+
+        if(syntaxKind === SyntaxType.Ampersand)
+        {
+            return new BoundUnaryOperator(SyntaxType.Ampersand, 
+                BoundUnaryOperatorKind.Reference, 
+                operandType, 
+                new PointerType(operandType));
         }
         
         return null;
@@ -479,6 +499,17 @@ export class BoundSetExpression extends BoundExpression
     }
 
     public get kind(): BoundNodeKind { return BoundNodeKind.SetExpression; };
+    public get type(): Type { return this.left.type; }
+}
+
+export class BoundDereferenceAssignmentExpression extends BoundExpression
+{    
+    constructor(public readonly left : BoundExpression, public readonly right : BoundExpression)
+    {
+        super();
+    }
+
+    public get kind(): BoundNodeKind { return BoundNodeKind.DereferenceAssignmentExpression; };
     public get type(): Type { return this.left.type; }
 }
 

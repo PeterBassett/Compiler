@@ -113,23 +113,56 @@ export class StructDetails
 }
 
 export class Type
-{    
-    equals(type: Type): any 
+{            
+    private static _id : number = 0;
+
+    public typeid: number;
+
+    public type: ValueType;
+    
+    public name : string;
+    public isClass : boolean;    
+    public isStruct : boolean;
+    public isPredefined : boolean;
+
+    public get isPointer() : boolean
     {
-        return this.type == type.type;
+        return !!this.pointerToType;
     }
 
-    variable?: VariableDetails;
-    function?: FunctionDetails;
-    classDetails?: ClassDetails;
-    structDetails?: StructDetails;
+    public pointerToType : Type|null;
+    public variable: VariableDetails|null;
+    public function: FunctionDetails|null;
+    public classDetails: ClassDetails|null;
+    public structDetails: StructDetails|null;
+
+    constructor(type: ValueType, name : string)
+    {
+        this.typeid = Type._id++;
+        this.type = type;
+        this.name = name;
+        this.isClass = type == ValueType.Class;
+        this.isStruct = type == ValueType.Struct;
+        
+        this.isPredefined = false;
+        this.pointerToType = null;
+        
+        this.function = null;
+        this.variable = null;
+        this.classDetails = null;
+        this.structDetails = null;
+    }
 
     clone(): Type {
-        let a = new Type(this.type, this.name);
-        a.isClass = this.isClass;
-        a.isStruct = this.isStruct;
-        a.typeid = this.typeid;
+        let a = new Type(this.type, this.name);        
         
+        a.typeid = this.typeid;
+
+        a.isClass = this.isClass;
+        a.isStruct = this.isStruct;        
+        a.isPredefined = this.isPredefined;
+        a.pointerToType = this.pointerToType;
+
         if(this.function)
             a.function = this.function.clone();
 
@@ -154,26 +187,53 @@ export class Type
              this.function.returnType.setFunctionReturnType(t);                     
     }
 
+    equals(type: Type): any 
+    {
+        return this.type == type.type;
+    }
+
     isAssignableTo(targetType: Type): boolean {
         return this.type == targetType.type;
     }
+}
 
-    constructor(type: ValueType, name? : string, func? : FunctionDetails, isPredefined? : boolean)
+export class ClassType extends Type
+{
+    constructor(name:string) 
     {
-        this.typeid = Type._id++;
-        this.type = type;
-        this.name = name;
-        this.isClass = type == ValueType.Class;
-        this.isStruct = type == ValueType.Struct;
-        this.function = func;
-        this.isPredefined = isPredefined || false;
+        super(ValueType.Class, name);
     }
+}
 
-    private static _id : number = 0;
-    public typeid: number;    
-    public type: ValueType
-    public name? : string;
-    public isClass : boolean;    
-    public isStruct : boolean;
-    public isPredefined : boolean;
+export class StructType extends Type
+{
+    constructor(name:string) {
+        super(ValueType.Struct, name);
+    }
+}
+
+export class FunctionType extends Type
+{
+    constructor(returnType : ValueType, name:string, functionDetails : FunctionDetails) {
+        super(returnType, name);
+
+        this.function = functionDetails;
+    }
+}
+
+export class PredefinedType extends Type
+{
+    constructor(returnType : ValueType, name:string) {
+        super(returnType, name);
+
+        this.isPredefined = true;
+    }
+}
+
+export class PointerType extends Type
+{
+    constructor(pointerToType : Type) {
+        super(pointerToType.type, "*" + pointerToType.name);
+        this.pointerToType = pointerToType;
+    }
 }

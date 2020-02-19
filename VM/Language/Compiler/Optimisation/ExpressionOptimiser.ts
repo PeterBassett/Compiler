@@ -42,7 +42,7 @@ export default class ExpressionOptimiser extends BoundTreeTransformBase
 
         let operand = operandExpression as Nodes.BoundLiteralExpression;
      
-        switch(expression.operator.kind)
+        switch(expression.operator.operatorKind)
         {
             case Nodes.BoundUnaryOperatorKind.Identity:
                 return expression;

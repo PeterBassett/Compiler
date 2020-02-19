@@ -1027,7 +1027,7 @@ export default class CodeGenerator
     
     writeUnaryExpression(expression: Nodes.BoundUnaryExpression) : void
     {
-        switch(expression.operator.kind)
+        switch(expression.operator.operatorKind)
         {    
             case Nodes.BoundUnaryOperatorKind.Identity:
             {
