@@ -150,6 +150,10 @@ export default class Binder
                 return this.BindReturnStatement(syntax); 
             case "StructDeclarationStatementSyntax" :     
                 return this.BindStructDeclarationStatement(syntax);             
+            case "SetStatementSyntax":               
+                return this.BindSetStatement(syntax);
+            case "DereferenceAssignmentStatementSyntax":               
+                return this.BindDereferenceAssignmentStatementSyntax(syntax);                  
             case "ElseStatementSyntax" :
             case "ParameterDeclarationSyntax" : 
             case "ParameterDeclarationListSyntax" :               
@@ -602,11 +606,7 @@ export default class Binder
             case "AssignmentExpressionSyntax":               
                 return this.BindAssignmentExpression(syntax);
             case "GetExpressionSyntax":               
-                return this.BindGetExpression(syntax);
-            case "SetExpressionSyntax":               
-                return this.BindSetExpression(syntax);
-            case "DereferenceAssignmentExpressionSyntax":               
-                return this.BindDereferenceAssignmentExpressionSyntax(syntax);                
+                return this.BindGetExpression(syntax);              
             case "TypeNameSyntax":
                 throw new Error("Not Implemented");
         }
@@ -635,22 +635,22 @@ export default class Binder
         return new Nodes.BoundGetExpression(left, result.type, result.name);
     }
 
-    private BindSetExpression(syntax: AST.SetExpressionSyntax) : Nodes.BoundExpression {
+    private BindSetStatement(syntax: AST.SetStatementSyntax) : Nodes.BoundStatement {
         const left = this.BindGetExpression(syntax.left) as Nodes.BoundGetExpression;
         const right = this.BindExpression(syntax.right);
         
         const convertedExpression = this.BindConversion(syntax.right.span(), right, left.type);
 
-        return new Nodes.BoundSetExpression(left, convertedExpression);
+        return new Nodes.BoundSetStatement(left, convertedExpression);
     }
 
-    private BindDereferenceAssignmentExpressionSyntax(syntax: AST.DereferenceAssignmentExpressionSyntax) : Nodes.BoundExpression {
+    private BindDereferenceAssignmentStatementSyntax(syntax: AST.DereferenceAssignmentStatementSyntax) : Nodes.BoundStatement {
         const left = this.BindExpression(syntax.left);
         const right = this.BindExpression(syntax.right);
         
         const convertedExpression = this.BindConversion(syntax.right.span(), right, left.type);
 
-        return new Nodes.BoundDereferenceAssignmentExpression(left, convertedExpression);
+        return new Nodes.BoundDereferenceAssignmentStatement(left, convertedExpression);
     }
 
     BindNameExpression(syntax: AST.NameExpressionSyntax): Nodes.BoundExpression 

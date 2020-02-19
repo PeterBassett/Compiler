@@ -525,17 +525,16 @@ func main() : int
                 LiteralExpression<null:leaf3>
             VariableDeclaration<l2:leaf2>
                 LiteralExpression<null:leaf2>
-            ExpressionStatement
-                SetExpression
-                    GetExpression<a1:int>
-                        GetExpression<b2:root>
-                            GetExpression<c2:leaf1>
-                                GetExpression<d2:leaf2>
-                                    VariableExpression<l3:leaf3>
-                    GetExpression<a1:int>
-                        GetExpression<b2:root>
-                            GetExpression<c2:leaf1>
-                                VariableExpression<l2:leaf2>
+            SetStatement
+                GetExpression<a1:int>
+                    GetExpression<b2:root>
+                        GetExpression<c2:leaf1>
+                            GetExpression<d2:leaf2>
+                                VariableExpression<l3:leaf3>
+                GetExpression<a1:int>
+                    GetExpression<b2:root>
+                        GetExpression<c2:leaf1>
+                            VariableExpression<l2:leaf2>
             ReturnStatement
                 GetExpression<a1:int>
                     GetExpression<b2:root>
@@ -584,11 +583,10 @@ func main() : int
         BlockStatement
             VariableDeclaration<ap:*int>
                 LiteralExpression<0:*int>
-            ExpressionStatement
-                DereferenceAssignmentExpression
-                    UnaryExpression<*>
-                        VariableExpression<ap:*int>
-                    LiteralExpression<6:int>
+            DereferenceAssignmentStatement
+                UnaryExpression<*>
+                    VariableExpression<ap:*int>
+                LiteralExpression<6:int>
             ReturnStatement
                 LiteralExpression<1:int>
 `],
@@ -604,11 +602,10 @@ func main() : int
         BlockStatement
             VariableDeclaration<ap:*int>
                 LiteralExpression<0:*int>
-            ExpressionStatement
-                DereferenceAssignmentExpression
-                    UnaryExpression<*>
-                        VariableExpression<ap:*int>
-                    LiteralExpression<6:int>
+            DereferenceAssignmentStatement
+                UnaryExpression<*>
+                    VariableExpression<ap:*int>
+                LiteralExpression<6:int>
             ReturnStatement
                 UnaryExpression<*>
                     VariableExpression<ap:*int>
@@ -635,11 +632,10 @@ func main() : int
                 AssignmentExpression<ap:*int>
                     UnaryExpression<&>
                         VariableExpression<a:int>
-            ExpressionStatement
-                DereferenceAssignmentExpression
-                    UnaryExpression<*>
-                        VariableExpression<ap:*int>
-                    LiteralExpression<6:int>
+            DereferenceAssignmentStatement
+                UnaryExpression<*>
+                    VariableExpression<ap:*int>
+                LiteralExpression<6:int>
             ReturnStatement
                 VariableExpression<a:int>
 `]

@@ -195,8 +195,8 @@ export default class Interpreter
             case "StructMemberDeclarationStatementSyntax" :             
             case "ClassDeclarationStatementSyntax" :           
             case "GetExpressionSyntax":              
-            case "SetExpressionSyntax":                         
-            case "DereferenceAssignmentExpressionSyntax":                         
+            case "SetStatementSyntax":                         
+            case "DereferenceAssignmentStatementSyntax":                         
                 throw new Error("Class execution not impletmented yet");                                
             default:
                 return exhaustiveCheck(node);
@@ -211,11 +211,11 @@ export default class Interpreter
         throw new Error("Method not implemented.");
     }
 
-    VisitSetExpressionSyntax(syntax: AST.SetExpressionSyntax): Value {
+    VisitSetStatementSyntax(syntax: AST.SetStatementSyntax): Value {
         throw new Error("Method not implemented.");
     }
 
-    VisitDereferenceAssignmentExpressionSyntax(syntax: AST.DereferenceAssignmentExpressionSyntax): Value {
+    VisitDereferenceAssignmentStatementSyntax(syntax: AST.DereferenceAssignmentStatementSyntax): Value {
         throw new Error("Method not implemented.");
     }    
 
@@ -553,11 +553,7 @@ export default class Interpreter
             case "TypeNameSyntax":
                 return this.VisitTypeNameSyntax(node);     
             case "GetExpressionSyntax":               
-                return this.VisitGetExpressionSyntax(node);   
-            case "SetExpressionSyntax":               
-                return this.VisitSetExpressionSyntax(node);   
-            case "DereferenceAssignmentExpressionSyntax":               
-                return this.VisitDereferenceAssignmentExpressionSyntax(node);                                                                                                                                     
+                return this.VisitGetExpressionSyntax(node);                                                                                                                                     
             default :
                 exhaustiveCheck(node, true);
                 throw RangeError("JUST HERE TO CLEAR A COMPILER ERROR. The call above will throw before this");

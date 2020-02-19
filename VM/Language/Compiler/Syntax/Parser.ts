@@ -500,10 +500,10 @@ export default class Parser
     }
 
     private parseExpression(): AST.ExpressionNode {
-        return this.parseAssignmentExpression();
+        return this.parseBinaryExpression();
     }
 
-    private parseAssignmentExpression(): AST.ExpressionNode {
+    private parseAssignmentExpression(): { statement : AST.StatementNode|null, expression : AST.ExpressionNode|null } {
         // are we doing a straight variable assignment?
         // this is the fast path.
         if(this.peek(0).kind == SyntaxType.Identifier && 
@@ -513,7 +513,10 @@ export default class Parser
             const operatorToken = this.next();
             const right = this.parseBinaryExpression();
 
-            return AST.AssignmentExpressionSyntax(identifierToken, operatorToken, right);
+            return {
+                expression : AST.AssignmentExpressionSyntax(identifierToken, operatorToken, right),
+                statement : null
+            };
         }
 
         // either a more complex assignment or an expression statement of some type.
@@ -530,9 +533,12 @@ export default class Parser
                 {
                     // convert the get expression into a set expression
                     const equalsToken = this.next();
-                    const right = this.parseAssignmentExpression();
-        
-                    return AST.SetExpressionSyntax(expression, equalsToken, right);
+                    const right = this.parseExpression();
+                    const semiColon = this.match(SyntaxType.SemiColon);
+                    return {
+                        expression : null,
+                        statement : AST.SetStatementSyntax(expression, equalsToken, right)
+                    };                    
                 }
                 case "UnaryExpressionSyntax":
                 {
@@ -542,18 +548,25 @@ export default class Parser
                     if(expression.operatorToken.lexeme === "*")
                     {
                         const right = this.parseBinaryExpression();
-                        return AST.DereferenceAssignmentExpressionSyntax(expression, equalsToken, right);
+                        const semiColon = this.match(SyntaxType.SemiColon);
+                        
+                        return {
+                            expression : null,
+                            statement : AST.DereferenceAssignmentStatementSyntax(expression, equalsToken, right)
+                        };
                     }
                 }
                 default:
                 {
-                    this._diagnostics.reportAssignmentRequiresLValue(expression.kind, expression.span());
-                    return expression;
+                    this._diagnostics.reportAssignmentRequiresLValue(expression.kind, expression.span());                    
                 }
             }
         }
 
-        return expression;
+        return {
+            expression : expression,
+            statement : null
+        };
     }
 
     private parseBinaryExpression(parentPrecedence : number = 0): AST.ExpressionNode {
@@ -762,22 +775,39 @@ export default class Parser
         return AST.ContinueStatementSyntax(keyword);
     }
 
-    private parseExpressionStatement(): AST.ExpressionStatementSyntax {
-        const expression = this.parseExpression();
+    private parseExpressionStatement(): AST.StatementNode {
+        const {statement, expression} = this.parseAssignmentExpression();
 
-        switch(expression.kind)
+        if(expression)
         {
-            case "CallExpressionSyntax":
-            case "AssignmentExpressionSyntax": 
-            case "SetExpressionSyntax":
-            case "DereferenceAssignmentExpressionSyntax":     
-                break;     
-            default:
-                this._diagnostics.reportUnexpectedStatementExpression(expression.span());
-        }        
+            switch(expression.kind)
+            {
+                case "CallExpressionSyntax":
+                case "AssignmentExpressionSyntax":
+                    break;
+                default:
+                    this._diagnostics.reportUnexpectedStatementExpression(expression.span());
+            }
 
-        const semiColonToken = this.match(SyntaxType.SemiColon);
-        return AST.ExpressionStatementSyntax(expression, semiColonToken);
+            const semiColonToken = this.match(SyntaxType.SemiColon);
+            return AST.ExpressionStatementSyntax(expression, semiColonToken);
+        }
+        else if(statement)
+        {
+            switch(statement.kind)
+            {
+                case "SetStatementSyntax":
+                case "DereferenceAssignmentStatementSyntax":     
+                    break;
+                default:
+                    this._diagnostics.reportUnexpectedStatementExpression(statement.span());
+            }
+
+            return statement;
+
+        }        
+        else
+            throw new Error("parseAssignmentExpression returned no valid objects");
     }
  
     isMakingProgress(lastTokenPosition : number) : { progress : boolean, newPosition : number }

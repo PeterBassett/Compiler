@@ -19,6 +19,7 @@ export enum BoundNodeKind {
     ForStatement,
     WhileStatement,
     ReturnStatement,
+    DereferenceAssignmentStatement,
     ParameterDeclaration,
     UnaryExpression,
     VariableExpression,
@@ -29,12 +30,11 @@ export enum BoundNodeKind {
     GotoStatement,
     ConditionalGotoStatement,
     ConversionExpression,
-    SetExpression,
+    SetStatement,
     StructMemberDeclaration,
     StructDeclaration,
     ClassDeclaration,
-    GetExpression,
-    DereferenceAssignmentExpression
+    GetExpression 
 }
 
 export enum BoundBinaryOperatorKind {
@@ -491,25 +491,14 @@ export class BoundVariableExpression extends BoundExpression
     public get type(): Type { return this.variable.type; }
 }
 
-export class BoundSetExpression extends BoundExpression
+export class BoundSetStatement extends BoundStatement
 {    
     constructor(public readonly left : BoundGetExpression, public readonly right : BoundExpression)
     {
         super();
     }
 
-    public get kind(): BoundNodeKind { return BoundNodeKind.SetExpression; };
-    public get type(): Type { return this.left.type; }
-}
-
-export class BoundDereferenceAssignmentExpression extends BoundExpression
-{    
-    constructor(public readonly left : BoundExpression, public readonly right : BoundExpression)
-    {
-        super();
-    }
-
-    public get kind(): BoundNodeKind { return BoundNodeKind.DereferenceAssignmentExpression; };
+    public get kind(): BoundNodeKind { return BoundNodeKind.SetStatement; };
     public get type(): Type { return this.left.type; }
 }
 
@@ -577,6 +566,17 @@ export class BoundAssignmentExpression extends BoundExpression
 
     public get kind(): BoundNodeKind { return BoundNodeKind.AssignmentExpression; };
     public get type(): Type { return this.expression.type; }
+}
+
+export class BoundDereferenceAssignmentStatement extends BoundStatement
+{    
+    constructor(public readonly left : BoundExpression, public readonly right : BoundExpression)
+    {
+        super();
+    }
+
+    public get kind(): BoundNodeKind { return BoundNodeKind.DereferenceAssignmentStatement; };
+    public get type(): Type { return this.left.type; }
 }
 
 export class BoundClassDeclaration extends BoundStatement

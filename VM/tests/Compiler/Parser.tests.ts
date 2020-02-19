@@ -619,16 +619,14 @@ func main() : int
         BlockStatementSyntax
             VariableDeclarationSyntax<a>
                 TypeNameSyntax<pair>
-            ExpressionStatementSyntax
-                SetExpressionSyntax
-                    GetExpressionSyntax<first>
-                        NameExpressionSyntax<a>
-                    IntegerLiteralExpressionSyntax<1>
-            ExpressionStatementSyntax
-                SetExpressionSyntax
-                    GetExpressionSyntax<second>
-                        NameExpressionSyntax<a>
-                    IntegerLiteralExpressionSyntax<2>
+            SetStatementSyntax
+                GetExpressionSyntax<first>
+                    NameExpressionSyntax<a>
+                IntegerLiteralExpressionSyntax<1>
+            SetStatementSyntax
+                GetExpressionSyntax<second>
+                    NameExpressionSyntax<a>
+                IntegerLiteralExpressionSyntax<2>
             ReturnStatementSyntax
                 BinaryExpressionSyntax<+>
                     GetExpressionSyntax<first>
@@ -696,16 +694,15 @@ func main() : int
                 TypeNameSyntax<leaf3>
             VariableDeclarationSyntax<b1>
                 TypeNameSyntax<leaf2>
-            ExpressionStatementSyntax
-                SetExpressionSyntax
-                    GetExpressionSyntax<a1>
-                        GetExpressionSyntax<b2>
-                            GetExpressionSyntax<c2>
-                                GetExpressionSyntax<d2>
-                                    NameExpressionSyntax<d1>
-                    GetExpressionSyntax<a1>
-                        GetExpressionSyntax<b2>
-                            NameExpressionSyntax<b1>
+            SetStatementSyntax
+                GetExpressionSyntax<a1>
+                    GetExpressionSyntax<b2>
+                        GetExpressionSyntax<c2>
+                            GetExpressionSyntax<d2>
+                                NameExpressionSyntax<d1>
+                GetExpressionSyntax<a1>
+                    GetExpressionSyntax<b2>
+                        NameExpressionSyntax<b1>
             ReturnStatementSyntax
                 GetExpressionSyntax<a1>
                     GetExpressionSyntax<b2>
@@ -762,11 +759,10 @@ func main() : int
             VariableDeclarationSyntax<ap>
                 TypeNameSyntax<*int>
                     TypeNameSyntax<int>
-            ExpressionStatementSyntax
-                DereferenceAssignmentExpressionSyntax
-                    UnaryExpressionSyntax<*>
-                        NameExpressionSyntax<ap>
-                    IntegerLiteralExpressionSyntax<6>
+            DereferenceAssignmentStatementSyntax
+                UnaryExpressionSyntax<*>
+                    NameExpressionSyntax<ap>
+                IntegerLiteralExpressionSyntax<6>
             ReturnStatementSyntax
                 NameExpressionSyntax<a>
 `],
@@ -795,11 +791,10 @@ func main() : int
                 AssignmentExpressionSyntax<ap>
                     UnaryExpressionSyntax<&>
                         NameExpressionSyntax<a>
-            ExpressionStatementSyntax
-                DereferenceAssignmentExpressionSyntax
-                    UnaryExpressionSyntax<*>
-                        NameExpressionSyntax<ap>
-                    IntegerLiteralExpressionSyntax<6>
+            DereferenceAssignmentStatementSyntax
+                UnaryExpressionSyntax<*>
+                    NameExpressionSyntax<ap>
+                IntegerLiteralExpressionSyntax<6>
             ReturnStatementSyntax
                 NameExpressionSyntax<a>
 `]

@@ -315,6 +315,47 @@ export default class CodeGenerator
                 }
                 break;
             }                  
+            case Nodes.BoundNodeKind.SetStatement:
+            {
+                let stmt = statement as Nodes.BoundSetStatement;
+
+                const memberRoot = this.structMemberRoot(stmt.left);
+
+                const spec = this.variableMap.peek()[memberRoot.variable.name];
+
+                let offset = this.stackOffset + spec.offset;                                     
+
+                const memberPath = this.getExpressionPath(stmt.left);  
+                const member = this.structMember(memberRoot.variable.type, memberPath);                
+                const memberType = member.type;
+                const memberSize = this.typeSize(memberType);                            
+                
+                if(memberType.type === ValueType.Struct)
+                {
+                    const sourceRoot = this.structMemberRoot(stmt.right as Nodes.BoundGetExpression);
+                    
+                    const sourceSpec = this.variableMap.peek()[sourceRoot.variable.name];
+                    let sourceStackOffset = this.stackOffset + sourceSpec.offset;   
+
+                    const sourceMemberPath = this.getExpressionPath(stmt.right as Nodes.BoundGetExpression);
+                    const source = this.structMember(sourceRoot.variable.type, sourceMemberPath);
+                    
+                    for (let i = 0; i < memberSize; i++)
+                    {
+                        this.instruction(`MOVb [R6-${offset + member.offset + i}] [R6-${sourceStackOffset + source.offset + i}]`);                    
+                    }                                
+                }
+                else
+                {
+                    this.writeExpression(stmt.right);
+                    
+                    const mov = this.typedMnemonic(memberType.type, "MOV");
+                    const dest = this.getDataReference(memberRoot.variable)(member.offset, 0);                    
+                    this.instruction(`${mov} ${dest} R1`);                
+                }
+
+                break;
+            }
         }
     }
 
@@ -542,47 +583,6 @@ export default class CodeGenerator
                     this.instruction(`MOVb [R6+${offset + memberOffset + 1}] [R6+${sourceStackOffset + sourceOffset + i}]`);                                        
                     */
                 }
-                break;
-            }
-            case Nodes.BoundNodeKind.SetExpression:
-            {
-                let exp = expression as Nodes.BoundSetExpression;
-
-                const memberRoot = this.structMemberRoot(exp.left);
-
-                const spec = this.variableMap.peek()[memberRoot.variable.name];
-
-                let offset = this.stackOffset + spec.offset;                                     
-
-                const memberPath = this.getExpressionPath(exp.left);  
-                const member = this.structMember(memberRoot.variable.type, memberPath);                
-                const memberType = member.type;
-                const memberSize = this.typeSize(memberType);                            
-                
-                if(memberType.type === ValueType.Struct)
-                {
-                    const sourceRoot = this.structMemberRoot(exp.right as Nodes.BoundGetExpression);
-                    
-                    const sourceSpec = this.variableMap.peek()[sourceRoot.variable.name];
-                    let sourceStackOffset = this.stackOffset + sourceSpec.offset;   
-
-                    const sourceMemberPath = this.getExpressionPath(exp.right as Nodes.BoundGetExpression);
-                    const source = this.structMember(sourceRoot.variable.type, sourceMemberPath);
-                    
-                    for (let i = 0; i < memberSize; i++)
-                    {
-                        this.instruction(`MOVb [R6-${offset + member.offset + i}] [R6-${sourceStackOffset + source.offset + i}]`);                    
-                    }                                
-                }
-                else
-                {
-                    this.writeExpression(exp.right);
-                    
-                    const mov = this.typedMnemonic(memberType.type, "MOV");
-                    const dest = this.getDataReference(memberRoot.variable)(member.offset, 0);                    
-                    this.instruction(`${mov} ${dest} R1`);                
-                }
-
                 break;
             }
             case Nodes.BoundNodeKind.LiteralExpression:
