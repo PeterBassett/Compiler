@@ -105,7 +105,7 @@ export class Diagnostics
     public reportUnexpectedStatementExpression(span : TextSpan): void {
         this.report(`Only assignment, call, increment and decrement can be used as a statement`, DiagnosticType.InvalidStatementExpressionType, span);
     }
-
+    
     public reportInvalidTypeName(foundToken: Token): void {
         this.report(`Found unexpected token ${foundToken.lexeme} type ${SyntaxType[foundToken.kind]}. Expected a predefined or user defined typename.`, DiagnosticType.InvalidTypeName, foundToken.span);
     }

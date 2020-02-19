@@ -1044,7 +1044,11 @@ export default class CodeGenerator
             {
                 this.instruction("NEG R1", "unary negation op");                                              
                 break;
-            }            
+            }    
+            default:
+            {                
+                throw new Error(`Unexpected Unary Expression Type ${expression.kind}`);
+            }
         }
     }
 
@@ -1157,6 +1161,10 @@ export default class CodeGenerator
                 this.instruction("SETNE R1", "set R1 register to 1 iff e2 != 0");
                 this.label(end);
                 break;
+            }
+            default:
+            {                
+                throw new Error(`Unexpected Binary Expression Type ${expression.kind}`);
             }
         }
     }
