@@ -7,71 +7,43 @@ export class AssemblyLineParser
 {
     private lexer : AssemblyLineLexer;
     private tokens : Token[];
+    private position : number;
     private labelsExpected : boolean;
 
     constructor(lexer : AssemblyLineLexer, labelsExpected:boolean = false) 
     {
         this.lexer = lexer;
         this.tokens = [];
+        this.position = 0;
         this.labelsExpected = labelsExpected;
+
+        while(this.lexer.advance())
+            this.tokens.push(this.lexer.current);
     }
 
-    private ConsumeAny() : Token
+    private next() : Token
     {
-        // Make sure we've read the token.
-        const token = this.LookAhead();
-
-        this.tokens.slice(1);
-
-        return token;
+        const current = this.tokens[this.position];
+        this.position++;
+        return current;
     }
 
-    public Consume(expected : OperandToken) : void
-    {        
-        const token = this.LookAhead();
-        if (token.token != expected)
-            throw RangeError("Expected token " + expected + " and found " + token.token + " at " + token.position);
-
-        this.ConsumeAny();
-    }
-
-    public ConsumeOptional(expected : OperandToken) : boolean
+    private match(expected : OperandToken) : Token
     {
-        const token = this.LookAhead();
+        if(this.current.token == expected)
+            return this.next();
 
-        if (token.token == expected)
-        {
-            this.ConsumeAny();
-            return true;
-        }
-
-        return false;
+        throw RangeError("Expected token " + expected + " and found " + this.current.token + " at " + this.current.position);
     }
 
-    private LookAhead(distance : number = 0) : Token
+    private peek() : Token
     {
-        // Read in as many as needed.
-        while (distance >= this.tokens.length)
-        {
-            const tokenFound = this.lexer.advance();
-
-            if(tokenFound)
-                this.tokens.push(this.lexer.current);
-        }
-
-        // Get the queued token.
-        return this.tokens[distance];
-    }
-
-    private Peek() : Token
-    {
-        this.LookAhead();
-        return this.tokens[0];
+        return this.tokens[this.position + 1];
     }
 
     private get current() : Token
     {
-        return this.tokens[0];
+        return this.tokens[this.position];
     }
 
     public Parse() : Instruction
@@ -81,14 +53,13 @@ export class AssemblyLineParser
         // MNEMONIC REG
         // MNEMONIC CONST
 
-        this.Consume(OperandToken.IDENTIFIER);
-        const mnemonic = this.current;
+        const identifier = this.match(OperandToken.IDENTIFIER);
 
-        const instruction = InstructionMap[mnemonic.lexeme.toUpperCase()];
+        const instruction = InstructionMap[identifier.lexeme.toUpperCase()];
 
         if(!instruction)
         {
-            throw RangeError("Invalid instruction " + mnemonic.lexeme.toUpperCase());
+            throw RangeError("Invalid instruction " + identifier.lexeme.toUpperCase());
         }
 
         if(instruction.operandCount == 0)
@@ -132,15 +103,10 @@ export class AssemblyLineParser
 
     parseOperand() : ValueOrRegister
     {
-        const ok = this.lexer.advance();
-        
-        if(!this.lexer.current || !ok)
+        if(!this.current)
             throw RangeError("Failed to find a value, register or relative address");
-
-        while(this.lexer.current.token == OperandToken.WHITESPACE)
-            this.lexer.advance();
         
-        switch(this.lexer.current.token)
+        switch(this.current.token)
         {
             case OperandToken.LEFT_SQUARE_BRACKET:
                 return this.parseRelative();
@@ -153,8 +119,11 @@ export class AssemblyLineParser
             case OperandToken.DATALABEL:
                 return this.parseDataLabel();    
             case OperandToken.MINUS:
-                if(this.LookAhead(1).token === OperandToken.NUMBER)
+                if(this.peek().token === OperandToken.NUMBER)
+                {
+                    this.next();
                     return this.parseNegativeNumber();    
+                }
         }
         
         throw RangeError("Failed to find a value, register or relative address");    
@@ -162,74 +131,82 @@ export class AssemblyLineParser
 
     parseRelative() : ValueOrRegister
     {
-        const skipWhitepace = () => {
-            if(this.lexer.current.token == OperandToken.WHITESPACE)        
-                this.lexer.advance();
-        };
+        this.match(OperandToken.LEFT_SQUARE_BRACKET);    
 
-        const ensure = (expected:OperandToken) : void => {        
-            if(!this.lexer.current || this.lexer.current.token != expected)
-                throw RangeError("Failed to find a expected token");
-        };
-
-        const consume = (expected:OperandToken) : void => {        
-            this.lexer.advance();
-            
-            if(!this.lexer.current || this.lexer.current.token != expected)
-                throw RangeError("Failed to find a expected token");        
-        };
-
-        ensure(OperandToken.LEFT_SQUARE_BRACKET);    
-        this.lexer.advance();
-        skipWhitepace();
-        ensure(OperandToken.REGISTER);
-
-        const register = this.lexer.current;
-
-        this.lexer.advance();
-        skipWhitepace();
+        let result : ValueOrRegister;
         
-        switch(this.lexer.current.token)
+        switch(this.current.token)
+        {
+            case OperandToken.REGISTER:
+            {
+                const register = this.parseRegister();
+                const relative = this.parseRelativeToRegister(register.register!);                       
+                result = new ValueOrRegister(register.register, true, relative.value);
+                break;
+            }
+            case OperandToken.NUMBER:
+            {
+                const number = this.parseNumber();
+                result = new ValueOrRegister(undefined, true, number.value);
+                break;
+            }
+            case OperandToken.LABEL:
+            {
+                result = this.parseLabel();  
+                break;              
+            }
+            case OperandToken.DATALABEL:
+            {
+                result = this.parseDataLabel();             
+                break;
+            }
+            default:
+            {
+                throw RangeError("Unexpected relative operand token " + this.current.lexeme + " at " + this.current.position);
+            }    
+        }    
+
+        this.match(OperandToken.RIGHT_SQUARE_BRACKET);
+
+        return result;
+    }
+
+    parseRelativeToRegister(register:string): ValueOrRegister {
+        switch(this.current.token)
         {
             case OperandToken.RIGHT_SQUARE_BRACKET:
-                return new ValueOrRegister(register.lexeme, true, 0);
+            {
+                return new ValueOrRegister(register, true);
+            }
             case OperandToken.MINUS:
             {
-                skipWhitepace();
-                ensure(OperandToken.MINUS);
-                this.lexer.advance();
-                const value = new ValueOrRegister(register.lexeme, true, -this.lexer.current.value);            
-
-                this.lexer.advance();
-                ensure(OperandToken.RIGHT_SQUARE_BRACKET);
-                return value;                
+                this.match(OperandToken.MINUS);
+                const value = this.match(OperandToken.NUMBER);
+                return new ValueOrRegister(register, true, -value.value);            
             }    
             case OperandToken.PLUS:
             {
-                skipWhitepace();
-                ensure(OperandToken.PLUS);
-                this.lexer.advance();
-                const value = new ValueOrRegister(register.lexeme, true, this.lexer.current.value);
-
-                this.lexer.advance();
-                ensure(OperandToken.RIGHT_SQUARE_BRACKET);
-                return value;                
-            }
-            case OperandToken.NUMBER:
-                return this.parseNumber();
-        }    
-
-        return new ValueOrRegister(this.lexer.current.lexeme, true);
+                this.match(OperandToken.PLUS);
+                const value = this.match(OperandToken.NUMBER);
+                return new ValueOrRegister(register, true, value.value);
+            }     
+            default:
+            {
+                throw RangeError("Unexpected relative operand token " + this.current.lexeme + " at " + this.current.position);
+            }       
+        }            
     }
 
     parseRegister() : ValueOrRegister
     {
-        return new ValueOrRegister(this.lexer.current.lexeme);
+        const token = this.next();
+        return new ValueOrRegister(token.lexeme);
     }
 
     parseNumber() : ValueOrRegister
     {
-        return new ValueOrRegister(undefined, false, this.lexer.current.value);
+        const token = this.next();
+        return new ValueOrRegister(undefined, false, token.value);
     }
 
     parseNegativeNumber() : ValueOrRegister
@@ -241,8 +218,9 @@ export class AssemblyLineParser
     parseLabel() : ValueOrRegister
     {
         if(!this.labelsExpected)
-            throw RangeError("Unexpected unresolved Label token " + this.lexer.current.lexeme + " at " + this.lexer.current.position);
+            throw RangeError("Unexpected unresolved Label token " + this.current.lexeme + " at " + this.current.position);
 
+        this.next();
         // labels are not expected to produce final values
         return new ValueOrRegister(undefined, false, 0);
     }
@@ -250,8 +228,9 @@ export class AssemblyLineParser
     parseDataLabel() : ValueOrRegister
     {
         if(!this.labelsExpected)
-            throw RangeError("Unexpected unresolved Data Label token " + this.lexer.current.lexeme + " at " + this.lexer.current.position);
+            throw RangeError("Unexpected unresolved Data Label token " + this.current.lexeme + " at " + this.current.position);
 
+        this.next();
         // labels are not expected to produce final values
         return new ValueOrRegister(undefined, false, 0);
     }
