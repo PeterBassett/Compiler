@@ -20,6 +20,7 @@ describe("The AssemblyLineParser class ", () => {
     }
 
     const b1000 = new OpcodeModes(new OpcodeMode(false, false), new OpcodeMode(false, true));
+    const b0010 = new OpcodeModes(new OpcodeMode(false, false), new OpcodeMode(true, false));
     const b1100 = new OpcodeModes(new OpcodeMode(false, true), new OpcodeMode(false, true));
     const b1101 = new OpcodeModes(new OpcodeMode(true, true), new OpcodeMode(false, true));
     const b1110 = new OpcodeModes(new OpcodeMode(false, true), new OpcodeMode(true, true));
@@ -101,6 +102,10 @@ describe("The AssemblyLineParser class ", () => {
 
     it("parses a line of assembly with a pointer destination register and literal source", () => {
         test("STR [R4+5] 100", new Instruction(OpCodes.STR, b1010,0,4,5,100));
+    }); 
+
+    it("parses a line of assembly with a pointer destination literal and literal source", () => {
+        test("STR [5] 100", new Instruction(OpCodes.STR, b0010, 0, 0, 5, 100));
     }); 
 
     it("parses a line of assembly with floating point number", () => {
