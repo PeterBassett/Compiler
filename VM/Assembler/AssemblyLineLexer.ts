@@ -1,5 +1,4 @@
 export enum OperandToken {
-    WHITESPACE,
     IDENTIFIER,
     LEFT_SQUARE_BRACKET,
     RIGHT_SQUARE_BRACKET,
@@ -236,7 +235,6 @@ export class AssemblyLineLexer
         while(!this.end && this.isWhiteSpace(this.currentChar))
             this._currentPosition++;
 
-        //this.current = new Token(this._source.substring(start, this._currentPosition), start, OperandToken.WHITESPACE);
         return false;
     }
 
