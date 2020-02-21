@@ -303,17 +303,13 @@ var a2 : float = 2.3;
 var a3 : float = 3.4;
 var a4 : float = 4.5;
 var b1 : float;
-var b2 : float;
-var b3 : float;
-var b4 : float; 
+var b2 : float; 
 func main() : float
 {
     b1 = 1.2;
     b2 = 2.3;
-    b3 = 3.4;
-    b4 = 4.5;
 
-    return a1;// + b4;
+    return a1;
 }`, 1.2
 ],
 [`func main() : float
