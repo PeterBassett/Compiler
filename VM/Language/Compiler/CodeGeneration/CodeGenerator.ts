@@ -376,6 +376,10 @@ export default class CodeGenerator
 
                     const mov = this.typedMnemonic(stmt.type.type, "MOV");
 
+                    const dest = this.getDataReference(stmt.identifier);
+                    this.instruction(`${mov} ${dest(0, 0)} R1`, `assign to ${stmt.identifier.name} on the stack`); 
+
+                    /*
                     if(stmt.identifier.variable!.isParameter)
                     {
                         let spec = this.variableMap.peek()[stmt.identifier.name];
@@ -394,6 +398,7 @@ export default class CodeGenerator
                         let offset = spec.offset + spec.size;
                         this.instruction(`${mov} [R6-${offset}] R1`, `assign to variable ${stmt.identifier.name} on the stack`);
                     }
+                    */
                 }
                 break;
             }
@@ -875,7 +880,7 @@ export default class CodeGenerator
         }
         else if(identifier.variable && identifier.variable!.isGlobal)
         {           
-            return (offset) => `.${identifier.name}`;
+            return (offset) => `[.${identifier.name}]`;
         }
         else
         {
@@ -1044,7 +1049,17 @@ export default class CodeGenerator
             {
                 this.instruction("NEG R1", "unary negation op");                                              
                 break;
-            }    
+            }  
+            case Nodes.BoundUnaryOperatorKind.Reference:
+            {
+                this.instruction("NEG R1", "unary negation op");                                         
+                break;
+            }                
+            case Nodes.BoundUnaryOperatorKind.Dereference:
+            {
+                this.instruction("NOP", "unary dereference op");                                              
+                break;
+            }              
             default:
             {                
                 throw new Error(`Unexpected Unary Expression Type ${expression.kind}`);
