@@ -40,8 +40,16 @@ function storeValue(instruction : Instruction,
     }
     else
     {
-        value = readBytes(value, size);
-        memory.storeNumber(instruction.sourceMemoryAddress, value, size);
+        if(mode.isPointer)
+        {            
+            let offset = endpoint === Endpoint.Source ? instruction.sourceMemoryAddress : instruction.destinationMemoryAddress;
+            memory.storeNumber(offset, value, size);
+        }
+        else        
+        {  
+            value = readBytes(value, size);
+            memory.storeNumber(instruction.sourceMemoryAddress, value, size);
+        }
     }
 }
 
@@ -66,7 +74,17 @@ function getValue(instruction : Instruction,
         }        
     }
     else
-        value = instruction.sourceMemoryAddress;
+    {
+        if(mode.isPointer)
+        {            
+            let offset = endpoint === Endpoint.Source ? instruction.sourceMemoryAddress : instruction.destinationMemoryAddress;
+            value = memory.readNumber(offset, size);
+        }
+        else        
+        {
+            value = instruction.sourceMemoryAddress;            
+        }
+    }        
 
     value = readBytes(value, size);
     
