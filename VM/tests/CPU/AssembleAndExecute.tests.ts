@@ -1784,4 +1784,23 @@ describe("Assemble and execute", () => {
         expect(registers.R4).toEqual(0);
         expect(registers.R1).toEqual(11);
     });
+
+    it("a MOVf to a pointer literal in the data section", () => {
+        execute(`
+    .data
+        .x float 10
+        .y float 6        
+    .text
+    .global intro:
+    intro:
+
+        MVI r1 0
+        ldrf r3 .x
+        MOVf [.y] r3
+        ldrf r1 .y
+
+        halt`);
+
+        expect(registers.R1).toEqual(10);
+    });
 });
