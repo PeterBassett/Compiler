@@ -1,7 +1,6 @@
 import Instruction, { OpcodeModes, OpcodeMode } from "./Instruction";
 import InstructionCoder from "./InstructionCoder";
 import RAM from "../../Memory/RAM";
-import ValueOrRegister from "../../../Assembler/ValueOrRegister";
 
 function Mask(bits : number) : number
 {
@@ -50,6 +49,9 @@ export default class InstructionCoder32Bit implements InstructionCoder
         if(destinationMemoryAddress < -127)
             throw new RangeError(`Instruction part MemoryAddress can not be less than -127 (${destinationMemoryAddress})`);
 
+        if(destinationMemoryAddress > 127)
+            throw new RangeError(`Instruction part MemoryAddress can not be more than 127 (${destinationMemoryAddress})`);
+            
         if(sourceMemoryAddress < -127 && !!destinationMemoryAddress)
             throw new RangeError(`Instruction part MemoryAddress can not be less than -127 when destination address is used (${sourceMemoryAddress})`);
 
