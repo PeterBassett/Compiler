@@ -50,7 +50,7 @@ function CreateInstructionCoder() : InstructionCoder
     const instructionCoder32 = new InstructionCoder32Bit();
     const instructionCoderVariable = new InstructionCoderVariable();
 
-    return instructionCoder32;
+    return instructionCoderVariable;
 }
 
 function assemble(assemblyCode : string) : AssembledOutput
