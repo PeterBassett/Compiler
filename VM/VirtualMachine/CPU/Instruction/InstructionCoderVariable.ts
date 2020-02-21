@@ -3,7 +3,7 @@ import { OpCodes as Op, OpCodes } from "./InstructionSet";
 import InstructionCoder from "./InstructionCoder";
 import RAM from "../../Memory/RAM";
 import { MapOpCodeToExecutor, InstructionSet } from "./InstructionSet";
-import { decodeInstructionOperandToValue, Endpoint, encodeInstructionOperand, encodeOpCodeModes } from "./InstructionCoder32Bit";
+import { Endpoint, encodeOpCodeModes } from "./InstructionCoder32Bit";
 import { memo } from "react";
 
 function Mask(bits : number) : number
@@ -32,9 +32,31 @@ const DestinationRegisterMask = Mask(DestinationRegisterBits);
 const DestinationRegister32BitMask = DestinationRegisterMask << DestinationRegisterOffset;
 
 const MemoryAddressOffset = DestinationRegisterOffset + DestinationRegisterBits;
-const MemoryAddressBits = 16;
+const MemoryAddressBits = 64;
 const MemoryAddressMask = Mask(MemoryAddressBits);
-const MemoryAddress32BitMask = MemoryAddressMask << MemoryAddressOffset;
+
+export function encodeInstructionOperand(value : number) : number
+{
+    const flag = 0b100000000000000000000000;
+    
+    if(value < 0)
+        value = Math.abs(value) | flag;
+
+    return value;
+}
+
+export function decodeInstructionOperand(input : number) : number
+{
+    const mask = 0b011111111111111111111111;
+    const flag = 0b100000000000000000000000;
+
+    let value = input;
+
+    if(value & flag)
+        value = -(value & mask);
+
+    return value;
+}
 
 export type encoder = (opcode : number, 
     opcodeMode : OpcodeModes, 
@@ -495,11 +517,10 @@ export default class InstructionCoderVariable implements InstructionCoder
         InstructionCoderVariable.validateInstructionPart(sourceRegister, SourceRegisterMask, "SourceRegister");
         InstructionCoderVariable.validateInstructionPart(destinationRegister, DestinationRegisterMask, "DestinationRegister");        
 
-        const memoryAddress = encodeInstructionOperand(destinationMemoryAddress,
-            sourceMemoryAddress,
-            opcodeMode.destination.isPointer && opcodeMode.source.isPointer);
+        const encodedSourceAddress = encodeInstructionOperand(sourceMemoryAddress);
+        const encodedDestAddress = encodeInstructionOperand(destinationMemoryAddress);        
 
-        InstructionCoderVariable.validateInstructionPart(memoryAddress, MemoryAddressMask, "MemoryAddress");
+        //InstructionCoderVariable.validateInstructionPart(memoryAddress, MemoryAddressMask, "MemoryAddress");
 
         let mode = encodeOpCodeModes(opcodeMode);
 
@@ -510,14 +531,14 @@ export default class InstructionCoderVariable implements InstructionCoder
         array[2] = sourceRegister;
         array[3] = destinationRegister;
 
-        array[4] =  (memoryAddress >> 0 ) & 0xff;
-        array[5] =  (memoryAddress >> 8 ) & 0xff;
-        array[6] =  (memoryAddress >> 16) & 0xff;
-        array[7] =  (memoryAddress >> 24) & 0xff;
-        array[8] =  (memoryAddress >> 32) & 0xff;
-        array[9] =  (memoryAddress >> 40) & 0xff;
-        array[10] = (memoryAddress >> 48) & 0xff;
-        array[11] = (memoryAddress >> 56) & 0xff;
+        array[4] =  (encodedSourceAddress >> 0 ) & 0xff;
+        array[5] =  (encodedSourceAddress >> 8 ) & 0xff;
+        array[6] =  (encodedSourceAddress >> 16) & 0xff;
+        array[7] =  (encodedSourceAddress >> 24) & 0xff;
+        array[8] =  (encodedDestAddress >> 0) & 0xff;
+        array[9] =  (encodedDestAddress >> 8) & 0xff;
+        array[10] = (encodedDestAddress >> 16) & 0xff;
+        array[11] = (encodedDestAddress >> 24) & 0xff;
 
         return array;
     }
@@ -531,14 +552,15 @@ export default class InstructionCoderVariable implements InstructionCoder
         const sourceRegister = array[2];
         const destinationRegister = array[3];
 
-        const rawMemoryAddress = (array[4] << 0) |
-                                    (array[5] << 8 ) |
-                                    (array[6] << 16) |
-                                    (array[7] << 24) |
-                                    (array[8] << 32) |
-                                    (array[9] << 40) |
-                                    (array[10] << 48) |
-                                    (array[11] << 56);
+        const source = (array[4] << 0) |
+                                  (array[5] << 8 ) |
+                                  (array[6] << 16) |
+                                  (array[7] << 24);
+
+        const destination = (array[8] << 0) |
+                                  (array[9] << 8) |
+                                  (array[10] << 16) |
+                                  (array[11] << 24);
 
         const mode = new OpcodeModes(
             new OpcodeMode(
@@ -551,21 +573,8 @@ export default class InstructionCoderVariable implements InstructionCoder
             )
         );
 
-        let sourceMemoryAddress : number = rawMemoryAddress;
-        let destinationMemoryAddress : number = 0;
-
-        if(mode.source.isPointer || mode.destination.isPointer)
-        {
-            sourceMemoryAddress = decodeInstructionOperandToValue(
-                rawMemoryAddress, 
-                Endpoint.Source, 
-                mode.source.isPointer && mode.destination.isPointer);
-
-            destinationMemoryAddress = decodeInstructionOperandToValue(
-                rawMemoryAddress, 
-                Endpoint.Destination, 
-                mode.source.isPointer && mode.destination.isPointer);            
-        }
+        const sourceMemoryAddress = decodeInstructionOperand(source);
+        const destinationMemoryAddress = decodeInstructionOperand(destination);
     
         return { 
             instruction : new Instruction(opcode, 
