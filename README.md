@@ -21,9 +21,8 @@ at the moment precomputes the output of expressions involving literals.
 * Virtual Machine to execute the binaries.
 * The VM is "low level" in that it does not provide some higher level VM
 primitives, it simulates a fairly restricted 16 bit computer.
-* Currently the code generator supports generating code for integer, float, boolean and struct varables and parameters. There are some details around structure member referencing to be completed.
+* Currently the code generator supports generating code for integer, float, boolean and struct varables and parameters. Pointers, reference & and dereference * operators. There are some details around structure member referencing to be completed.
 
 Next Steps
 * global struct variables
-* Pointers
 * Arrays
