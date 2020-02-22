@@ -99,6 +99,10 @@ describe("The AssemblyLineLexer class ", () => {
         test("label:", [ OperandToken.LABEL ]);
     });
 
+    it("lexes a comma", () => {
+        test(",", [ OperandToken.COMMA ]);
+    });
+
     it("lexes a line of assembly with a label containing underscores and numbers", () => {
         test("label1_2test:", [ OperandToken.LABEL ]);
     });
@@ -121,5 +125,9 @@ describe("The AssemblyLineLexer class ", () => {
 
     it("lexes a line of assembly with which references a memory location by negative offset register pointer", () => {
         test("MVI R1 [SP-4]", [ OperandToken.IDENTIFIER, OperandToken.REGISTER, OperandToken.LEFT_SQUARE_BRACKET, OperandToken.REGISTER, OperandToken.MINUS, OperandToken.NUMBER, OperandToken.RIGHT_SQUARE_BRACKET ] );
+    });
+
+    it("lexes a line of assembly with register and second operand of bare negative", () => {
+        test("MVI R1, -4", [ OperandToken.IDENTIFIER, OperandToken.REGISTER, OperandToken.COMMA, OperandToken.MINUS, OperandToken.NUMBER ] );
     });
 });

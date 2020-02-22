@@ -94,7 +94,7 @@ describe("Assemble and execute with Variable Length Instructions", () => {
     .text
     .global start:
         start:
-        mvi r5 -20
+        mvi r5, -20
         halt`);
 
         expect(registers.R5).toEqual(-20);

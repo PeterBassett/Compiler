@@ -59,7 +59,7 @@ export default class Conversion
         if(from.type === ValueType.Null &&
             to.isPointer)
         {
-            return new Conversion(true, false, false, true, to, null);
+            return new Conversion(true, false, false, true, to, 0);
         }
 
         return Conversion.None;

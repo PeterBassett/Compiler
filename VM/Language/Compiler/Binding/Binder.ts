@@ -594,7 +594,7 @@ export default class Binder
             case "IntegerLiteralExpressionSyntax":
                 return new Nodes.BoundLiteralExpression(parseInt(syntax.literalToken.lexeme), PredefinedValueTypes.Integer);
             case "NullLiteralExpressionSyntax":
-                return new Nodes.BoundLiteralExpression("null", PredefinedValueTypes.Null);                
+                return new Nodes.BoundLiteralExpression(0, PredefinedValueTypes.Null);                
             case "ParenthesizedExpressionSyntax":
                 return this.BindExpression(syntax.expression);                
             case "BinaryExpressionSyntax":

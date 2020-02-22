@@ -7,7 +7,8 @@ export enum OperandToken {
     PLUS,
     MINUS,
     LABEL,
-    DATALABEL
+    DATALABEL,
+    COMMA
 }
 
 export class Token
@@ -91,6 +92,9 @@ export class AssemblyLineLexer
             case '+':
                 this.current = new Token(this.currentChar, this._currentPosition++, OperandToken.PLUS);
                 return true;
+            case ',':
+                this.current = new Token(this.currentChar, this._currentPosition++, OperandToken.COMMA);
+                return true;                
         }
 
         if(this.currentChar == '.')

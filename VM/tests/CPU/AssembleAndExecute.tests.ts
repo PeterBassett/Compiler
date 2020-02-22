@@ -12,6 +12,7 @@ import Parser from "../../Assembler/Parser";
 import defaultPreprocessor from "../../Assembler/Preprocessors/DefaultPreprocessor";
 import validator from "../../Assembler/Preprocessors/DefaultPreprocessor";
 import Flags from "../../VirtualMachine/CPU/Flags";
+import InstructionCoderVariable from "../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
 
 describe("Assemble and execute", () => {
     let assembler : Assembler;
@@ -1598,6 +1599,8 @@ describe("Assemble and execute", () => {
     });
     */
 
+    /// not ready for this yet
+    /*
    it("draw mandelbrot fractal", () => {
     execute(`
     .data
@@ -1762,7 +1765,7 @@ describe("Assemble and execute", () => {
         expect(registers.R1).toEqual(16);
         expect(registers.R2).toEqual(1);
     });
-
+*/
     it("a JMR immediate instruction", () => {
         execute(`
     .data
@@ -1802,5 +1805,23 @@ describe("Assemble and execute", () => {
         halt`);
 
         expect(registers.R1).toEqual(10);
+    
     });
+
+    it("a MOV with a non pointer register relative source", () => {
+        execute(`
+    .data
+    .text
+    .global intro:
+    intro:
+
+        MVI r1 0
+        MVI r3 10
+        MOV R1 R3-4
+
+        halt`);
+
+        expect(registers.R1).toEqual(6);
+    
+    }); 
 });

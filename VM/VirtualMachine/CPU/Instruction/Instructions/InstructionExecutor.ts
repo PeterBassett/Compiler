@@ -67,11 +67,16 @@ function getValue(instruction : Instruction,
     {
         value = registers.get(register);
 
+        let offset = endpoint === Endpoint.Source ? instruction.sourceMemoryAddress : instruction.destinationMemoryAddress;
+
         if(mode.isPointer)
         {            
-            let offset = endpoint === Endpoint.Source ? instruction.sourceMemoryAddress : instruction.destinationMemoryAddress;
             return memory.readNumber(value + offset, size);             
-        }        
+        }   
+        else
+        {
+            value = value + offset;
+        }     
     }
     else
     {

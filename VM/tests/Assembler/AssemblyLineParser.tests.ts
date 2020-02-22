@@ -121,6 +121,10 @@ describe("The AssemblyLineParser class ", () => {
     });
 
     it("parses a line of assembly with negative integer", () => {
-        test("mvi R0 -1", new Instruction(OpCodes.MVI,b1000,0,0,0,-1));
+        test("mvi R0, -1", new Instruction(OpCodes.MVI,b1000,0,0,0,-1));
+    });
+
+    it("parses a line of assembly with register relative non pointer", () => {
+        test("MOV R1 R3-4", new Instruction(OpCodes.MOV,b1100,3,1,0,-4));
     });
 });

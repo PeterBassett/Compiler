@@ -41,6 +41,11 @@ export class AssemblyLineParser
         return this.tokens[this.position + 1];
     }
 
+    private get more() : boolean
+    {
+        return this.tokens.length > this.position;
+    }
+
     private get current() : Token
     {
         return this.tokens[this.position];
@@ -52,6 +57,9 @@ export class AssemblyLineParser
         // MNEMONIC REG CONST
         // MNEMONIC REG
         // MNEMONIC CONST
+        //generally, reg and const can be of the form
+        // [X] // read memory at byte position X, X can be
+        // REG, CONST, REG+CONST, REG-CONST but not yet CONST+CONST, CONST-CONST
 
         const identifier = this.match(OperandToken.IDENTIFIER);
 
@@ -103,15 +111,15 @@ export class AssemblyLineParser
 
     parseOperand() : ValueOrRegister
     {
-        if(!this.current)
+        if(!this.more)
             throw RangeError("Failed to find a value, register or relative address");
         
         switch(this.current.token)
         {
             case OperandToken.LEFT_SQUARE_BRACKET:
-                return this.parseRelative();
+                return this.parseRelative(true);
             case OperandToken.REGISTER:
-                return this.parseRegister();
+                return this.parseRelative(false);
             case OperandToken.NUMBER:
                 return this.parseNumber();
             case OperandToken.LABEL:
@@ -129,9 +137,10 @@ export class AssemblyLineParser
         throw RangeError("Failed to find a value, register or relative address");    
     }
 
-    parseRelative() : ValueOrRegister
+    parseRelative(expectingBrackets : boolean) : ValueOrRegister
     {
-        this.match(OperandToken.LEFT_SQUARE_BRACKET);    
+        if(expectingBrackets)
+            this.match(OperandToken.LEFT_SQUARE_BRACKET);    
 
         let result : ValueOrRegister;
         
@@ -141,7 +150,7 @@ export class AssemblyLineParser
             {
                 const register = this.parseRegister();
                 const relative = this.parseRelativeToRegister(register.register!);                       
-                result = new ValueOrRegister(register.register, true, relative.value);
+                result = new ValueOrRegister(register.register, expectingBrackets, relative.value);
                 break;
             }
             case OperandToken.NUMBER:
@@ -166,17 +175,34 @@ export class AssemblyLineParser
             }    
         }    
 
-        this.match(OperandToken.RIGHT_SQUARE_BRACKET);
+        if(expectingBrackets)
+            this.match(OperandToken.RIGHT_SQUARE_BRACKET);
 
         return result;
     }
 
     parseRelativeToRegister(register:string): ValueOrRegister {
+
+        if(!this.more)
+        {
+            return new ValueOrRegister(register, true);
+        }
+
         switch(this.current.token)
         {
+            case OperandToken.LEFT_SQUARE_BRACKET:
             case OperandToken.RIGHT_SQUARE_BRACKET:
+            case OperandToken.REGISTER:
+            case OperandToken.LABEL:
+            case OperandToken.DATALABEL:
+            case OperandToken.NUMBER:
             {
                 return new ValueOrRegister(register, true);
+            }
+            case OperandToken.COMMA:
+            {
+                this.match(OperandToken.COMMA);
+                return new ValueOrRegister(register, true);            
             }
             case OperandToken.MINUS:
             {
@@ -189,7 +215,7 @@ export class AssemblyLineParser
                 this.match(OperandToken.PLUS);
                 const value = this.match(OperandToken.NUMBER);
                 return new ValueOrRegister(register, true, value.value);
-            }     
+            }                 
             default:
             {
                 throw RangeError("Unexpected relative operand token " + this.current.lexeme + " at " + this.current.position);

@@ -112,7 +112,9 @@ export default class InstructionCoder32Bit implements InstructionCoder
         let sourceMemoryAddress : number = rawMemoryAddress;
         let destinationMemoryAddress : number = 0;
 
-        if(mode.source.isPointer || mode.destination.isPointer)
+        if(mode.source.isPointer || 
+           mode.destination.isPointer || 
+           (mode.source.isRegister && mode.destination.isRegister))
         {
             sourceMemoryAddress = decodeInstructionOperandToValue(
                 rawMemoryAddress, 

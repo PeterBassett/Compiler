@@ -402,6 +402,29 @@ export default class CodeGenerator
                 }
                 break;
             }
+            case Nodes.BoundNodeKind.DereferenceAssignmentStatement:
+            {
+                let stmt = statement as Nodes.BoundDereferenceAssignmentStatement;
+
+                const type = stmt.left.type.type;
+                const push = this.typedMnemonic(type, "PUSH");
+                const pop = this.typedMnemonic(type, "POP");
+                const mov = this.typedMnemonic(type, "MOV");
+                const swap = this.typedMnemonic(type, "SWAP");
+
+                this.writeExpression(stmt.left);
+                this.instruction(`${push} R1`, "save value of the left hand expression on the stack");
+                this.writeExpression(stmt.right);
+                this.instruction(`${pop} R2`, "pop left hand result from the stack into R2");
+
+                this.instruction(`${swap} R1 R2`);
+                this.instruction(`${mov} [R1] R2`);
+                break;   
+            }         
+            default:
+            {
+                throw new Error(`Unexpected Statement Type ${statement.kind}`);
+            }
         }
     }
 
@@ -867,8 +890,14 @@ export default class CodeGenerator
         }
     }
 
-    getDataReference(identifier : Identifier) : (offset:number, chunk:number)=>string
+    getDataReference(identifier : Identifier, address:boolean = true) : (offset:number, chunk:number)=>string
     {
+        const addAddress = (add:string) => {
+            if(address)
+                return `[${add}]`;
+            return add;
+        };
+
         // assignments for structs are always simple byte copys
         // from a variable, parameter or global.
         if(identifier.variable!.isParameter)
@@ -876,17 +905,17 @@ export default class CodeGenerator
             // assigning to struct parameter
             let spec = this.variableMap.peek()[identifier.name];
             let offset = this.stackOffset + spec.offset;
-            return (i,c) => `[R6+${offset+i}]`;
+            return (i,c) => addAddress(`R6+${offset+i}`);
         }
         else if(identifier.variable && identifier.variable!.isGlobal)
         {           
-            return (offset) => `[.${identifier.name}]`;
+            return (offset) => addAddress(`.${identifier.name}`);
         }
         else
         {
             let spec = this.variableMap.peek()[identifier.name];
             let offset = spec.offset + spec.size;
-            return (i, c) => `[R6-${offset-i}]`;
+            return (i, c) => addAddress(`R6-${offset-i}`);
         }
     }
     
@@ -1052,12 +1081,19 @@ export default class CodeGenerator
             }  
             case Nodes.BoundUnaryOperatorKind.Reference:
             {
-                this.instruction("NEG R1", "unary negation op");                                         
+                const v = expression.operand as Nodes.BoundVariableExpression;
+                const address = this.getDataReference(v.variable, false);
+
+                this.instruction(`MOV R1 ${address(0,0)}`, "address of");                                         
                 break;
             }                
             case Nodes.BoundUnaryOperatorKind.Dereference:
             {
-                this.instruction("NOP", "unary dereference op");                                              
+                const v = expression.operand as Nodes.BoundVariableExpression;
+                const address = this.getDataReference(v.variable, true);
+                
+                this.instruction(`MOV R1 ${address(0,0)}`, "value at address");                 
+
                 break;
             }              
             default:

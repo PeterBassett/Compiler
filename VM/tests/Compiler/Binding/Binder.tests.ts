@@ -550,7 +550,7 @@ func main() : int
         ParameterDeclarationList
         BlockStatement
             VariableDeclaration<ap:*int>
-                LiteralExpression<null:*int>
+                LiteralExpression<0:*int>
             ReturnStatement
                 LiteralExpression<1:int>
 `],
@@ -564,7 +564,7 @@ func main() : int
         ParameterDeclarationList
         BlockStatement
             VariableDeclaration<ap:**int>
-                LiteralExpression<null:**int>
+                LiteralExpression<0:**int>
             ReturnStatement
                 LiteralExpression<1:int>
 `],
