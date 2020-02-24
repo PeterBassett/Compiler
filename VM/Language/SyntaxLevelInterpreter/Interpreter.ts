@@ -64,7 +64,7 @@ class InvalidLiteralValueTokenException extends Error
 export default class Interpreter
 {
     private scope : ExecutionScope;
-
+    
     constructor()
     {
         this.scope = new ExecutionScope();
@@ -194,9 +194,9 @@ export default class Interpreter
             case "StructDeclarationStatementSyntax" :   
             case "StructMemberDeclarationStatementSyntax" :             
             case "ClassDeclarationStatementSyntax" :           
-            case "GetExpressionSyntax":              
-            case "SetStatementSyntax":                         
-            case "DereferenceAssignmentStatementSyntax":                         
+            case "GetExpressionSyntax":                    
+            case "ArrayIndexExpressionSyntax":
+            case "DereferenceExpressionSyntax":               
                 throw new Error("Class execution not impletmented yet");                                
             default:
                 return exhaustiveCheck(node);
@@ -210,14 +210,6 @@ export default class Interpreter
     VisitGetExpressionSyntax(syntax: AST.GetExpressionSyntax): Value {
         throw new Error("Method not implemented.");
     }
-
-    VisitSetStatementSyntax(syntax: AST.SetStatementSyntax): Value {
-        throw new Error("Method not implemented.");
-    }
-
-    VisitDereferenceAssignmentStatementSyntax(syntax: AST.DereferenceAssignmentStatementSyntax): Value {
-        throw new Error("Method not implemented.");
-    }    
 
     VisitTypeNameSyntax(node: AST.TypeNameSyntax): Value {
         throw new Error("Method not implemented.");
@@ -330,17 +322,48 @@ export default class Interpreter
     }
 
     VisitAssignmentStatementSyntax(node : AST.AssignmentStatementSyntax): Value {
-        let name = node.identifierToken.lexeme;
+        switch(node.target.kind)
+        {
+            case "NameExpressionSyntax":
+                return this.VisitAssignToVariableStatement(node.target, node.expression);
+            case "GetExpressionSyntax":
+                return this.VisitAssignToGetExpressionStatement(node.target, node.expression);
+            case "DereferenceExpressionSyntax":
+                return this.VisitAssignToDereferenceExpressionStatement(node.target, node.expression);                
+            case "ArrayIndexExpressionSyntax":
+                return this.VisitAssignToArrayIndexExpressionSyntax(node.target, node.expression);                
+            default: 
+            {
+                //exhaustiveCheck(node, true);
+                throw RangeError("JUST HERE TO CLEAR A COMPILER ERROR. The call above will throw before this");
+            }
+        }
+    }
+
+    VisitAssignToArrayIndexExpressionSyntax(target: AST.ArrayIndexExpressionSyntax, expression: AST.ExpressionNode): Value {
+        throw new Error("Method not implemented.");
+    }
+
+    VisitAssignToVariableStatement(target: AST.NameExpressionSyntax, expression: AST.ExpressionNode): Value {
+        let name = target.identifierToken.lexeme;
         let variable = this.scope.FindIdentifier(name);
 
         if(!variable.IsDefined)
             throw new UndefinedIdentifierException("Identifier is not defined " + name);
 
-        let value = this.VisitExpressionNode(node.expression);
+        let value = this.VisitExpressionNode(expression);
 
         this.scope.AssignIdentifierValue(name, value);
 
         return Value.Unit;
+    }
+
+    VisitAssignToDereferenceExpressionStatement(target: any, expression: any): Value {
+        throw new Error("Method not implemented.");
+    }
+
+    VisitAssignToGetExpressionStatement(target: any, expression: any): Value {
+        throw new Error("Method not implemented.");
     }
     
     VisitBinaryExpressionSyntax(node : AST.BinaryExpressionSyntax) : Value {
@@ -551,10 +574,22 @@ export default class Interpreter
             case "TypeNameSyntax":
                 return this.VisitTypeNameSyntax(node);     
             case "GetExpressionSyntax":               
-                return this.VisitGetExpressionSyntax(node);                                                                                                                                     
+                return this.VisitGetExpressionSyntax(node);     
+            case "ArrayIndexExpressionSyntax":
+                return this.VisitArrayIndexExpressionSyntax(node);                                                                                                        
+            case "DereferenceExpressionSyntax":
+                return this.VisitDereferenceExpressionSyntax(node);
             default :
                 exhaustiveCheck(node, true);
                 throw RangeError("JUST HERE TO CLEAR A COMPILER ERROR. The call above will throw before this");
         }
+    }
+
+    VisitDereferenceExpressionSyntax(node: AST.DereferenceExpressionSyntax): Value {
+        throw new Error("Method not implemented.");
+    }
+
+    VisitArrayIndexExpressionSyntax(node: AST.ArrayIndexExpressionSyntax): Value {
+        throw new Error("Method not implemented.");
     }
 }

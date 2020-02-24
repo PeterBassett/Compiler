@@ -85,13 +85,6 @@ export default class BoundTreeStructureVisitor
                 value = "<" + exp.name + ":" + exp.type.name + ">";
                 break;
             }                        
-            case Nodes.BoundNodeKind.AssignmentStatement:
-            {
-                let exp = node as Nodes.BoundAssignmentStatement;
-
-                value = "<" + exp.identifier.name + ":" + exp.identifier.type.name + ">";
-                break;
-            }
             case Nodes.BoundNodeKind.VariableExpression:
             {
                 let exp = node as Nodes.BoundVariableExpression;

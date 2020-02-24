@@ -135,8 +135,9 @@ export default class Lowerer extends BoundTreeTransformBase
         // }
 
         const loopVariable = new Identifier(forStatement.variable.name, forStatement.variable.type, forStatement.variable);
+        const boundLoopVariable = new Nodes.BoundVariableExpression(loopVariable);
         const variableDeclaration = new Nodes.BoundVariableDeclaration(loopVariable.variable!, forStatement.lowerBound);
-        const varianleInitStatement = new Nodes.BoundAssignmentStatement(loopVariable, forStatement.lowerBound);
+        const varianleInitStatement = new Nodes.BoundAssignmentStatement(boundLoopVariable, forStatement.lowerBound);
         const variableExpression = new Nodes.BoundVariableExpression(loopVariable);
         const upperboundSymbolName = this.generateVariable("upperBound");
         const upperBoundSymbol = new Nodes.VariableSymbol(upperboundSymbolName, true, PredefinedValueTypes.Integer, false);
@@ -149,8 +150,10 @@ export default class Lowerer extends BoundTreeTransformBase
         );
 
         const continueLabelStatement = new Nodes.BoundLabelStatement(forStatement.continueLabel);
+        const loopIdentifier = new Identifier(forStatement.variable.name, forStatement.variable.type, forStatement.variable);
+        const boundLoopIdentifier = new Nodes.BoundVariableExpression(loopIdentifier);
         const increment = new Nodes.BoundAssignmentStatement(
-            new Identifier(forStatement.variable.name, forStatement.variable.type, forStatement.variable),
+            boundLoopIdentifier,
             new Nodes.BoundBinaryExpression(
                 variableExpression,
                 BoundBinaryOperator.Bind(SyntaxType.Plus, PredefinedValueTypes.Integer, PredefinedValueTypes.Integer)!,

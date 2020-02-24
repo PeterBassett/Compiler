@@ -257,7 +257,8 @@ func main() : int
         BlockStatement
             VariableDeclaration<n:int>
                 LiteralExpression<0:int>
-            AssignmentStatement<n:int>
+            AssignmentStatement
+                VariableExpression<n:int>
                 LiteralExpression<5:int>
             ReturnStatement
                 VariableExpression<n:int>
@@ -315,7 +316,7 @@ func main() : int
                 LiteralExpression<null:leaf3>
             VariableDeclaration<l2:leaf2>
                 LiteralExpression<null:leaf2>
-            SetStatement
+            AssignmentStatement
                 GetExpression<a1:int>
                     GetExpression<b2:root>
                         GetExpression<c2:leaf1>
@@ -438,18 +439,21 @@ func main() : int
                 LiteralExpression<0:int>
             VariableDeclaration<i:int>
                 LiteralExpression<1:int>
-            AssignmentStatement<i:int>
+            AssignmentStatement
+                VariableExpression<i:int>
                 LiteralExpression<1:int>
             VariableDeclaration<upperBound1:int>
                 LiteralExpression<100:int>
             GotoStatement<Label1>
             LabelStatement<Label2>
-            AssignmentStatement<n:int>
+            AssignmentStatement
+                VariableExpression<n:int>
                 BinaryExpression<+>
                     VariableExpression<n:int>
                     VariableExpression<i:int>
             LabelStatement<continue1>
-            AssignmentStatement<i:int>
+            AssignmentStatement
+                VariableExpression<i:int>
                 BinaryExpression<+>
                     VariableExpression<i:int>
                     LiteralExpression<1:int>
@@ -490,18 +494,21 @@ func main() : int
                 LiteralExpression<true:bool>
             VariableDeclaration<i:int>
                 LiteralExpression<1:int>
-            AssignmentStatement<i:int>
+            AssignmentStatement
+                VariableExpression<i:int>
                 LiteralExpression<1:int>
             VariableDeclaration<upperBound1:int>
                 LiteralExpression<100:int>
             GotoStatement<Label3>
             LabelStatement<Label4>
-            AssignmentStatement<n:int>
+            AssignmentStatement
+                VariableExpression<n:int>
                 BinaryExpression<+>
                     VariableExpression<n:int>
                     VariableExpression<i:int>
             LabelStatement<continue1>
-            AssignmentStatement<i:int>
+            AssignmentStatement
+                VariableExpression<i:int>
                 BinaryExpression<+>
                     VariableExpression<i:int>
                     LiteralExpression<1:int>
@@ -515,18 +522,21 @@ func main() : int
             LabelStatement<Label1>
             VariableDeclaration<i:int>
                 LiteralExpression<100:int>
-            AssignmentStatement<i:int>
+            AssignmentStatement
+                VariableExpression<i:int>
                 LiteralExpression<100:int>
             VariableDeclaration<upperBound2:int>
                 LiteralExpression<1000:int>
             GotoStatement<Label5>
             LabelStatement<Label6>
-            AssignmentStatement<n:int>
+            AssignmentStatement
+                VariableExpression<n:int>
                 BinaryExpression<+>
                     VariableExpression<n:int>
                     VariableExpression<i:int>
             LabelStatement<continue2>
-            AssignmentStatement<i:int>
+            AssignmentStatement
+                VariableExpression<i:int>
                 BinaryExpression<+>
                     VariableExpression<i:int>
                     LiteralExpression<1:int>
@@ -559,7 +569,8 @@ func main() : int
                 LiteralExpression<0:int>
             VariableDeclaration<x:int>
                 LiteralExpression<1:int>
-            AssignmentStatement<x:int>
+            AssignmentStatement
+                VariableExpression<x:int>
                 LiteralExpression<1:int>
             VariableDeclaration<upperBound1:int>
                 LiteralExpression<100:int>
@@ -567,20 +578,23 @@ func main() : int
             LabelStatement<Label2>
             VariableDeclaration<y:int>
                 LiteralExpression<100:int>
-            AssignmentStatement<y:int>
+            AssignmentStatement
+                VariableExpression<y:int>
                 LiteralExpression<100:int>
             VariableDeclaration<upperBound2:int>
                 LiteralExpression<1000:int>
             GotoStatement<Label3>
             LabelStatement<Label4>
-            AssignmentStatement<n:int>
+            AssignmentStatement
+                VariableExpression<n:int>
                 BinaryExpression<+>
                     BinaryExpression<+>
                         VariableExpression<n:int>
                         VariableExpression<x:int>
                     VariableExpression<y:int>
             LabelStatement<continue2>
-            AssignmentStatement<y:int>
+            AssignmentStatement
+                VariableExpression<y:int>
                 BinaryExpression<+>
                     VariableExpression<y:int>
                     LiteralExpression<1:int>
@@ -591,7 +605,8 @@ func main() : int
                     VariableExpression<upperBound2:int>
             LabelStatement<break2>
             LabelStatement<continue1>
-            AssignmentStatement<x:int>
+            AssignmentStatement
+                VariableExpression<x:int>
                 BinaryExpression<+>
                     VariableExpression<x:int>
                     LiteralExpression<1:int>
@@ -625,7 +640,8 @@ func main() : int
                 LiteralExpression<0:int>
             VariableDeclaration<x:int>
                 LiteralExpression<1:int>
-            AssignmentStatement<x:int>
+            AssignmentStatement
+                VariableExpression<x:int>
                 LiteralExpression<1:int>
             VariableDeclaration<upperBound1:int>
                 LiteralExpression<100:int>
@@ -637,7 +653,8 @@ func main() : int
                     LiteralExpression<50:int>
             VariableDeclaration<y:int>
                 LiteralExpression<100:int>
-            AssignmentStatement<y:int>
+            AssignmentStatement
+                VariableExpression<y:int>
                 LiteralExpression<100:int>
             VariableDeclaration<upperBound2:int>
                 LiteralExpression<1000:int>
@@ -647,7 +664,8 @@ func main() : int
                 BinaryExpression<>>
                     VariableExpression<y:int>
                     LiteralExpression<50:int>
-            AssignmentStatement<n:int>
+            AssignmentStatement
+                VariableExpression<n:int>
                 BinaryExpression<+>
                     BinaryExpression<+>
                         VariableExpression<n:int>
@@ -655,7 +673,8 @@ func main() : int
                     VariableExpression<y:int>
             LabelStatement<Label6>
             LabelStatement<continue2>
-            AssignmentStatement<y:int>
+            AssignmentStatement
+                VariableExpression<y:int>
                 BinaryExpression<+>
                     VariableExpression<y:int>
                     LiteralExpression<1:int>
@@ -667,7 +686,8 @@ func main() : int
             LabelStatement<break2>
             LabelStatement<Label3>
             LabelStatement<continue1>
-            AssignmentStatement<x:int>
+            AssignmentStatement
+                VariableExpression<x:int>
                 BinaryExpression<+>
                     VariableExpression<x:int>
                     LiteralExpression<1:int>
@@ -700,7 +720,8 @@ func main() : int
                 LiteralExpression<0:int>
             GotoStatement<continue1>
             LabelStatement<Label1>
-            AssignmentStatement<n:int>
+            AssignmentStatement
+                VariableExpression<n:int>
                 BinaryExpression<+>
                     VariableExpression<n:int>
                     LiteralExpression<1:int>

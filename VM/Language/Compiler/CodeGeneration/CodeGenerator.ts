@@ -314,7 +314,8 @@ export default class CodeGenerator
                         this.zeroStackbytes(size);
                 }
                 break;
-            }                  
+            }    
+            /* TO BE FOLDED INTO ADDISNGMENT IN GENERAL              
             case Nodes.BoundNodeKind.SetStatement:
             {
                 let stmt = statement as Nodes.BoundSetStatement;
@@ -355,53 +356,13 @@ export default class CodeGenerator
                 }
 
                 break;
-            }
+            } */
             case Nodes.BoundNodeKind.AssignmentStatement:
             {
-                let stmt = statement as Nodes.BoundAssignmentStatement;
-
-                if(stmt.type.isStruct)
-                {
-                    // assigning to struct parameter
-                    let spec = this.variableMap.peek()[stmt.identifier.name];                    
-
-                    const dest = this.getDataReference(stmt.identifier);
-                    const source = this.getStructDataReference(stmt.expression);
-
-                    this.emitStackCopy(dest, source, spec.size);
-                }
-                else
-                {
-                    this.writeExpression(stmt.expression);
-
-                    const mov = this.typedMnemonic(stmt.type.type, "MOV");
-
-                    const dest = this.getDataReference(stmt.identifier);
-                    this.instruction(`${mov} ${dest(0, 0)} R1`, `assign to ${stmt.identifier.name} on the stack`); 
-
-                    /*
-                    if(stmt.identifier.variable!.isParameter)
-                    {
-                        let spec = this.variableMap.peek()[stmt.identifier.name];
-                        let offset = this.stackOffset + spec.offset;
-                        this.instruction(`${mov} [R6+${offset}] R1`, `assignt to parameter ${stmt.identifier.name} on the stack`);
-                    }
-                    else if(stmt.identifier.variable && stmt.identifier.variable!.isGlobal)
-                    {
-                        const str = this.typedMnemonic(stmt.identifier.type.type, "STR");
-                        this.instruction(`${str} R1 .${stmt.identifier.name}`, "read global variable");                       
-                        //this.instruction(`${mov} .${exp.identifier.name} R1`, "assign to global variable");
-                    }
-                    else
-                    {
-                        let spec = this.variableMap.peek()[stmt.identifier.name];
-                        let offset = spec.offset + spec.size;
-                        this.instruction(`${mov} [R6-${offset}] R1`, `assign to variable ${stmt.identifier.name} on the stack`);
-                    }
-                    */
-                }
+                this.writeAssignmentStatement(statement as Nodes.BoundAssignmentStatement);                 
                 break;
             }
+            /* TO BE FOLDED INTO ASSIGNMENT IN GENERAL
             case Nodes.BoundNodeKind.DereferenceAssignmentStatement:
             {
                 let stmt = statement as Nodes.BoundDereferenceAssignmentStatement;
@@ -421,10 +382,51 @@ export default class CodeGenerator
                 this.instruction(`${mov} [R1] R2`);
                 break;   
             }         
+            */
             default:
             {
                 throw new Error(`Unexpected Statement Type ${statement.kind}`);
             }
+        }
+    }
+
+    private writeAssignmentStatement(statement: Nodes.BoundAssignmentStatement) 
+    {
+        switch(statement.target.kind)
+        {
+            case Nodes.BoundNodeKind.VariableExpression:
+                return this.writeAssignmentToVariable(statement.target as Nodes.BoundVariableExpression, statement.expression);
+            case Nodes.BoundNodeKind.GetExpression:
+            case Nodes.BoundNodeKind.DereferenceExpression:
+            case Nodes.BoundNodeKind.ArrayIndex:
+            default:
+                throw new Error("Not implemented");                
+        }
+
+    }
+
+    writeAssignmentToVariable(target: Nodes.BoundVariableExpression, expression: Nodes.BoundExpression) 
+    {
+        const identifier = target.variable;
+
+        if(target.type.isStruct)
+        {
+            // assigning to struct parameter
+            let spec = this.variableMap.peek()[identifier.name];                    
+
+            const dest = this.getDataReference(identifier);
+            const source = this.getStructDataReference(expression);
+
+            this.emitStackCopy(dest, source, spec.size);
+        }
+        else
+        {
+            this.writeExpression(expression);
+
+            const mov = this.typedMnemonic(expression.type.type, "MOV");
+
+            const dest = this.getDataReference(identifier);
+            this.instruction(`${mov} ${dest(0, 0)} R1`, `assign to ${identifier.name} on the stack`); 
         }
     }
 

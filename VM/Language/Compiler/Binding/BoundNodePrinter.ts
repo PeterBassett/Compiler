@@ -266,11 +266,16 @@ export class BoundNodePrinter
 
     private static WriteAssignmentExpression(node : Nodes.BoundAssignmentStatement, writer : IndentedTextWriter)
     {
-        this.WriteIdentifier(writer, node.identifier.name);
+        this.WriteAssignmentTargetExpression(node.target, writer);
         this.WriteSpace(writer);
         this.WritePunctuation(writer, SyntaxType.Equals);
         this.WriteSpace(writer);
         this.WriteTo(node.expression, writer);
+    }
+
+    private static WriteAssignmentTargetExpression(node : Nodes.BoundExpression, writer : IndentedTextWriter)
+    {
+        this.WriteTo(node, writer);
     }
 
     private static WriteUnaryExpression(node : Nodes.BoundUnaryExpression, writer : IndentedTextWriter)

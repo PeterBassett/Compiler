@@ -1,4 +1,4 @@
-import { Diagnostics } from "../Diagnostics/Diagnostics";
+import { Diagnostics, DiagnosticType } from "../Diagnostics/Diagnostics";
 import CompilationUnit from "../Syntax/CompilationUnit";
 import * as AST from "../Syntax/AST/ASTNode";
 import { SyntaxType } from "../Syntax/SyntaxType";
@@ -150,10 +150,6 @@ export default class Binder
                 return this.BindReturnStatement(syntax); 
             case "StructDeclarationStatementSyntax" :     
                 return this.BindStructDeclarationStatement(syntax);             
-            case "SetStatementSyntax":               
-                return this.BindSetStatement(syntax);
-            case "DereferenceAssignmentStatementSyntax":               
-                return this.BindDereferenceAssignmentStatementSyntax(syntax);  
             case "AssignmentStatementSyntax":               
                 return this.BindAssignmentStatement(syntax);                                
             case "ElseStatementSyntax" :
@@ -607,7 +603,10 @@ export default class Binder
                 return this.BindCallExpression(syntax);                        
             case "GetExpressionSyntax":               
                 return this.BindGetExpression(syntax);              
-            case "TypeNameSyntax":
+            case "DereferenceExpressionSyntax":
+                return this.BindDereferenceExpression(syntax);
+            case "TypeNameSyntax":             
+            case "ArrayIndexExpressionSyntax":            
                 throw new Error("Not Implemented");
         }
     }
@@ -621,13 +620,16 @@ export default class Binder
             return new Nodes.BoundErrorExpression();
         }
 
+        //if(left.type.isPointer)
+        //{
+            // we will automatically dereference one
+        //}
         const structDetails = left.type.structDetails!;
         const structName = structDetails.structName;
         const result = structDetails.get(syntax.name.lexeme);
 
         if(!result)
         {                        
-
             this.diagnostics.reportUndefinedStructMember(structName, syntax.name.lexeme, syntax.span());
             return new Nodes.BoundErrorExpression();        
         }   
@@ -635,25 +637,7 @@ export default class Binder
         return new Nodes.BoundGetExpression(left, result.type, result.name);
     }
 
-    private BindSetStatement(syntax: AST.SetStatementSyntax) : Nodes.BoundStatement {
-        const left = this.BindGetExpression(syntax.left) as Nodes.BoundGetExpression;
-        const right = this.BindExpression(syntax.right);
-        
-        const convertedExpression = this.BindConversion(syntax.right.span(), right, left.type);
-
-        return new Nodes.BoundSetStatement(left, convertedExpression);
-    }
-
-    private BindDereferenceAssignmentStatementSyntax(syntax: AST.DereferenceAssignmentStatementSyntax) : Nodes.BoundStatement {
-        const left = this.BindExpression(syntax.left);
-        const right = this.BindExpression(syntax.right);
-        
-        const convertedExpression = this.BindConversion(syntax.right.span(), right, left.type);
-
-        return new Nodes.BoundDereferenceAssignmentStatement(left, convertedExpression);
-    }
-
-    BindNameExpression(syntax: AST.NameExpressionSyntax): Nodes.BoundExpression 
+    BindNameExpression(syntax: AST.NameExpressionSyntax): Nodes.BoundVariableExpression 
     {
         const name = syntax.identifierToken.lexeme;
 
@@ -661,7 +645,7 @@ export default class Binder
         {
             // This means the token was inserted by the parser. We already
             // reported error so we can just return an error expression.
-            return new Nodes.BoundLiteralExpression(0, PredefinedValueTypes.Unit);
+            return new Nodes.BoundVariableExpression(Identifier.Undefined);
         }
 
         const identifier = this.scope.FindVariable(name);
@@ -669,7 +653,7 @@ export default class Binder
         if (!identifier)
         {
             this.diagnostics.reportUndefinedName(syntax.identifierToken.span, name);
-            return new Nodes.BoundLiteralExpression(0, PredefinedValueTypes.Unit);
+            return new Nodes.BoundVariableExpression(Identifier.Undefined);
         }
 
         return new Nodes.BoundVariableExpression(identifier);
@@ -846,20 +830,69 @@ export default class Binder
 
     private BindAssignmentStatement(syntax : AST.AssignmentStatementSyntax) : Nodes.BoundStatement
     {
-        const identifier = this.scope.FindVariable(syntax.identifierToken.lexeme);
-        
-        const expression = this.BindExpression(syntax.expression);
-        if(identifier == Identifier.Undefined)
+        switch(syntax.target.kind)
         {
-            this.diagnostics.reportUndefinedName(syntax.identifierToken.span, syntax.identifierToken.lexeme);
-            // we dont error here. An undefined identifier shouldnt stop up from type checking.            
+            case "NameExpressionSyntax":
+                return this.BindAssignToVariableStatement(syntax.target, syntax.expression);
+            case "GetExpressionSyntax":
+                return this.BindAssignToGetExpressionStatement(syntax.target, syntax.expression);
+            case "DereferenceExpressionSyntax":
+                return this.BindAssignToDereferenceExpressionStatement(syntax.target, syntax.expression);                
+            case "ArrayIndexExpressionSyntax":
+                return this.BindAssignToArrayIndexExpressionStatement(syntax.target, syntax.expression);                
         }
+    }
 
-        const convertedExpression = this.BindConversion(syntax.expression.span(), expression, identifier.type);
+    private BindAssignToVariableStatement(target: AST.NameExpressionSyntax, source : AST.ExpressionNode): Nodes.BoundStatement {
+        const identifier = this.BindNameExpression(target);
+        const right = this.BindExpression(source);
+        const convertedExpression = this.BindConversion(source.span(), right, identifier.type);
 
         return new Nodes.BoundAssignmentStatement(identifier, convertedExpression);
     }
 
+    BindAssignToGetExpressionStatement(target: AST.GetExpressionSyntax, expression: AST.ExpressionNode): Nodes.BoundStatement 
+    {
+        const left = this.BindGetExpression(target);
+        const right = this.BindExpression(expression);
+
+        const convertedExpression = this.BindConversion(expression.span(), right, left.type);
+
+        return new Nodes.BoundAssignmentStatement(left, convertedExpression);
+    }
+
+    BindAssignToDereferenceExpressionStatement(target: AST.DereferenceExpressionSyntax, expression: AST.ExpressionNode): Nodes.BoundStatement 
+    {
+        const left = this.BindDereferenceExpression(target);
+        const right = this.BindExpression(expression);
+
+        const convertedExpression = this.BindConversion(expression.span(), right, left.type);
+
+        return new Nodes.BoundAssignmentStatement(left, convertedExpression);
+    }
+
+    BindDereferenceExpression(syntax: AST.DereferenceExpressionSyntax) : Nodes.BoundExpression{
+        const operand = this.BindExpression(syntax.operand);
+        if(syntax.operatorToken.kind !== SyntaxType.Star)
+        {
+            this.diagnostics.report("Dereference expression received with incorrect operator syntax", DiagnosticType.AssignmentRequiresLValue, syntax.operatorToken.span);
+            return new Nodes.BoundErrorExpression();            
+        }
+
+        if(!operand.type.isPointer)
+        {
+            this.diagnostics.report("Cannot Dereference Non Pointer Type", DiagnosticType.AssignmentRequiresLValue, syntax.operatorToken.span);
+            return new Nodes.BoundErrorExpression();            
+        }
+
+        return new Nodes.BoundDereferenceStatement(operand);
+    }
+
+    BindAssignToArrayIndexExpressionStatement(target: AST.ArrayIndexExpressionSyntax, expression: AST.ExpressionNode): Nodes.BoundExpression
+    {
+        throw new Error("Arrays not implemented yet.");
+    }
+    
     private BindErrorStatement() : Nodes.BoundStatement
     {
         return new Nodes.BoundExpressionStatement(new Nodes.BoundErrorExpression());
