@@ -583,8 +583,8 @@ func main() : int
         BlockStatement
             VariableDeclaration<ap:*int>
                 LiteralExpression<0:*int>
-            DereferenceAssignmentStatement
-                UnaryExpression<*>
+            AssignmentStatement
+                DereferenceExpression
                     VariableExpression<ap:*int>
                 LiteralExpression<6:int>
             ReturnStatement
@@ -602,12 +602,12 @@ func main() : int
         BlockStatement
             VariableDeclaration<ap:*int>
                 LiteralExpression<0:*int>
-            DereferenceAssignmentStatement
-                UnaryExpression<*>
+            AssignmentStatement
+                DereferenceExpression
                     VariableExpression<ap:*int>
                 LiteralExpression<6:int>
             ReturnStatement
-                UnaryExpression<*>
+                DereferenceExpression
                     VariableExpression<ap:*int>
 `],
 [`func main() : int
@@ -632,13 +632,69 @@ func main() : int
                 VariableExpression<ap:*int>
                 UnaryExpression<&>
                     VariableExpression<a:int>
-            DereferenceAssignmentStatement
-                UnaryExpression<*>
+            AssignmentStatement
+                DereferenceExpression
                     VariableExpression<ap:*int>
                 LiteralExpression<6:int>
             ReturnStatement
                 VariableExpression<a:int>
-`]
+`],
+[
+`func main() : int
+{
+    let ap : *int = null;
+    
+    if(ap != null)
+        return 1;
+    else
+        return 0;
+}`, 
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<ap:*int>
+                LiteralExpression<0:*int>
+            IfStatement
+                Condition
+                    BinaryExpression<!=>
+                        VariableExpression<ap:*int>
+                        LiteralExpression<0:null>
+                TrueBranch
+                    ReturnStatement
+                        LiteralExpression<1:int>
+                FalseBranch
+                    ReturnStatement
+                        LiteralExpression<0:int>
+`],
+[
+`func main() : int
+{
+    let ap : *int = null;
+    
+    if(ap == null)
+        return 1;
+    else
+        return 0;
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<ap:*int>
+                LiteralExpression<0:*int>
+            IfStatement
+                Condition
+                    BinaryExpression<==>
+                        VariableExpression<ap:*int>
+                        LiteralExpression<0:null>
+                TrueBranch
+                    ReturnStatement
+                        LiteralExpression<1:int>
+                FalseBranch
+                    ReturnStatement
+                        LiteralExpression<0:int>
+`] 
 /*,[`
 class test
 {

@@ -6,6 +6,7 @@ import { BoundBinaryOperator } from "./BoundNode";
 import { SyntaxType } from "../Syntax/SyntaxType";
 import { isNonEmpty } from "../../../misc/NonEmptyArray";
 import { Identifier } from "../../Scope/DefinitionScope";
+import { BoundNodeVisitorBase } from "./BoundNodeVisitorBase";
 
 export default class BoundTreeTransformBase
 {
@@ -328,6 +329,11 @@ export default class BoundTreeTransformBase
                 const expr = this.transformGetExpression(expression as Nodes.BoundGetExpression);
                 return (expr !== expression) ? expr : expression;                
             }
+            case Nodes.BoundNodeKind.DereferenceExpression:
+            {
+                const expr = this.transformDereferenceExpression(expression as Nodes.BoundDereferenceExpression);
+                return (expr !== expression) ? expr : expression;                                
+            }
             default:
                 throw new Error(`Unhandled expression type ${expression.kind}`);
         }
@@ -418,26 +424,14 @@ export default class BoundTreeTransformBase
 
         return expression;
     }
-/*
-    protected transformSetStatement(statement: Nodes.BoundSetStatement) : Nodes.BoundStatement {
-        const left = this.transformExpression(statement.left);       
-        const right = this.transformExpression(statement.right);         
 
-        if(left !== statement.left ||
-            right != statement.right)
-            return new Nodes.BoundSetStatement(left as Nodes.BoundGetExpression, right);
+    protected transformDereferenceExpression(expression: Nodes.BoundDereferenceExpression) : Nodes.BoundExpression 
+    {
+        const operand = this.transformExpression(expression.operand);        
 
-        return statement;
-    }    
+        if(operand !== expression.operand)
+            return new Nodes.BoundDereferenceExpression(operand, operand.type);
 
-    protected transformDereferenceAssignmentStatement(statement: Nodes.BoundDereferenceAssignmentStatement) : Nodes.BoundStatement {
-        const left = this.transformExpression(statement.left);
-        const right = this.transformExpression(statement.right);
-
-        if(left !== statement.left ||
-            right != statement.right)
-            return new Nodes.BoundDereferenceAssignmentStatement(left, right);
-
-        return statement;        
-    }*/
+        return expression;
+    }
 }

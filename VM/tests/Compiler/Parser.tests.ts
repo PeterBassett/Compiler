@@ -759,8 +759,8 @@ func main() : int
             VariableDeclarationSyntax<ap>
                 TypeNameSyntax<*int>
                     TypeNameSyntax<int>
-            DereferenceAssignmentStatementSyntax
-                UnaryExpressionSyntax<*>
+            AssignmentStatementSyntax
+                DereferenceExpressionSyntax
                     NameExpressionSyntax<ap>
                 IntegerLiteralExpressionSyntax<6>
             ReturnStatementSyntax
@@ -791,13 +791,168 @@ func main() : int
                 NameExpressionSyntax<ap>
                 UnaryExpressionSyntax<&>
                     NameExpressionSyntax<a>
-            DereferenceAssignmentStatementSyntax
-                UnaryExpressionSyntax<*>
+            AssignmentStatementSyntax
+                DereferenceExpressionSyntax
                     NameExpressionSyntax<ap>
                 IntegerLiteralExpressionSyntax<6>
             ReturnStatementSyntax
                 NameExpressionSyntax<a>
-`]
+`],
+[
+`struct item 
+{
+    value : int;    
+    next : *item;
+}
+
+func main() : int
+{
+    let root : item;
+    let a : *item;
+    
+    a = &root;
+    (*a).value = 51;
+
+    return root.value;
+}`, 
+`CompilationUnitSyntax
+    StructDeclarationStatementSyntax<item>
+        StructMemberDeclarationStatementSyntax<value:int>
+            TypeNameSyntax<int>
+        StructMemberDeclarationStatementSyntax<next:item>
+            TypeNameSyntax<*item>
+                TypeNameSyntax<item>
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        TypeNameSyntax<int>
+        BlockStatementSyntax
+            VariableDeclarationSyntax<root>
+                TypeNameSyntax<item>
+            VariableDeclarationSyntax<a>
+                TypeNameSyntax<*item>
+                    TypeNameSyntax<item>
+            AssignmentStatementSyntax
+                NameExpressionSyntax<a>
+                UnaryExpressionSyntax<&>
+                    NameExpressionSyntax<root>
+            AssignmentStatementSyntax
+                GetExpressionSyntax<value>
+                    ParenthesizedExpressionSyntax
+                        DereferenceExpressionSyntax
+                            NameExpressionSyntax<a>
+                IntegerLiteralExpressionSyntax<51>
+            ReturnStatementSyntax
+                GetExpressionSyntax<value>
+                    NameExpressionSyntax<root>
+`
+],
+[
+`func main() : int
+{
+    let ap : *int = null;
+    
+    if(ap != null)
+        return 1;
+    else
+        return 0;
+}`, 
+`CompilationUnitSyntax
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        TypeNameSyntax<int>
+        BlockStatementSyntax
+            VariableDeclarationSyntax<ap>
+                TypeNameSyntax<*int>
+                    TypeNameSyntax<int>
+                NullLiteralExpressionSyntax
+            IfStatementSyntax
+                ParenthesizedExpressionSyntax
+                    BinaryExpressionSyntax<!=>
+                        NameExpressionSyntax<ap>
+                        NullLiteralExpressionSyntax
+                ReturnStatementSyntax
+                    IntegerLiteralExpressionSyntax<1>
+                ElseStatementSyntax
+                    ReturnStatementSyntax
+                        IntegerLiteralExpressionSyntax<0>
+`],
+[
+`func main() : int
+{
+    let ap : *int = null;
+    
+    if(ap == null)
+        return 1;
+    else
+        return 0;
+}`,
+`CompilationUnitSyntax
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        TypeNameSyntax<int>
+        BlockStatementSyntax
+            VariableDeclarationSyntax<ap>
+                TypeNameSyntax<*int>
+                    TypeNameSyntax<int>
+                NullLiteralExpressionSyntax
+            IfStatementSyntax
+                ParenthesizedExpressionSyntax
+                    BinaryExpressionSyntax<==>
+                        NameExpressionSyntax<ap>
+                        NullLiteralExpressionSyntax
+                ReturnStatementSyntax
+                    IntegerLiteralExpressionSyntax<1>
+                ElseStatementSyntax
+                    ReturnStatementSyntax
+                        IntegerLiteralExpressionSyntax<0>
+`],
+[`
+struct item 
+{
+    value : int;    
+    next : *item;
+}
+
+func main() : int
+{
+    let root : item;
+    let a : *item;
+    
+    a = &root;
+    (*a).value = 51;
+
+    return root.value;
+}`, 
+`CompilationUnitSyntax
+    StructDeclarationStatementSyntax<item>
+        StructMemberDeclarationStatementSyntax<value:int>
+            TypeNameSyntax<int>
+        StructMemberDeclarationStatementSyntax<next:item>
+            TypeNameSyntax<*item>
+                TypeNameSyntax<item>
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        TypeNameSyntax<int>
+        BlockStatementSyntax
+            VariableDeclarationSyntax<root>
+                TypeNameSyntax<item>
+            VariableDeclarationSyntax<a>
+                TypeNameSyntax<*item>
+                    TypeNameSyntax<item>
+            AssignmentStatementSyntax
+                NameExpressionSyntax<a>
+                UnaryExpressionSyntax<&>
+                    NameExpressionSyntax<root>
+            AssignmentStatementSyntax
+                GetExpressionSyntax<value>
+                    ParenthesizedExpressionSyntax
+                        DereferenceExpressionSyntax
+                            NameExpressionSyntax<a>
+                IntegerLiteralExpressionSyntax<51>
+            ReturnStatementSyntax
+                GetExpressionSyntax<value>
+                    NameExpressionSyntax<root>
+`],
     ].forEach((item) => {
         it(`should parse source : ` + item[0], () => {
             let text = item[0] as string;

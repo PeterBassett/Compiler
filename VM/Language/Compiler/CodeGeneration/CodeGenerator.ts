@@ -115,20 +115,20 @@ export default class CodeGenerator
         variables.forEach(v => 
         {
             const expression = v.initialiser;
-
+            const valueType = v.variable.type.type;
             if(expression.kind == Nodes.BoundNodeKind.LiteralExpression)
             {                
                 let exp = expression as Nodes.BoundLiteralExpression;           
-                this.data(v.variable.type.type, v.variable.name, exp.value, `Global variable Declaration for ${v.variable.name}`);
+                this.data(valueType, v.variable.name, exp.value, `Global variable Declaration for ${v.variable.name}`);
             }            
             else
             {
                 this.setCurrentSection(this.dataSection);
-                this.data(v.variable.type.type, v.variable.name, 0, `Global variable Declaration for ${v.variable.name}`);
+                this.data(valueType, v.variable.name, 0, `Global variable Declaration for ${v.variable.name}`);
 
                 this.setCurrentSection(this.initSection);
                 this.writeExpression(expression);                
-                const str = this.typedMnemonic(v.variable.type.type, "STR");
+                const str = this.typedMnemonic(valueType, "STR");
                 this.instruction(`${str} R1 .${v.variable.name}`, "Initialise global variable");
             }
         });
@@ -252,9 +252,9 @@ export default class CodeGenerator
             case Nodes.BoundNodeKind.VariableDeclaration:
             {
                 let stmt = statement as Nodes.BoundVariableDeclaration;            
-
+                let valueType = stmt.variable.type.type; 
                 this.comment(`declare variable ${stmt.variable.name}`);
-                if(stmt.variable.type.type != ValueType.Struct)
+                if(valueType != ValueType.Struct)
                 {
                     if(stmt.initialiser)
                     {
@@ -274,10 +274,10 @@ export default class CodeGenerator
 
                 this.comment(`reserve space on stack for variable ${stmt.variable.name} type ${stmt.variable.type.name}`);                            
 
-                if(stmt.variable.type.type != ValueType.Struct)
+                if(valueType != ValueType.Struct)
                 {
-                    const push = this.typedMnemonic(stmt.variable.type.type, "PUSH");
-                    const type = this.mnemonicForType(stmt.variable.type.type);
+                    const push = this.typedMnemonic(valueType, "PUSH");
+                    const type = this.mnemonicForType(valueType);
                     this.instruction(`${push} R1`, `reserve space for a ${type} variable ${stmt.variable.name}`);                
                 }
                 else
@@ -315,74 +315,11 @@ export default class CodeGenerator
                 }
                 break;
             }    
-            /* TO BE FOLDED INTO ADDISNGMENT IN GENERAL              
-            case Nodes.BoundNodeKind.SetStatement:
-            {
-                let stmt = statement as Nodes.BoundSetStatement;
-
-                const memberRoot = this.structMemberRoot(stmt.left);
-
-                const spec = this.variableMap.peek()[memberRoot.variable.name];
-
-                let offset = this.stackOffset + spec.offset;                                     
-
-                const memberPath = this.getExpressionPath(stmt.left);  
-                const member = this.structMember(memberRoot.variable.type, memberPath);                
-                const memberType = member.type;
-                const memberSize = this.typeSize(memberType);                            
-                
-                if(memberType.type === ValueType.Struct)
-                {
-                    const sourceRoot = this.structMemberRoot(stmt.right as Nodes.BoundGetExpression);
-                    
-                    const sourceSpec = this.variableMap.peek()[sourceRoot.variable.name];
-                    let sourceStackOffset = this.stackOffset + sourceSpec.offset;   
-
-                    const sourceMemberPath = this.getExpressionPath(stmt.right as Nodes.BoundGetExpression);
-                    const source = this.structMember(sourceRoot.variable.type, sourceMemberPath);
-                    
-                    for (let i = 0; i < memberSize; i++)
-                    {
-                        this.instruction(`MOVb [R6-${offset + member.offset + i}] [R6-${sourceStackOffset + source.offset + i}]`);                    
-                    }                                
-                }
-                else
-                {
-                    this.writeExpression(stmt.right);
-                    
-                    const mov = this.typedMnemonic(memberType.type, "MOV");
-                    const dest = this.getDataReference(memberRoot.variable)(member.offset, 0);                    
-                    this.instruction(`${mov} ${dest} R1`);                
-                }
-
-                break;
-            } */
             case Nodes.BoundNodeKind.AssignmentStatement:
             {
                 this.writeAssignmentStatement(statement as Nodes.BoundAssignmentStatement);                 
                 break;
             }
-            /* TO BE FOLDED INTO ASSIGNMENT IN GENERAL
-            case Nodes.BoundNodeKind.DereferenceAssignmentStatement:
-            {
-                let stmt = statement as Nodes.BoundDereferenceAssignmentStatement;
-
-                const type = stmt.left.type.type;
-                const push = this.typedMnemonic(type, "PUSH");
-                const pop = this.typedMnemonic(type, "POP");
-                const mov = this.typedMnemonic(type, "MOV");
-                const swap = this.typedMnemonic(type, "SWAP");
-
-                this.writeExpression(stmt.left);
-                this.instruction(`${push} R1`, "save value of the left hand expression on the stack");
-                this.writeExpression(stmt.right);
-                this.instruction(`${pop} R2`, "pop left hand result from the stack into R2");
-
-                this.instruction(`${swap} R1 R2`);
-                this.instruction(`${mov} [R1] R2`);
-                break;   
-            }         
-            */
             default:
             {
                 throw new Error(`Unexpected Statement Type ${statement.kind}`);
@@ -392,17 +329,168 @@ export default class CodeGenerator
 
     private writeAssignmentStatement(statement: Nodes.BoundAssignmentStatement) 
     {
+        if(statement.target.type.type == ValueType.Struct)
+        {
+            /*
+            let spec = this.variableMap.peek()[identifier.name];                    
+
+            const dest = this.getDataReference(identifier);
+            const source = this.getStructDataReference(expression);
+
+            this.emitStackCopy(dest, source, spec.size);
+*/
+
+            const source = this.getStructDataReference(statement.expression);
+            
+            this.writeAddressExpression(statement.target);
+            
+            const size = this.typeSize(statement.target.type);
+            for (let i = 0; i < size; i++)
+                this.instruction(`MOVb [R1+${i}] ${source(i, 0)}`);                    
+        }
+        else
+        {
+            this.writeExpression(statement.expression);
+            const push = this.typedMnemonic(statement.target.type.type, "PUSH");
+            this.instruction(`${push} R1`);
+            this.writeAddressExpression(statement.target);
+            const pop = this.typedMnemonic(statement.target.type.type, "pop");
+            this.instruction(`${pop} R2`);
+
+            const mov = this.typedMnemonic(statement.target.type.type, "MOV");
+            this.instruction(`${mov} [R1] R2`);
+        }
+    }
+
+    writeAddressExpression(expression: Nodes.BoundExpression) 
+    {
+        switch (expression.kind)
+        {
+            case Nodes.BoundNodeKind.VariableExpression: 
+            {
+                const variable = expression as Nodes.BoundVariableExpression;
+                const address = this.getDataReference(variable.variable, false);
+                this.instruction(`MOV R1, ${address(0,0)}`, "value at address");       
+                break;           
+            }
+            case Nodes.BoundNodeKind.DereferenceExpression: 
+            {
+                const deref = expression as Nodes.BoundDereferenceExpression;
+                this.writeAddressExpression(deref.operand);
+                if(deref.operand.type.pointerToType && !deref.operand.type.pointerToType.isStruct)
+                    this.instruction("MOV R1, [R1]");
+                break;
+            }
+            case Nodes.BoundNodeKind.GetExpression:
+            {
+                {
+                    this.comment("------------------------------------------");
+                    this.comment("START - 1");
+                const target = expression as Nodes.BoundGetExpression;
+                const memberRoot = this.structMemberRoot(target);
+                this.writeAddressExpression(memberRoot);
+                                
+                const spec = this.variableMap.peek()[memberRoot.variable.name];
+
+                const memberPath = this.getExpressionPath(target);  
+
+                const member = this.structMember(memberRoot.variable.type, memberPath);
+
+                if(member.offset > 0)
+                {
+                    this.instruction(`MVI R2 ${member.offset}`);
+                    this.instruction(`ADD R1 R2`);
+                }
+                }
+                /*{
+                    this.comment("------------------------------------------");
+                    this.comment("START - 2");
+
+                const target = expression as Nodes.BoundGetExpression;
+                const memberRoot = this.structMemberRoot(target);
+                const spec = this.variableMap.peek()[memberRoot.variable.name];
+                const offset = this.stackOffset + spec.offset;                                     
+                const memberPath = this.getExpressionPath(target);  
+                const member = this.structMember(memberRoot.variable.type, memberPath);                
+                this.instruction(`MOV R1, ` + this.getDataReference(memberRoot.variable, false)(member.offset, 0));
+                }
+                this.comment("------------------------------------------");
+                    this.comment("END");
+                //this.instruction(`MOV R1, R6-${offset + member.offset}`);                  */
+                break;
+            }
+            case Nodes.BoundNodeKind.ArrayIndex:
+            default:
+                throw new Error("Not an lvalue");
+        }
+    }
+
+    /*
+
         switch(statement.target.kind)
         {
             case Nodes.BoundNodeKind.VariableExpression:
                 return this.writeAssignmentToVariable(statement.target as Nodes.BoundVariableExpression, statement.expression);
             case Nodes.BoundNodeKind.GetExpression:
+                return this.writeAssignmentToGetExpression(statement.target as Nodes.BoundGetExpression, statement.expression);
             case Nodes.BoundNodeKind.DereferenceExpression:
+                return this.writeAssignmentToDereferenceExpression(statement.target as Nodes.BoundDereferenceExpression, statement.expression);
             case Nodes.BoundNodeKind.ArrayIndex:
             default:
                 throw new Error("Not implemented");                
         }
 
+    writeAssignmentToDereferenceExpression(target: Nodes.BoundDereferenceExpression, expression: Nodes.BoundExpression) {
+        const type = target.type.type;
+        const push = this.typedMnemonic(type, "PUSH");
+        const pop = this.typedMnemonic(type, "POP");
+        const mov = this.typedMnemonic(type, "MOV");
+
+        this.writeExpression(target);
+        this.instruction(`${push} R1`, "save value of the left hand expression on the stack");
+        this.writeExpression(expression);
+        this.instruction(`${pop} R2`, "pop left hand result from the stack into R2");
+
+        this.instruction(`SWAP R1 R2`);
+        this.instruction(`${mov} [R1] R2`);
+    }
+    
+    writeAssignmentToGetExpression(target: Nodes.BoundGetExpression, expression: Nodes.BoundExpression) {
+        
+        const memberRoot = this.structMemberRoot(target);
+
+        const spec = this.variableMap.peek()[memberRoot.variable.name];
+
+        let offset = this.stackOffset + spec.offset;                                     
+
+        const memberPath = this.getExpressionPath(target);  
+        const member = this.structMember(memberRoot.variable.type, memberPath);                
+        const memberType = member.type;
+        const memberSize = this.typeSize(memberType);                            
+        
+        if(memberType.type === ValueType.Struct)
+        {
+            const sourceRoot = this.structMemberRoot(expression as Nodes.BoundGetExpression);
+            
+            const sourceSpec = this.variableMap.peek()[sourceRoot.variable.name];
+            let sourceStackOffset = this.stackOffset + sourceSpec.offset;   
+
+            const sourceMemberPath = this.getExpressionPath(expression as Nodes.BoundGetExpression);
+            const source = this.structMember(sourceRoot.variable.type, sourceMemberPath);
+            
+            for (let i = 0; i < memberSize; i++)
+            {
+                this.instruction(`MOVb [R6-${offset + member.offset + i}] [R6-${sourceStackOffset + source.offset + i}]`);                    
+            }                                
+        }
+        else
+        {
+            this.writeExpression(expression);
+            
+            const mov = this.typedMnemonic(memberType.type, "MOV");
+            const dest = this.getDataReference(memberRoot.variable)(member.offset, 0);                    
+            this.instruction(`${mov} ${dest} R1`);                
+        }
     }
 
     writeAssignmentToVariable(target: Nodes.BoundVariableExpression, expression: Nodes.BoundExpression) 
@@ -428,7 +516,7 @@ export default class CodeGenerator
             const dest = this.getDataReference(identifier);
             this.instruction(`${mov} ${dest(0, 0)} R1`, `assign to ${identifier.name} on the stack`); 
         }
-    }
+    }*/
 
     private writeStructComment(stmt: Nodes.BoundVariableDeclaration) 
     {
@@ -531,8 +619,15 @@ export default class CodeGenerator
 
     typeSize(type : Type) : number {
 
+        if(type.isPointer)
+        {
+            // pointers require 4 bytes for storage
+            return 4;
+        }
+
         switch(type.type)
         {
+            case ValueType.Pointer :
             case ValueType.Int :
                 return 4;
             case ValueType.Float :
@@ -569,6 +664,9 @@ export default class CodeGenerator
     structMember(type:Type, memberPath:string[]) : { type: Type, offset : number} {
         let offset = 0;
 
+        while(type.pointerToType)
+            type = type.pointerToType;
+
         for(let field of type.structDetails!.fields)
         {
             if(field.name == memberPath[0])
@@ -600,6 +698,7 @@ export default class CodeGenerator
         switch(type) {
             case ValueType.Boolean:
                 return "byte";
+            case ValueType.Pointer:
             case ValueType.Int:
                 return "long";
             case ValueType.Float:
@@ -617,6 +716,9 @@ export default class CodeGenerator
         switch(type) {
             case ValueType.Boolean:
                 return op + "b";
+            case ValueType.Pointer:
+            case ValueType.Null:
+            case ValueType.Struct:
             case ValueType.Int:
                 return op;
             case ValueType.Float:
@@ -646,6 +748,7 @@ export default class CodeGenerator
                 }
                 else
                 {
+                    throw new Error("GET EXPRESSION");
                     /*
                     for (let i = 0; i < memberSize; i++)
                     {
@@ -668,6 +771,7 @@ export default class CodeGenerator
 
                 switch(exp.type.type)
                 {
+                    case ValueType.Pointer :
                     case ValueType.Int :
                         this.instruction(`${mvi} R1 ${exp.value}`, "Loading literal int");
                         break;
@@ -684,9 +788,11 @@ export default class CodeGenerator
                         // calculate size of structure
                         const size = this.structSize(exp.type);
                         // reserve space on the stack for this
-                        this.instruction(`SUB SP ${size}`, "Reserve space on stack for struct");                    
-                        
-                        break;                        
+                        this.instruction(`SUB SP ${size}`, "Reserve space on stack for struct");                                            
+                        break;
+                    case ValueType.Null: 
+                        this.instruction(`${mvi} R1 0`, "Loading literal NULL");
+                        break;
                     default : 
                         this.diagnostics.reportUnsupportedType(exp.type.type);
                         this.instruction("MVI R1 0", "PLACEHOLDER LOAD");                         
@@ -718,31 +824,25 @@ export default class CodeGenerator
             {
                 const exp = expression as Nodes.BoundVariableExpression;
 
-                const mov = this.typedMnemonic(exp.variable.type.type, "MOV");
-
-                if(exp.variable.variable!.isParameter)
-                {                    
-                    const spec = this.variableMap.peek()[exp.variable.name];
-                    // find location of variable on the stack.
-                    // skip over the RETurn IP and the previous base pointer
-                    let offset = this.stackOffset + spec.offset;                     
-                    this.instruction(`${mov} R1 [R6+${offset}]`, `read parameter ${exp.variable.name} from the stack`);
-                }
-                else if(exp.variable.variable!.isGlobal)
+                if(exp.variable.type.type != ValueType.Struct)
                 {
-                    const ldr = this.typedMnemonic(exp.variable.type.type, "LDR");
-                    this.instruction(`${ldr} R1 .${exp.variable.name}`, "read global variable");   
-                    //this.instruction(`${mov} R1 .${exp.variable.name}`, "read global variable");    
+                    const mov = this.typedMnemonic(exp.variable.type.type, "MOV");
+
+                    const description = this.getDataReferenceDescription(exp.variable, true);
+                    const address = this.getDataReference(exp.variable, true);
+
+                    this.instruction(`${mov} R1 ${address(0,0)}`, `read ${description.description} ${exp.variable.name} from the ${description.source}`);
                 }
                 else
                 {
-                    const spec = this.variableMap.peek()[exp.variable.name];
-                    // find the variable on the stack.
-                    // since we are going down the stack below the base pointer
-                    // we need to use both the offset and the size of the variable
-                    let offset = spec.offset + spec.size; 
-                    this.instruction(`${mov} R1 [R6-${offset}]`, `read variable ${exp.variable.name} from the stack`);
+                    const mov = this.typedMnemonic(ValueType.Pointer, "MOV");
+
+                    const description = this.getDataReferenceDescription(exp.variable, false);
+                    const address = this.getDataReference(exp.variable, false);
+
+                    this.instruction(`${mov} R1, ${address(0,0)}`, `read ${description.description} ${exp.variable.name} from the ${description.source}`);
                 }
+
                 break;
             }                  
             case Nodes.BoundNodeKind.UnaryExpression:
@@ -762,11 +862,22 @@ export default class CodeGenerator
                 this.writeConversionExpression(expression as Nodes.BoundConversionExpression);   
                 break;
             }            
+            case Nodes.BoundNodeKind.DereferenceExpression:
+            {
+                this.writeDereferenceExpression(expression as Nodes.BoundDereferenceExpression);
+                break;
+            }        
             default:
             {
                 throw new Error(`Unexpected Expression Type ${expression.kind}`);
             }
         }
+    }
+
+    writeDereferenceExpression(expression: Nodes.BoundDereferenceExpression) {
+        const variable = expression.operand as Nodes.BoundVariableExpression;
+        const address = this.getDataReference(variable.variable, true);
+        this.instruction(`MOV R1 ${address(0,0)}`, "value at address");                 
     }
     
     private writeStructReturnTypeSetup(exp: Nodes.BoundCallExpression) {
@@ -887,7 +998,7 @@ export default class CodeGenerator
             }
             default:
             {
-                throw new Error("Unhandled expression type")   ;
+                throw new Error("Unhandled expression type");
             }            
         }
     }
@@ -920,6 +1031,39 @@ export default class CodeGenerator
             return (i, c) => addAddress(`R6-${offset-i}`);
         }
     }
+
+    getDataReferenceDescription(identifier : Identifier, address:boolean = true) : { description : string, source :string }
+    {
+        const addAddress = (add:string) => {
+            if(address)
+                return `address of ${add}`;
+            return add;
+        };
+
+        // assignments for structs are always simple byte copys
+        // from a variable, parameter or global.
+        if(identifier.variable!.isParameter)
+        {
+            return {
+                description : addAddress(`parameter`),
+                source : `stack`
+            };
+        }
+        else if(identifier.variable && identifier.variable!.isGlobal)
+        {    
+            return {
+                description : addAddress(`global variable`),
+                source : `data region`
+            };       
+        }
+        else
+        {
+            return {
+                description : addAddress(`local variable`),
+                source : `stack`
+            };
+        }
+    }
     
     getExpressionPath(left: Nodes.BoundGetExpression) : string[]
     {
@@ -933,6 +1077,7 @@ export default class CodeGenerator
         let current : Nodes.BoundExpression = left;
         let last = current;
 
+        // ick, this needs serious work to find the underlying model at play.
         while(current)
         {
             last = current;
@@ -945,6 +1090,16 @@ export default class CodeGenerator
             if(current && current.kind === Nodes.BoundNodeKind.VariableExpression)
             {
                 return current as Nodes.BoundVariableExpression;
+            }
+
+            if(current && current.kind === Nodes.BoundNodeKind.DereferenceExpression)
+            {
+                const t = current as Nodes.BoundDereferenceExpression;
+            
+                if(t && t.operand.kind === Nodes.BoundNodeKind.VariableExpression)
+                {
+                    return t.operand as Nodes.BoundVariableExpression;
+                }
             }
 
             if(current.id === last.id)
@@ -1086,18 +1241,9 @@ export default class CodeGenerator
                 const v = expression.operand as Nodes.BoundVariableExpression;
                 const address = this.getDataReference(v.variable, false);
 
-                this.instruction(`MOV R1 ${address(0,0)}`, "address of");                                         
+                this.instruction(`MOV R1, ${address(0,0)}`, "address of");                                         
                 break;
-            }                
-            case Nodes.BoundUnaryOperatorKind.Dereference:
-            {
-                const v = expression.operand as Nodes.BoundVariableExpression;
-                const address = this.getDataReference(v.variable, true);
-                
-                this.instruction(`MOV R1 ${address(0,0)}`, "value at address");                 
-
-                break;
-            }              
+            }                      
             default:
             {                
                 throw new Error(`Unexpected Unary Expression Type ${expression.kind}`);

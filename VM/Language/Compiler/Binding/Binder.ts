@@ -885,7 +885,7 @@ export default class Binder
             return new Nodes.BoundErrorExpression();            
         }
 
-        return new Nodes.BoundDereferenceStatement(operand);
+        return new Nodes.BoundDereferenceExpression(operand, operand.type.pointerToType!);
     }
 
     BindAssignToArrayIndexExpressionStatement(target: AST.ArrayIndexExpressionSyntax, expression: AST.ExpressionNode): Nodes.BoundExpression

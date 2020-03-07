@@ -239,7 +239,7 @@ __entrypoint:
 main:
     PUSH R6
     MOV R6 SP
-    LDR R1 .secondsInAYear
+    MOV R1 [.secondsInAYear]
 main_epilogue:
     MOV SP R6
     POP R6

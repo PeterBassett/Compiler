@@ -613,7 +613,15 @@ export default class Parser
         {
             const operatorToken = this.next();
             const operand = this.parseBinaryExpression(unaryOperatorPrecedence);
-            left = AST.UnaryExpressionSyntax(operatorToken, operand);
+
+            // is this a dereference?
+            if(operatorToken.kind === SyntaxType.Star)
+                // we give dereferences their own ast node type to track
+                // assignments more easily.
+                left = AST.DereferenceExpressionSyntax(operatorToken, operand);
+            else
+                // all other unary operators are handled by the same node.
+                left = AST.UnaryExpressionSyntax(operatorToken, operand);
         }
         else
         {
@@ -635,8 +643,18 @@ export default class Parser
                 break;
 
             const operatorToken = this.next();
-            const right = this.parseBinaryExpression(precedence);
-            left = AST.BinaryExpressionSyntax(left, operatorToken, right);
+
+            if (operatorToken.kind == SyntaxType.Dot) 
+            {              
+                let name = this.match(SyntaxType.Identifier);
+
+                left = AST.GetExpressionSyntax(left, operatorToken, name);       
+            }
+            else
+            {
+                const right = this.parseBinaryExpression(precedence);
+                left = AST.BinaryExpressionSyntax(left, operatorToken, right);
+            }
         }
 
         return left;

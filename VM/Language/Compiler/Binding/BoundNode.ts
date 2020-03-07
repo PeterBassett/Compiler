@@ -19,7 +19,6 @@ export enum BoundNodeKind {
     ForStatement,
     WhileStatement,
     ReturnStatement,
-    DereferenceAssignmentStatement,
     ParameterDeclaration,
     UnaryExpression,
     VariableExpression,
@@ -30,7 +29,6 @@ export enum BoundNodeKind {
     GotoStatement,
     ConditionalGotoStatement,
     ConversionExpression,
-    SetStatement,
     StructMemberDeclaration,
     StructDeclaration,
     ClassDeclaration,
@@ -181,6 +179,15 @@ export class BoundBinaryOperator
                 return op;
         }
 
+        if((leftType.isPointer && rightType.type == ValueType.Null || leftType.type == ValueType.Null || rightType.isPointer ) )
+        {
+            if(syntaxKind == SyntaxType.EqualsEquals)
+                return new BoundBinaryOperator(syntaxKind, BoundBinaryOperatorKind.Equals, leftType, PredefinedValueTypes.Boolean);
+
+            if(syntaxKind == SyntaxType.BangEquals)
+                return new BoundBinaryOperator(syntaxKind, BoundBinaryOperatorKind.NotEquals, leftType, PredefinedValueTypes.Boolean);            
+        }
+        
         return null;
     }
 }
@@ -206,14 +213,6 @@ export class BoundUnaryExpression extends BoundExpression
     public get type() : Type { return this.operator.type; }
     public readonly operator : BoundUnaryOperator;
     public readonly operand : BoundExpression;
-}
-
-export class BoundDereferenceExpression extends BoundUnaryExpression
-{
-    constructor(operand : BoundExpression)
-    {
-        super(BoundUnaryOperator.Bind(SyntaxType.Star, operand.type)!, operand); 
-    }
 }
 
 export class BoundUnaryOperator
@@ -716,13 +715,15 @@ export class BoundArrayIndexExpression extends BoundExpression
     public get type(): Type { return this.left.type; }
 }
 
-export class BoundDereferenceStatement extends BoundExpression
+export class BoundDereferenceExpression extends BoundExpression
 {    
-    constructor(public readonly left : BoundExpression)
+    private readonly _type : Type;
+    constructor(public readonly operand : BoundExpression, t : Type)
     {
         super();
+        this._type = t;
     }
 
     public get kind(): BoundNodeKind { return BoundNodeKind.DereferenceExpression; };
-    public get type(): Type { return this.left.type; }
+    public get type(): Type { return this._type; }
 }

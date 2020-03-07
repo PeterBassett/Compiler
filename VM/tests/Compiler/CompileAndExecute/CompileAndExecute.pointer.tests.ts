@@ -21,6 +21,26 @@ import run from "./CompileAndExecute.base";
 
 describe("Complie Assemble and Execute pointer", () => {
 [
+[
+`func main() : int
+{
+    let ap : *int = null;
+    
+    if(ap != null)
+        return 1;
+    else
+        return 0;
+}`, 0],
+[
+`func main() : int
+{
+    let ap : *int = null;
+    
+    if(ap == null)
+        return 1;
+    else
+        return 0;
+}`, 1],
 [`
 func main() : int
 {
