@@ -612,18 +612,25 @@ export default class Binder
     }
     
     private BindGetExpression(syntax: AST.GetExpressionSyntax) : Nodes.BoundExpression {
-        const left = this.BindExpression(syntax.left);
+        let left = this.BindExpression(syntax.left);
         
+        if(left.type.pointerToType && left.type.pointerToType.isStruct)
+        {
+            // we are dealing with a pointer to a struct. 
+            // for syntax sugar we will automatically dereference the pointer and access the 
+            // member
+
+            const operand = this.BindExpression(syntax.left);
+
+            left = new Nodes.BoundDereferenceExpression(operand, left.type.pointerToType);            
+        }
+
         if(!left.type.isStruct)
         {
             this.diagnostics.reportExpectedClass(syntax.left.span(), syntax.name.lexeme);
             return new Nodes.BoundErrorExpression();
         }
 
-        //if(left.type.isPointer)
-        //{
-            // we will automatically dereference one
-        //}
         const structDetails = left.type.structDetails!;
         const structName = structDetails.structName;
         const result = structDetails.get(syntax.name.lexeme);
