@@ -270,9 +270,9 @@ export default class CodeGenerator
             
                 const size = this.typeSize(stmt.variable.type);
                 this.variableMap.peek()[stmt.variable.name] = { offset:this.stackIndex, size:size };
-                this.stackIndex += size;                
+                this.stackIndex += size;
 
-                this.comment(`reserve space on stack for variable ${stmt.variable.name} type ${stmt.variable.type.name}`);                            
+                this.comment(`reserve space on stack for variable ${stmt.variable.name} of type ${stmt.variable.type.name}`);                            
 
                 if(valueType != ValueType.Struct)
                 {
@@ -288,7 +288,7 @@ export default class CodeGenerator
 
                     if(stmt.initialiser && stmt.initialiser.kind === Nodes.BoundNodeKind.CallExpression)
                     {
-                        this.comment(`calculate initialisation value for variable ${stmt.variable.name}`);
+                        this.comment(`Function Call initialisation value for variable ${stmt.variable.name}`);
                         this.writeExpression(stmt.initialiser);
 
                         const spec = this.variableMap.peek()[stmt.variable.name];
@@ -305,13 +305,18 @@ export default class CodeGenerator
 
                         this.comment(`OLD CODE to copy ${size} bytes on the stack`)
                         */
+
+                        this.comment(`Copy ${size} bytes on the stack`)                        
                         for (let i = 0; i < size; i++)
                         {
                             this.instruction(`MOVb [R6-${offset + i}] [R3+${size-i}]`);                    
                         } 
                     }
                     else
+                    {
+                        this.comment(`Zero ${size} bytes on the stack`)                        
                         this.zeroStackbytes(size);
+                    }
                 }
                 break;
             }    
@@ -329,6 +334,8 @@ export default class CodeGenerator
 
     private writeAssignmentStatement(statement: Nodes.BoundAssignmentStatement) 
     {
+        this.comment("-----------------------------");
+
         if(statement.target.type.type == ValueType.Struct)
         {
             /*
@@ -340,6 +347,7 @@ export default class CodeGenerator
             this.emitStackCopy(dest, source, spec.size);
 */
 
+            this.comment("Assign a struct");
             const source = this.getStructDataReference(statement.expression);
             
             this.writeAddressExpression(statement.target);
@@ -350,16 +358,23 @@ export default class CodeGenerator
         }
         else
         {
+            
+            this.comment("Assignment a non struct value");
             this.writeExpression(statement.expression);
+            
             const push = this.typedMnemonic(statement.target.type.type, "PUSH");
-            this.instruction(`${push} R1`);
+            this.instruction(`${push} R1`, "Push value to assign to stack");
             this.writeAddressExpression(statement.target);
-            const pop = this.typedMnemonic(statement.target.type.type, "pop");
-            this.instruction(`${pop} R2`);
+
+            const pop = this.typedMnemonic(statement.target.type.type, "POP");
+            this.instruction(`${pop} R2`, "Pop value to assign to R2");
 
             const mov = this.typedMnemonic(statement.target.type.type, "MOV");
-            this.instruction(`${mov} [R1] R2`);
+            this.instruction(`${mov} [R1] R2`, "Copy value in R2 to address in R1");
         }
+
+        this.comment("Assignment Complete");
+        this.comment("-----------------------------");
     }
 
     writeAddressExpression(expression: Nodes.BoundExpression) 
@@ -370,53 +385,33 @@ export default class CodeGenerator
             {
                 const variable = expression as Nodes.BoundVariableExpression;
                 const address = this.getDataReference(variable.variable, false);
-                this.instruction(`MOV R1, ${address(0,0)}`, "value at address");       
+                this.instruction(`MOV R1, ${address(0,0)}`, `address of variable ${variable.variable.name}`);       
                 break;           
             }
             case Nodes.BoundNodeKind.DereferenceExpression: 
             {
                 const deref = expression as Nodes.BoundDereferenceExpression;
                 this.writeAddressExpression(deref.operand);
-                if(deref.operand.type.pointerToType && !deref.operand.type.pointerToType.isStruct)
-                    this.instruction("MOV R1, [R1]");
+                this.instruction("MOV R1, [R1]", `Dereference pointer`);
                 break;
             }
             case Nodes.BoundNodeKind.GetExpression:
             {
-                {
-                    this.comment("------------------------------------------");
-                    this.comment("START - 1");
+                this.comment("------------------------------------------");
+                this.comment("GetExpression");
                 const target = expression as Nodes.BoundGetExpression;
-                const memberRoot = this.structMemberRoot(target);
-                this.writeAddressExpression(memberRoot);
+                this.writeAddressExpression(target.left);
                                 
-                const spec = this.variableMap.peek()[memberRoot.variable.name];
-
-                const memberPath = this.getExpressionPath(target);  
-
-                const member = this.structMember(memberRoot.variable.type, memberPath);
+                const member = this.structMember(target.left.type, [target.member]);
 
                 if(member.offset > 0)
                 {
-                    this.instruction(`MVI R2 ${member.offset}`);
-                    this.instruction(`ADD R1 R2`);
+                    //
+                    this.comment(`Reference struct member ${target.member}`);
+                    this.instruction(`MVI R2 ${member.offset}`, `Member at ${member.offset} bytes`);
+                    this.instruction(`ADD R1 R2`, "add offset");
                 }
-                }
-                /*{
-                    this.comment("------------------------------------------");
-                    this.comment("START - 2");
-
-                const target = expression as Nodes.BoundGetExpression;
-                const memberRoot = this.structMemberRoot(target);
-                const spec = this.variableMap.peek()[memberRoot.variable.name];
-                const offset = this.stackOffset + spec.offset;                                     
-                const memberPath = this.getExpressionPath(target);  
-                const member = this.structMember(memberRoot.variable.type, memberPath);                
-                this.instruction(`MOV R1, ` + this.getDataReference(memberRoot.variable, false)(member.offset, 0));
-                }
-                this.comment("------------------------------------------");
-                    this.comment("END");
-                //this.instruction(`MOV R1, R6-${offset + member.offset}`);                  */
+                this.comment("------------------------------------------");                
                 break;
             }
             case Nodes.BoundNodeKind.ArrayIndex:
@@ -1292,46 +1287,47 @@ export default class CodeGenerator
             {
                 const type = binpreamble();
                 const div = this.typedMnemonic(type, "DIV");
-                this.instruction("SWAP R1 R2", "Division requires the operand be in the oposite order");
+                this.instruction("SWAP R1 R2", "requires the operand be in the oposite order");
                 this.instruction(`${div} R1 R2`, "divide r1 by r2, save results in r1");                
                 break;   
             }    
             case Nodes.BoundBinaryOperatorKind.Equals:        
                 binpreamble();                
-                this.instruction("CMPr R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
+                this.instruction("CMPr R1 R2", "EQ : set ZF on if R1 == R2, NF on if R1 < R2");
                 this.instruction("SETE R1  ", "set R1 to 1 if ZF is on");
                 break;
             case Nodes.BoundBinaryOperatorKind.NotEquals:
                 binpreamble();    
-                this.instruction("CMPr R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
+                this.instruction("CMPr R1 R2", "NEQ : set ZF on if R1 == R2, NF on if R1 < R2");
                 this.instruction("SETNE R1 ", "set R1 if R1 <= R2, i.e. if R1 - R2 is negative");
                 break;                
             case Nodes.BoundBinaryOperatorKind.LessThan:
                 binpreamble();    
-                this.instruction("SWAP R1 R2", "Division requires the operand be in the oposite order");
-                this.instruction("CMPr R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
+                this.instruction("SWAP R1 R2", "requires the operand be in the oposite order");
+                this.instruction("CMPr R1 R2", "LT : set ZF on if R1 == R2, NF on if R1 < R2");
                 this.instruction("SETLT R1", "set R1 if R1 < R2, i.e. if R1 - R2 is negative");
                 break;
             case Nodes.BoundBinaryOperatorKind.LessThanOrEquals:
                 binpreamble();    
-                this.instruction("SWAP R1 R2", "Division requires the operand be in the oposite order");
-                this.instruction("CMPr R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
+                this.instruction("SWAP R1 R2", "requires the operand be in the oposite order");
+                this.instruction("CMPr R1 R2", "LTE : set ZF on if R1 == R2, NF on if R1 < R2");
                 this.instruction("SETLTE R1", "set R1 if R1 <= R2, i.e. if R1 - R2 is negative");
                 break;
             case Nodes.BoundBinaryOperatorKind.GreaterThan:
                 binpreamble();    
-                this.instruction("SWAP R1 R2", "Division requires the operand be in the oposite order");
-                this.instruction("CMPr R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
+                this.instruction("SWAP R1 R2", "requires the operand be in the oposite order");
+                this.instruction("CMPr R1 R2", "GT : set ZF on if R1 == R2, NF on if R1 < R2");
                 this.instruction("SETGT R1", "set R1 if R1 <= R2, i.e. if R1 - R2 is negative");
                 break;
             case Nodes.BoundBinaryOperatorKind.GreaterThanOrEquals:
                 binpreamble();    
-                this.instruction("SWAP R1 R2", "Division requires the operand be in the oposite order");
-                this.instruction("CMPr R1 R2", "set ZF on if R1 == R2, NF < 0 if R1 < R2");
+                this.instruction("SWAP R1 R2", "requires the operand be in the oposite order");
+                this.instruction("CMPr R1 R2", "GTE : set ZF on if R1 == R2, NF on if R1 < R2");
                 this.instruction("SETGTE R1", "set R1 if R1 <= R2, i.e. if R1 - R2 is negative");
                 break;      
             case Nodes.BoundBinaryOperatorKind.LogicalAnd:
             {
+                this.comment("Logical And");
                 this.writeExpression(expression.left);    
                 this.instruction("CMPZ R1", "check if left is true");
                 let clause2 = this.generateLabel("clause2");
@@ -1347,6 +1343,7 @@ export default class CodeGenerator
             }
             case Nodes.BoundBinaryOperatorKind.LogicalOr:   
             {
+                this.comment("Logical Or");
                 this.writeExpression(expression.left);    
                 this.instruction("CMPZ R1", "check if left is true");
                 let clause2 = this.generateLabel("clause2");
