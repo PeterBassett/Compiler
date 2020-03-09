@@ -76,6 +76,9 @@ struct item
 func main() : int
 {
     let root : item;
+
+    root.value = 10;
+
     let a : *item;
     
     a = &root;
@@ -113,17 +116,17 @@ func length(a : *item) : int
 
     while (a.next != null) 
     {
+        i = i + 1;
         a = a.next;
     }
 
-    return a;
+    return i;
 }
 
 func main() : int
 {
-
     let root : item;
-    let next : item;
+    let mid : item;
     let end : item;
 
     root.value = 1;

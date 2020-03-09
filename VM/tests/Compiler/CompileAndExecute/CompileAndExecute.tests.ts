@@ -60,6 +60,12 @@ describe("Complie Assemble and Execute", () => {
 }`, 50],
 [`func main() : int
 {
+    var n : int = 0;
+    n = 5;
+    return n;
+}`, 5],
+[`func main() : int
+{
     let i : int = 0;
     i = 10;
     return i;
