@@ -39,7 +39,6 @@ export default class SyntaxTreeStructureVisitor
             case "GetExpressionSyntax":
                 value = "<" + node.name.lexeme + ">";
                 break;   
-            case "AssignmentStatementSyntax":    
             case "NameExpressionSyntax":            
                 value = "<" + node.identifierToken.lexeme + ">";
                 break;            

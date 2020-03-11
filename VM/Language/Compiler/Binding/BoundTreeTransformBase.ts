@@ -6,6 +6,7 @@ import { BoundBinaryOperator } from "./BoundNode";
 import { SyntaxType } from "../Syntax/SyntaxType";
 import { isNonEmpty } from "../../../misc/NonEmptyArray";
 import { Identifier } from "../../Scope/DefinitionScope";
+import { BoundNodeVisitorBase } from "./BoundNodeVisitorBase";
 
 export default class BoundTreeTransformBase
 {
@@ -195,8 +196,6 @@ export default class BoundTreeTransformBase
                 return this.transformGotoStatement(statement as Nodes.BoundGotoStatement);
             case Nodes.BoundNodeKind.LabelStatement:
                 return this.transformLabelStatement(statement as Nodes.BoundLabelStatement);
-            case Nodes.BoundNodeKind.DereferenceAssignmentStatement:
-                return this.transformDereferenceAssignmentStatement(statement as Nodes.BoundDereferenceAssignmentStatement);
             default:
                 return statement;
         }
@@ -330,16 +329,23 @@ export default class BoundTreeTransformBase
                 const expr = this.transformGetExpression(expression as Nodes.BoundGetExpression);
                 return (expr !== expression) ? expr : expression;                
             }
+            case Nodes.BoundNodeKind.DereferenceExpression:
+            {
+                const expr = this.transformDereferenceExpression(expression as Nodes.BoundDereferenceExpression);
+                return (expr !== expression) ? expr : expression;                                
+            }
             default:
                 throw new Error(`Unhandled expression type ${expression.kind}`);
         }
     }    
 
     protected transformAssignmentExpression(expression: Nodes.BoundAssignmentStatement) : Nodes.BoundExpression {
+        let target = this.transformExpression(expression.target);
         let exp = this.transformExpression(expression.expression);
 
-        if(exp !== expression.expression)
-            return new Nodes.BoundAssignmentStatement(expression.identifier, exp);
+        if(target !== expression.target ||
+           exp !== expression.expression)
+            return new Nodes.BoundAssignmentStatement(target, exp);
 
         return expression;
     }
@@ -419,25 +425,13 @@ export default class BoundTreeTransformBase
         return expression;
     }
 
-    protected transformSetStatement(statement: Nodes.BoundSetStatement) : Nodes.BoundStatement {
-        const left = this.transformExpression(statement.left);       
-        const right = this.transformExpression(statement.right);         
+    protected transformDereferenceExpression(expression: Nodes.BoundDereferenceExpression) : Nodes.BoundExpression 
+    {
+        const operand = this.transformExpression(expression.operand);        
 
-        if(left !== statement.left ||
-            right != statement.right)
-            return new Nodes.BoundSetStatement(left as Nodes.BoundGetExpression, right);
+        if(operand !== expression.operand)
+            return new Nodes.BoundDereferenceExpression(operand, operand.type);
 
-        return statement;
-    }    
-
-    protected transformDereferenceAssignmentStatement(statement: Nodes.BoundDereferenceAssignmentStatement) : Nodes.BoundStatement {
-        const left = this.transformExpression(statement.left);
-        const right = this.transformExpression(statement.right);
-
-        if(left !== statement.left ||
-            right != statement.right)
-            return new Nodes.BoundDereferenceAssignmentStatement(left, right);
-
-        return statement;        
+        return expression;
     }
 }

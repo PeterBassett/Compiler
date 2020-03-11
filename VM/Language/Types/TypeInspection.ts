@@ -5,6 +5,7 @@ import { PredefinedValueTypes } from "./PredefinedValueTypes";
 import { ValueType } from "./ValueType";
 import { BoundFunctionDeclaration, BoundClassDeclaration, BoundVariableDeclaration } from "../Compiler/Binding/BoundNode";
 import { TypeNameSyntax } from "../Compiler/Syntax/AST/ASTNode";
+import { Value } from "../Scope/ExecutionScope";
 
 export default class TypeQuery
 {
@@ -60,7 +61,8 @@ export default class TypeQuery
     static getDefaultValueForType(type: Type, scope: IScope<ScopeInfo>): any {
         switch(type.type)
         {
-            case ValueType.Int:
+            case ValueType.Pointer :
+            case ValueType.Int :
             case ValueType.Float : 
                 return 0;                
             case ValueType.Boolean:

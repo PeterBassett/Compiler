@@ -233,7 +233,7 @@ export class PredefinedType extends Type
 export class PointerType extends Type
 {
     constructor(pointerToType : Type) {
-        super(pointerToType.type, "*" + pointerToType.name);
+        super(ValueType.Pointer, "*" + pointerToType.name);
         this.pointerToType = pointerToType;
     }
 }

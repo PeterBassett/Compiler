@@ -8,7 +8,8 @@ export enum ValueType {
     Float,
     String,
     Class,
-    Struct
+    Struct,
+    Pointer
 }
 
 let ValueTypeNameMap : { [index:number] :string } = {};

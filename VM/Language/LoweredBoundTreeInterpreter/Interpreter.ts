@@ -165,18 +165,34 @@ export default class Evaluator
 
     private EvaluateAssignmentStatement(a : Nodes.BoundAssignmentStatement) : Value
     {
-        var value = this.EvaluateExpression(a.expression);
-
-        let isGlobal = a.identifier.variable && a.identifier.variable.isGlobal || false;
+        switch(a.target.kind)
+        {
+            case Nodes.BoundNodeKind.VariableExpression:
+                return this.EvaluateAssignmentToVariable(a.target as Nodes.BoundVariableExpression, a.expression);
+            case Nodes.BoundNodeKind.GetExpression:
+            case Nodes.BoundNodeKind.DereferenceExpression:
+            case Nodes.BoundNodeKind.ArrayIndex:
+            default:
+                throw new Error("Not implemented");                
+        }
+    }
+    
+    private EvaluateAssignmentToVariable(destination: Nodes.BoundVariableExpression, source: Nodes.BoundExpression): Value 
+    {
+        const target = this.EvaluateExpression(destination);
+        const value = this.EvaluateExpression(source);
+        const variable = destination.variable.variable;
+        const name = destination.variable.name;
+        const isGlobal = variable && variable.isGlobal || false;
 
         if (isGlobal)
         {
-            this._globals[a.identifier.name] = value;
+            this._globals[name] = value;
         }
         else
         {
             var locals = this._locals.peek();
-            locals[a.identifier.name] = value;
+            locals[name] = value;
         }
         
         return value;

@@ -4,9 +4,7 @@ import { SyntaxType } from "./SyntaxType";
 import * as SyntaxFacts from "./SyntaxFacts";
 import * as AST from "./AST/ASTNode";
 import { Diagnostics, DiagnosticType } from "../Diagnostics/Diagnostics";
-import { symbol } from "prop-types";
 import TextSpan from "./Text/TextSpan";
-import { Identifier } from "../../Scope/DefinitionScope";
 import Token from "./Token";
 import Lexer from "./Lexer";
 import SyntaxTrivia from "./SyntaxTrivia";
@@ -503,6 +501,42 @@ export default class Parser
         return this.parseBinaryExpression();
     }
 
+    private parseAssignmentExpression(): { statement : AST.StatementNode|null, expression : AST.ExpressionNode|null } 
+    {
+        const left = this.parseExpression();
+
+        // are we doing an assignment?
+        if(this.peek(0).kind == SyntaxType.Equals)
+        {
+            let expression : AST.AddressableExpressionNode;
+
+            // make sure the expression is addressable
+            if(AST.isAddressable(left))
+                expression = left;
+            else
+            {
+                this._diagnostics.reportAssignmentRequiresLValue(left.kind, left.span());
+                return { expression: left, statement:null };
+            }
+    
+            // parse out the remainder of the assignment
+            const operatorToken = this.next();
+            const right = this.parseExpression();
+            const semiColon = this.match(SyntaxType.SemiColon);
+
+            return {
+                expression : null,
+                statement : AST.AssignmentStatementSyntax(expression, operatorToken, right)
+            };
+        }
+        
+        return {
+            expression : left,
+            statement : null
+        };
+    }
+
+    /*
     private parseAssignmentExpression(): { statement : AST.StatementNode|null, expression : AST.ExpressionNode|null } {
         // are we doing a straight variable assignment?
         // this is the fast path.
@@ -568,7 +602,7 @@ export default class Parser
             expression : expression,
             statement : null
         };
-    }
+    }*/
 
     private parseBinaryExpression(parentPrecedence : number = 0): AST.ExpressionNode {
         let left : AST.ExpressionNode;
@@ -579,7 +613,15 @@ export default class Parser
         {
             const operatorToken = this.next();
             const operand = this.parseBinaryExpression(unaryOperatorPrecedence);
-            left = AST.UnaryExpressionSyntax(operatorToken, operand);
+
+            // is this a dereference?
+            if(operatorToken.kind === SyntaxType.Star)
+                // we give dereferences their own ast node type to track
+                // assignments more easily.
+                left = AST.DereferenceExpressionSyntax(operatorToken, operand);
+            else
+                // all other unary operators are handled by the same node.
+                left = AST.UnaryExpressionSyntax(operatorToken, operand);
         }
         else
         {
@@ -601,8 +643,18 @@ export default class Parser
                 break;
 
             const operatorToken = this.next();
-            const right = this.parseBinaryExpression(precedence);
-            left = AST.BinaryExpressionSyntax(left, operatorToken, right);
+
+            if (operatorToken.kind == SyntaxType.Dot) 
+            {              
+                let name = this.match(SyntaxType.Identifier);
+
+                left = AST.GetExpressionSyntax(left, operatorToken, name);       
+            }
+            else
+            {
+                const right = this.parseBinaryExpression(precedence);
+                left = AST.BinaryExpressionSyntax(left, operatorToken, right);
+            }
         }
 
         return left;
@@ -796,9 +848,7 @@ export default class Parser
         {
             switch(statement.kind)
             {                
-                case "AssignmentStatementSyntax":
-                case "SetStatementSyntax":
-                case "DereferenceAssignmentStatementSyntax":     
+                case "AssignmentStatementSyntax":               
                     break;
                 default:
                     this._diagnostics.reportUnexpectedStatementExpression(statement.span());
