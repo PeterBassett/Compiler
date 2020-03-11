@@ -141,7 +141,10 @@ main:
     MVI R1 0
     PUSH R1
     MVI R1 5
-    MOV [R6-4] R1
+    PUSH R1
+    MOV R1, R6-4
+    POP R2
+    MOV [R1] R2
     MOV R1 [R6-4]
 main_epilogue:
     MOV SP R6
@@ -200,7 +203,10 @@ main:
     MVI R1 0
     PUSH R1
     MVI R1 5
-    MOV [R6-18] R1
+    PUSH R1
+    MOV R1, R6-18
+    POP R2
+    MOV [R1] R2
     MOV R1 [R6-18]
 main_epilogue:
     MOV SP R6
