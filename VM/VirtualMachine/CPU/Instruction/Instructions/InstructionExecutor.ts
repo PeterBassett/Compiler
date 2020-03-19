@@ -4,6 +4,8 @@ import RegisterBank from "../../RegisterBank";
 import Flags from "../../Flags";
 import CPU from "../../CPU";
 import BuiltinFunctions from "../../../../Language/Compiler/BuiltinFunctions";
+import { ValueType } from "../../../../Language/Types/ValueType";
+import { Value } from "../../../../Language/Scope/ExecutionScope";
 
 type InstructionExecutor = (cpu : CPU, instruction:Instruction, memory: Memory, registers: RegisterBank, flags: Flags) => void;
 export { InstructionExecutor };
@@ -244,21 +246,40 @@ export function POPf(cpu : CPU, instruction:Instruction, memory: Memory, registe
 }
 
 export function INT(cpu : CPU, instruction: Instruction, memory: Memory, registers: RegisterBank, flags : Flags): void {
-//    let interupt = instruction.sourceMemoryAddress >> 8;
- //   let vector = instruction.sourceMemoryAddress & 255;
+    const interupt = memory.readDWord(registers.SP);
+    const paramCount = memory.readDWord(registers.SP+4);
+    const params :number [] = [];
 
-    let interupt = memory.readDWord(registers.SP);
-    let paramCount = memory.readDWord(registers.SP+4);
-    let params :number [] = [];
-
-    for (let index = 0; index < paramCount; index++) {
-        params.push(memory.readDWord(registers.SP+8 + (index*4)));
-    }
-
-    let func = BuiltinFunctions.findByInterupt(interupt);
-
+    const func = cpu.builtins.findByInterupt(interupt);
+    
     if(!func)
         throw new RangeError("Invalid interupt requested");
+
+    if(paramCount !== func.details.parameterTypes.length)
+        throw new RangeError(`Expected ${paramCount} parameters but found ${func.details.parameterTypes.length}`);
+
+    let offset = registers.SP+8;
+    for(let p of func.details.parameterTypes)
+    {
+        switch(p.type)
+        {
+            case ValueType.Boolean:
+                params.push(memory.readByte(offset));
+                offset += 1;
+                break;
+            case ValueType.Int:
+            case ValueType.Pointer:                
+                params.push(memory.readDWord(offset));
+                offset += 4;
+                break;        
+            case ValueType.Float:
+                params.push(memory.readFloat64(offset));
+                offset += 8;
+                break;  
+            default:
+                throw new Error("Unsupported interupt function parameter type");
+        }
+    }
 
     let result = func!.executor(params);
 

@@ -128,7 +128,7 @@ export default class Lexer implements ILexer
             case '.' :
                 return SyntaxType.Dot;                                                                
             default:
-                if(this.isLetter(c))
+                if(this.isLetter(c) || c == '_')
                     return this.identifierOrKeyword();
                 
                 this._diagnostics.reportUnexpectedCharacter(c.toString(), this.start);
@@ -278,7 +278,7 @@ export default class Lexer implements ILexer
     }
 
     identifier(): SyntaxType {
-        while(this.isLetter(this.char) || this.isDigit(this.char))
+        while(this.isLetter(this.char) || this.isDigit(this.char) || this.char == '_')
             this.advance();
 
         return SyntaxType.Identifier;

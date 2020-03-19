@@ -15,8 +15,20 @@ import Flags from "../../../VirtualMachine/CPU/Flags";
 import RegisterBank from "../../../VirtualMachine/CPU/RegisterBank";
 import CPU from "../../../VirtualMachine/CPU/CPU";
 import { AssembledOutput } from "../../../Assembler/AssembledOutput";
+import BuiltinFunctions, { BuiltinFunction } from "../../../Language/Compiler/BuiltinFunctions";
+import { PredefinedType, FunctionDetails, Type, FunctionType } from "../../../Language/Types/TypeInformation";
+import { PredefinedValueTypes } from "../../../Language/Types/PredefinedValueTypes";
+import { ValueType } from "../../../Language/Types/ValueType";
 
 describe("Compiler Intrinsic Execute", () => {
+
+    const builtins = new BuiltinFunctions(
+        [new BuiltinFunction("Math_Log", 
+            new FunctionType(ValueType.Float, "Math_Log", new FunctionDetails([PredefinedValueTypes.Float], PredefinedValueTypes.Float, true)),
+            (parameters : number[]) => {
+                return Math.log(parameters[0]);
+            })]
+    );
 
     function run(text : string) : number 
     {
@@ -32,11 +44,11 @@ describe("Compiler Intrinsic Execute", () => {
         let source = new SourceText(text);        
         let parser = new Parser(source);
         let compilationUnit = parser.parse();
-        let binder = new Binder();
+        let binder = new Binder(builtins);
         let boundTree = binder.Bind(compilationUnit);
         let lowerer = new Lowerer();
         let newBoundTree = lowerer.lower(boundTree);
-        let codeGenerator = new CodeGenerator();
+        let codeGenerator = new CodeGenerator({ builtins,  });
         let result = codeGenerator.generate(newBoundTree);
         
         if(!result.success)
@@ -75,7 +87,7 @@ describe("Compiler Intrinsic Execute", () => {
         ram.setReadonlyRegions(output.regions);
 
         instructionCoder = new InstructionCoder32Bit();
-        cpu = new CPU(ram, registers, flags, instructionCoder);
+        cpu = new CPU(ram, registers, flags, instructionCoder, builtins);
 
         let stepCount = 0;
         try
@@ -115,26 +127,23 @@ func getANumber(a : int) : int
 }
 func main() : int {
     return getANumber(3) * 5;
-}`, 20]
-
-/*,
+}`, 20],
 [`
-function MandelbrotFractionalEscapeTime(cr : float, ci : float) : float
+func MandelbrotFractionalEscapeTime(cr : float, ci : float) : float
 {            
-    var zr = cr;
-    var zi = ci;
-    let MaxIterations = 20
+    let zr = cr;
+    let zi = ci;
     let log2 = Math_Log(2);
 
-    for (var counter in 0 to MaxIterations)
+    for let counter in 0 to 2
     {
-        var r2 : float = zr * zr;
-        var i2 : float = zi * zi;
+        let r2 : float = zr * zr;
+        let i2 : float = zi * zi;
 
         if (r2 + i2 > 4.0)
         {
-            var log_zn = Math_Log(r2 + i2) / 2.0;
-            var nu = Math_Log(log_zn / log2) / log2;
+            let log_zn = Math_Log(r2 + i2) / 2.0;
+            let nu = Math_Log(log_zn / log2) / log2;
 
             return counter + 1 - nu;                    
         }
@@ -143,12 +152,12 @@ function MandelbrotFractionalEscapeTime(cr : float, ci : float) : float
         zr = r2 - i2 + cr;
     }
 
-    return float(MaxIterations) - 1;
+    return -1.0;
 }
 
-func main() : int {
+func main() : float {
     return MandelbrotFractionalEscapeTime(1.0, 1.0);
-}`, 20.0]*/
+}`, 1.2679791543553804]
 ].forEach((item) => {
         it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
             let text = item[0] as string;

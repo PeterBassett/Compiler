@@ -31,6 +31,12 @@ export default class Binder
     private _incompleteCallSites: { call : Nodes.BoundCallExpression, syntax : AST.CallExpressionSyntax }[] = [];
     private _callSitePlaceholdersValid: boolean = false;
     private _function!: Nodes.BoundFunctionDeclaration|null;
+    private _builtins : BuiltinFunctions;
+
+    constructor(builtins? : BuiltinFunctions)
+    {
+        this._builtins = builtins || new BuiltinFunctions();        
+    }
 
     public Bind(compilationUnit : CompilationUnit) : Nodes.BoundGlobalScope
     {
@@ -693,7 +699,7 @@ export default class Binder
 
         if(!declaration)
         {
-            const func = BuiltinFunctions.find(name);
+            const func = this._builtins.findByName(name);
             if(!!func)
             {
                 builtin = func.type;
@@ -743,24 +749,30 @@ export default class Binder
                 };
             });        
 
+            const boundParameters : Nodes.BoundExpression[] = [];
             for(let i = 0; i < Math.min(parameters.length, declaredParameters.length); i++)
             {
-                if(!parameters[i].expression.type.isAssignableTo( declaredParameters[i] ))
+                const convertedParameter = this.BindConversion(parameters[i].span(), parameters[i].expression, declaredParameters[i]);
+                
+                //if(!parameters[i].expression.type.isAssignableTo( declaredParameters[i] ))
+                if(convertedParameter.kind == Nodes.BoundNodeKind.ErrorExpression)
                 {
                     this.diagnostics.reportCannotConvertParameter(parameters[i].expression.type, declaredParameters[i], parameters[i].span());
                 }
+
+                boundParameters.push(convertedParameter);
             }
 
             const callExpression = new Nodes.BoundCallExpression(syntax.nameExpression.identifierToken.lexeme, returnType);
             
             if(variable && variable != Identifier.Undefined)
             {            
-                callExpression.populate(variable!, parameters.map( p => p.expression ));
+                callExpression.populate(variable!, boundParameters);
             }
             else
             {
                 const variableIdentifier = new Identifier(name, builtin!);
-                callExpression.populate(variableIdentifier, parameters.map( p => p.expression ));
+                callExpression.populate(variableIdentifier, boundParameters);
             }
 
             // no need to store this one as it is complete as is.

@@ -31,21 +31,26 @@ export default class CodeGenerator
     private readonly writeBlankLines : boolean;
     private readonly optimiseForSize: boolean;
 
-    constructor( options? : { 
-        comments:boolean, 
-        blankLines:boolean,
-        optimiseForSize:boolean
+    private _builtins : BuiltinFunctions;
+
+    constructor(options? : {
+        builtins? : BuiltinFunctions, 
+        comments?:boolean, 
+        blankLines?:boolean,
+        optimiseForSize?:boolean
     })
     {
-        this.writeComments = true;
-        this.writeBlankLines = true;
-        this.optimiseForSize = true;
+        this.writeComments = false;
+        this.writeBlankLines = false;
+        this.optimiseForSize = false;
+
+        this._builtins = options && options.builtins || new BuiltinFunctions();
 
         if(options)
-        {
-            this.writeComments = options.comments;
-            this.writeBlankLines = options.blankLines;
-            this.optimiseForSize = options.optimiseForSize;
+        {            
+            this.writeComments = options.comments || this.writeComments;
+            this.writeBlankLines = options.blankLines || this.writeBlankLines;
+            this.optimiseForSize = options.optimiseForSize || this.optimiseForSize;
         }
     }
 
@@ -114,8 +119,12 @@ export default class CodeGenerator
         
         variables.forEach(v => 
         {
-            const expression = v.initialiser;
+            if(!v.initialiser)
+                throw new Error("Global variables should always have an initialiser");
+                
+            const expression = v.initialiser!;
             const valueType = v.variable.type.type;
+        
             if(expression.kind == Nodes.BoundNodeKind.LiteralExpression)
             {                
                 let exp = expression as Nodes.BoundLiteralExpression;           
@@ -130,7 +139,7 @@ export default class CodeGenerator
                 this.writeExpression(expression);                
                 const str = this.typedMnemonic(valueType, "STR");
                 this.instruction(`${str} R1 .${v.variable.name}`, "Initialise global variable");
-            }
+            }            
         });
     }
 
@@ -331,6 +340,8 @@ export default class CodeGenerator
             this.comment("Assign a struct");
             const source = this.getStructDataReference(statement.expression);
             
+            //this.writeExpression(statement.expression);
+
             this.writeAddressExpression(statement.target);
             
             const size = this.typeSize(statement.target.type);
@@ -770,7 +781,7 @@ export default class CodeGenerator
 
     private writeCallExpression(exp: Nodes.BoundCallExpression, targetFunction: string, args: Nodes.BoundExpression[]) {
         if (!!exp.type.function && exp.type.function.isBuiltin) {
-            let builtin = BuiltinFunctions.find(targetFunction);
+            let builtin = this._builtins.findByName(targetFunction);
             this.comment(`Adding INTERUPT FUNC ${targetFunction} params`);
             this.comment(`Pushing 2 arguments onto the stack, interupt number and param count`);
             this.instruction(`MVI R1 ${args.length}`);
@@ -850,6 +861,15 @@ export default class CodeGenerator
     getStructDataReference(expression: Nodes.BoundExpression) : (offset:number, chunk:number)=>string {
         switch(expression.kind)
         {
+            case Nodes.BoundNodeKind.LiteralExpression:
+            {
+                const exp = expression as Nodes.BoundLiteralExpression;
+
+                if(exp.value !== null)
+                    throw new Error("Expectng default value");
+
+                return (i, _c) => `0`;
+            }
             case Nodes.BoundNodeKind.VariableExpression:
             {
                 const exp = expression as Nodes.BoundVariableExpression;

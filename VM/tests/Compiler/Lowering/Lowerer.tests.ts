@@ -256,6 +256,8 @@ func main() : int
         ParameterDeclarationList
         BlockStatement
             VariableDeclaration<n:int>
+            AssignmentStatement
+                VariableExpression<n:int>
                 LiteralExpression<0:int>
             AssignmentStatement
                 VariableExpression<n:int>
@@ -313,8 +315,12 @@ func main() : int
         ParameterDeclarationList
         BlockStatement
             VariableDeclaration<l3:leaf3>
-                LiteralExpression<null:leaf3>
             VariableDeclaration<l2:leaf2>
+            AssignmentStatement
+                VariableExpression<l3:leaf3>
+                LiteralExpression<null:leaf3>
+            AssignmentStatement
+                VariableExpression<l2:leaf2>
                 LiteralExpression<null:leaf2>
             AssignmentStatement
                 GetExpression<a1:int>
@@ -415,6 +421,8 @@ func main() : int {
         ParameterDeclarationList
         BlockStatement
             VariableDeclaration<n:int>
+            AssignmentStatement
+                VariableExpression<n:int>
                 LiteralExpression<5:int>
             ReturnStatement
                 CallExpression<fib>
@@ -436,13 +444,19 @@ func main() : int
         ParameterDeclarationList
         BlockStatement
             VariableDeclaration<n:int>
-                LiteralExpression<0:int>
             VariableDeclaration<i:int>
+            VariableDeclaration<upperBound1:int>
+            AssignmentStatement
+                VariableExpression<n:int>
+                LiteralExpression<0:int>
+            AssignmentStatement
+                VariableExpression<i:int>
                 LiteralExpression<1:int>
             AssignmentStatement
                 VariableExpression<i:int>
                 LiteralExpression<1:int>
-            VariableDeclaration<upperBound1:int>
+            AssignmentStatement
+                VariableExpression<upperBound1:int>
                 LiteralExpression<100:int>
             GotoStatement<Label1>
             LabelStatement<Label2>
@@ -489,15 +503,23 @@ func main() : int
         ParameterDeclarationList
         BlockStatement
             VariableDeclaration<n:int>
+            VariableDeclaration<i:int>
+            VariableDeclaration<upperBound1:int>
+            VariableDeclaration<i:int>
+            VariableDeclaration<upperBound2:int>
+            AssignmentStatement
+                VariableExpression<n:int>
                 LiteralExpression<0:int>
             ConditionalGotoStatement<Label1:JIT=false>
                 LiteralExpression<true:bool>
-            VariableDeclaration<i:int>
+            AssignmentStatement
+                VariableExpression<i:int>
                 LiteralExpression<1:int>
             AssignmentStatement
                 VariableExpression<i:int>
                 LiteralExpression<1:int>
-            VariableDeclaration<upperBound1:int>
+            AssignmentStatement
+                VariableExpression<upperBound1:int>
                 LiteralExpression<100:int>
             GotoStatement<Label3>
             LabelStatement<Label4>
@@ -520,12 +542,14 @@ func main() : int
             LabelStatement<break1>
             GotoStatement<Label2>
             LabelStatement<Label1>
-            VariableDeclaration<i:int>
+            AssignmentStatement
+                VariableExpression<i:int>
                 LiteralExpression<100:int>
             AssignmentStatement
                 VariableExpression<i:int>
                 LiteralExpression<100:int>
-            VariableDeclaration<upperBound2:int>
+            AssignmentStatement
+                VariableExpression<upperBound2:int>
                 LiteralExpression<1000:int>
             GotoStatement<Label5>
             LabelStatement<Label6>
@@ -566,22 +590,32 @@ func main() : int
         ParameterDeclarationList
         BlockStatement
             VariableDeclaration<n:int>
-                LiteralExpression<0:int>
             VariableDeclaration<x:int>
+            VariableDeclaration<upperBound1:int>
+            VariableDeclaration<y:int>
+            VariableDeclaration<upperBound2:int>
+            AssignmentStatement
+                VariableExpression<n:int>
+                LiteralExpression<0:int>
+            AssignmentStatement
+                VariableExpression<x:int>
                 LiteralExpression<1:int>
             AssignmentStatement
                 VariableExpression<x:int>
                 LiteralExpression<1:int>
-            VariableDeclaration<upperBound1:int>
+            AssignmentStatement
+                VariableExpression<upperBound1:int>
                 LiteralExpression<100:int>
             GotoStatement<Label1>
             LabelStatement<Label2>
-            VariableDeclaration<y:int>
+            AssignmentStatement
+                VariableExpression<y:int>
                 LiteralExpression<100:int>
             AssignmentStatement
                 VariableExpression<y:int>
                 LiteralExpression<100:int>
-            VariableDeclaration<upperBound2:int>
+            AssignmentStatement
+                VariableExpression<upperBound2:int>
                 LiteralExpression<1000:int>
             GotoStatement<Label3>
             LabelStatement<Label4>
@@ -637,13 +671,21 @@ func main() : int
         ParameterDeclarationList
         BlockStatement
             VariableDeclaration<n:int>
-                LiteralExpression<0:int>
             VariableDeclaration<x:int>
+            VariableDeclaration<upperBound1:int>
+            VariableDeclaration<y:int>
+            VariableDeclaration<upperBound2:int>
+            AssignmentStatement
+                VariableExpression<n:int>
+                LiteralExpression<0:int>
+            AssignmentStatement
+                VariableExpression<x:int>
                 LiteralExpression<1:int>
             AssignmentStatement
                 VariableExpression<x:int>
                 LiteralExpression<1:int>
-            VariableDeclaration<upperBound1:int>
+            AssignmentStatement
+                VariableExpression<upperBound1:int>
                 LiteralExpression<100:int>
             GotoStatement<Label1>
             LabelStatement<Label2>
@@ -651,12 +693,14 @@ func main() : int
                 BinaryExpression<<>
                     VariableExpression<x:int>
                     LiteralExpression<50:int>
-            VariableDeclaration<y:int>
+            AssignmentStatement
+                VariableExpression<y:int>
                 LiteralExpression<100:int>
             AssignmentStatement
                 VariableExpression<y:int>
                 LiteralExpression<100:int>
-            VariableDeclaration<upperBound2:int>
+            AssignmentStatement
+                VariableExpression<upperBound2:int>
                 LiteralExpression<1000:int>
             GotoStatement<Label4>
             LabelStatement<Label5>
@@ -717,6 +761,8 @@ func main() : int
         ParameterDeclarationList
         BlockStatement
             VariableDeclaration<n:int>
+            AssignmentStatement
+                VariableExpression<n:int>
                 LiteralExpression<0:int>
             GotoStatement<continue1>
             LabelStatement<Label1>

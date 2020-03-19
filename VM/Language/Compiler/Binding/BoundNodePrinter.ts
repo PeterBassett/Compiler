@@ -136,9 +136,12 @@ export class BoundNodePrinter
         this.WriteSpace(writer);
         this.WriteIdentifier(writer, node.variable.name);
         this.WriteSpace(writer);
-        this.WritePunctuation(writer, SyntaxType.Equals);
-        this.WriteSpace(writer);
-        this.WriteTo(node.initialiser, writer);
+        if(node.initialiser)
+        {
+            this.WritePunctuation(writer, SyntaxType.Equals);
+            this.WriteSpace(writer);        
+            this.WriteTo(node.initialiser, writer);
+        }
         this.WriteLine(writer);
     }
 
