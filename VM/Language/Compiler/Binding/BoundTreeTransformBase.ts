@@ -62,34 +62,7 @@ export default class BoundTreeTransformBase
         /// do more here
         return root;
     }
-/*
-    protected liftVariableDeclarations(body: Nodes.BoundBlockStatement): Nodes.BoundBlockStatement {
-        let statements : Nodes.BoundStatement[] = [];
-        let declarations : Nodes.BoundStatement[] = [];
 
-        for(let statement of body.statements)
-        {
-            if(statement.kind == Nodes.BoundNodeKind.VariableDeclaration)
-            {
-                const declaration = statement as Nodes.BoundVariableDeclaration;
-                const variable = new Identifier(declaration.variable.name, declaration.variable.type, declaration.variable);
-                const variableExpression = new Nodes.BoundVariableExpression(variable);
-                const assignment = new Nodes.BoundAssignmentStatement(variableExpression, declaration.initialiser);
-
-                declarations.push(statement);
-                statements.push(assignment);
-            }
-            else
-                statements.push(statement);                
-        }
-
-        // if there were no declarations, we dont need to worry about it
-        if(declarations.length == 0)
-            return body;
-
-        return new Nodes.BoundBlockStatement([...declarations, ...statements]);
-    }
-*/
     protected transformParameterDeclarations(parameters: Nodes.ParameterDeclaration[]) : Nodes.ParameterDeclaration[] 
     {
         let output : Nodes.ParameterDeclaration[] = [];
