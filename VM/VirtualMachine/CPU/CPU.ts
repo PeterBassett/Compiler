@@ -5,6 +5,7 @@ import Instruction from "./Instruction/Instruction";
 import InstructionCoder from "./Instruction/InstructionCoder";
 import { MapOpCodeToExecutor } from "./Instruction/InstructionSet";
 import { InstructionExecutor } from "./Instruction/Instructions/InstructionExecutor";
+import BuiltinFunctions, { BuiltinFunction } from "../../Language/Compiler/BuiltinFunctions";
 
 export default class CPU
 {        
@@ -12,13 +13,15 @@ export default class CPU
     private registers : RegisterBank;
     private flags : Flags;
     private instructionDecoder : InstructionCoder;
+    public readonly builtins : BuiltinFunctions;
 
-    constructor(ram : Memory, registers : RegisterBank, flags : Flags, instructionDecoder : InstructionCoder)
+    constructor(ram : Memory, registers : RegisterBank, flags : Flags, instructionDecoder : InstructionCoder, builtins? : BuiltinFunctions)
     {        
         this.ram = ram;
         this.registers = registers;
         this.flags = flags;
         this.instructionDecoder = instructionDecoder;
+        this.builtins = builtins || new BuiltinFunctions();
     }
 
     public step(): Instruction {

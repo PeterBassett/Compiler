@@ -10,7 +10,9 @@ import { BoundNodeVisitorBase } from "./BoundNodeVisitorBase";
 
 export default class BoundTreeTransformBase
 {
+    protected _insideLoop : boolean = false; 
     protected _currentStatementList: Nodes.BoundStatement[][] = [];
+    protected _currentVariableDeclarationList: Nodes.BoundVariableDeclaration[] = [];
     protected get currentStatementList() : Nodes.BoundStatement[]
     {
         return this._currentStatementList[this._currentStatementList.length - 1];
@@ -22,14 +24,21 @@ export default class BoundTreeTransformBase
 
         let newFuncs : boolean = false;
         const funcs = root.functions.map(f => {
+            this._currentVariableDeclarationList = [];
+
             const newParameters = this.transformParameterDeclarations(f.parameters);            
             let newBody = this.transformBlockStatement(f.blockBody);
 
-            if(newParameters === f.parameters && newBody === f.blockBody)
+            if(newParameters === f.parameters && newBody === f.blockBody && this._currentVariableDeclarationList.length === 0)
                 return f;
- 
+
+            newBody = new Nodes.BoundBlockStatement(
+                [...this._currentVariableDeclarationList, ...newBody.statements]                
+            );
+
             newBody = this.flatten(newBody);
-        
+            //newBody = this.liftVariableDeclarations(newBody);
+
             let func = new Nodes.BoundFunctionDeclaration(
                 f.identifier,
                 f.parameters,
@@ -53,7 +62,34 @@ export default class BoundTreeTransformBase
         /// do more here
         return root;
     }
+/*
+    protected liftVariableDeclarations(body: Nodes.BoundBlockStatement): Nodes.BoundBlockStatement {
+        let statements : Nodes.BoundStatement[] = [];
+        let declarations : Nodes.BoundStatement[] = [];
 
+        for(let statement of body.statements)
+        {
+            if(statement.kind == Nodes.BoundNodeKind.VariableDeclaration)
+            {
+                const declaration = statement as Nodes.BoundVariableDeclaration;
+                const variable = new Identifier(declaration.variable.name, declaration.variable.type, declaration.variable);
+                const variableExpression = new Nodes.BoundVariableExpression(variable);
+                const assignment = new Nodes.BoundAssignmentStatement(variableExpression, declaration.initialiser);
+
+                declarations.push(statement);
+                statements.push(assignment);
+            }
+            else
+                statements.push(statement);                
+        }
+
+        // if there were no declarations, we dont need to worry about it
+        if(declarations.length == 0)
+            return body;
+
+        return new Nodes.BoundBlockStatement([...declarations, ...statements]);
+    }
+*/
     protected transformParameterDeclarations(parameters: Nodes.ParameterDeclaration[]) : Nodes.ParameterDeclaration[] 
     {
         let output : Nodes.ParameterDeclaration[] = [];
@@ -129,13 +165,16 @@ export default class BoundTreeTransformBase
 
     protected transformWhileStatement(statement: Nodes.BoundWhileStatement): Nodes.BoundStatement 
     {
-        const condition = this.transformExpression(statement.condition);
+        this._insideLoop = true;
+
+        const condition = this.transformExpression(statement.condition);        
         const body = this.transformStatement(statement.body);
 
         if(condition != statement.condition ||
             body !== statement.body)
             return new Nodes.BoundWhileStatement(condition, body, statement.breakLabel, statement.continueLabel);
 
+        this._insideLoop = false;        
         return statement;
     }
 
@@ -201,12 +240,16 @@ export default class BoundTreeTransformBase
         }
     }
 
-    protected transformVariableDeclarationStatement(declaration: Nodes.BoundVariableDeclaration): Nodes.BoundStatement {
-        const initialiser = this.transformExpression(declaration.initialiser);
+    protected transformVariableDeclarationStatement(declaration: Nodes.BoundVariableDeclaration): Nodes.BoundStatement 
+    {        
+        if(declaration.initialiser)
+        {
+            const initialiser = this.transformExpression(declaration.initialiser);
 
-        if(initialiser != declaration.initialiser)
-            return new Nodes.BoundVariableDeclaration(declaration.variable, initialiser);
-
+            if(initialiser != declaration.initialiser)
+                return new Nodes.BoundVariableDeclaration(declaration.variable, initialiser);
+        }
+        
         return declaration;
     }
 
@@ -244,6 +287,8 @@ export default class BoundTreeTransformBase
     }
     
     protected transformForStatement(forStatement: Nodes.BoundForStatement): Nodes.BoundStatement {        
+        this._insideLoop = true;
+
         const transformedLowerBound = this.transformExpression(forStatement.lowerBound);
         const transformedUpperBound = this.transformExpression(forStatement.upperBound);
         const transformedBody = this.transformStatement(forStatement.body);
@@ -259,7 +304,8 @@ export default class BoundTreeTransformBase
                 forStatement.breakLabel,
                 forStatement.continueLabel
             );
-            
+        
+        this._insideLoop = false;        
         return forStatement;
     }
 

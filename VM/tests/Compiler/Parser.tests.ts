@@ -222,7 +222,30 @@ func b() : int
             ReturnStatementSyntax
                 IntegerLiteralExpressionSyntax<3>
 `],
-                
+[`func main() : int
+{
+    return 1;
+}
+
+func function_with_underscores_in_its_name() : int
+{
+    return 2;
+}
+`,
+`CompilationUnitSyntax
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        TypeNameSyntax<int>
+        BlockStatementSyntax
+            ReturnStatementSyntax
+                IntegerLiteralExpressionSyntax<1>
+    FunctionDeclarationStatementSyntax<function_with_underscores_in_its_name>
+        ParameterDeclarationListSyntax
+        TypeNameSyntax<int>
+        BlockStatementSyntax
+            ReturnStatementSyntax
+                IntegerLiteralExpressionSyntax<2>
+`],                
 [`func add(a:int, b:int) : int => a + b;`, 
 `CompilationUnitSyntax
     LambdaDeclarationStatementSyntax<add>

@@ -238,6 +238,7 @@ export class BoundUnaryOperator
         new BoundUnaryOperator(SyntaxType.Bang, BoundUnaryOperatorKind.LogicalNegation, PredefinedValueTypes.Boolean),
         new BoundUnaryOperator(SyntaxType.Plus, BoundUnaryOperatorKind.Identity, PredefinedValueTypes.Integer),
         new BoundUnaryOperator(SyntaxType.Minus, BoundUnaryOperatorKind.Negation, PredefinedValueTypes.Integer),
+        new BoundUnaryOperator(SyntaxType.Minus, BoundUnaryOperatorKind.Negation, PredefinedValueTypes.Float),
     ];
 
     public static Bind(syntaxKind : SyntaxType, operandType: Type) : BoundUnaryOperator | null 
@@ -368,7 +369,7 @@ export class ParameterDeclaration
 
 export class BoundVariableDeclaration extends BoundStatement
 {
-    constructor(variable : VariableSymbol, initialiser : BoundExpression)
+    constructor(variable : VariableSymbol, initialiser : BoundExpression|null)
     {        
         super();
         this.variable = variable;
@@ -377,7 +378,7 @@ export class BoundVariableDeclaration extends BoundStatement
 
     public get kind() { return BoundNodeKind.VariableDeclaration };
     public readonly variable : VariableSymbol; 
-    public readonly initialiser : BoundExpression;
+    public readonly initialiser : BoundExpression|null;
 }
 
 export class BoundIfStatement extends BoundStatement

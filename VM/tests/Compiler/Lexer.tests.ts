@@ -328,7 +328,41 @@ describe("A Lexer object", () => {
         }
         return pairs;
     }
-    
+
+    [
+        [`a`],
+        [`aa`],
+        [`a_`],
+        [`_a`],
+        [`a_a`],
+        [`aLongIdentifier`],
+        [`a1`],
+        [`a11`],
+        [`a1a`]
+    ].forEach((item) => {
+        it(`should recognise identifier ${item[0].length}`, () => {  
+            let text = item[0] as string;
+            let source = new SourceText(text);
+            let lexer = new Lexer(source);
+            let tokens : Token[] = [];
+            
+            while(true)
+            {
+                let token = lexer.lex();
+                
+                if(token.kind == SyntaxType.Eof)
+                    break;
+            
+                tokens.push(token);
+            }
+
+            expect(tokens.length).toEqual(1);
+            tokens.forEach( (v, i) => {
+                expect(v.kind ).toEqual(SyntaxType.Identifier);
+            });
+        });
+    });
+
     [
         [`£`, [SyntaxType.BadToken] ],
         [`$`, [SyntaxType.BadToken] ],

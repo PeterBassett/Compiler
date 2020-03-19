@@ -4,6 +4,7 @@ import { ValueType } from "../Types/ValueType";
 import { PredefinedValueTypes } from "../Types/PredefinedValueTypes";
 import { Identifier } from "../Scope/DefinitionScope";
 import Stack from "../../misc/Stack";
+import TypeQuery from "../Types/TypeInspection";
 
 export default class Evaluator
 {
@@ -26,7 +27,13 @@ export default class Evaluator
         let decs : any[] = [];
 
         for (const variable of root.variables) {            
-            let value = this.EvaluateExpression(variable.initialiser);
+            let value : any;
+            
+            if(variable.initialiser)
+                value = this.EvaluateExpression(variable.initialiser);
+            else
+                throw new Error("Fix this. initialiser is null");
+
             this._globals[variable.variable.name] = value;
         }
 
@@ -99,9 +106,25 @@ export default class Evaluator
 
     private EvaluateVariableDeclaration(node : Nodes.BoundVariableDeclaration) : void
     {
-        var value = this.EvaluateExpression(node.initialiser);
+        var value = this.getDefaultValueForType(node.variable.type.type); // this.EvaluateExpression(node.initialiser!);
         this._lastValue = value;
         this.Assign(node.variable, value);
+    }
+
+    private getDefaultValueForType(type : ValueType) : any
+    {
+        switch(type)
+        {
+            case ValueType.Boolean:
+            case ValueType.Float:
+            case ValueType.Int:
+            case ValueType.Pointer:
+                return 0;
+            case ValueType.String:
+                return "";
+            default:
+                throw new Error("Default Type Not Implemented");
+        }
     }
 
     private Assign(variable: Nodes.VariableSymbol, value : Value) : void

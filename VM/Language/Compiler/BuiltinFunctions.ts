@@ -1,65 +1,81 @@
 import { FunctionDetails, Type, FunctionType } from "../Types/TypeInformation";
 import { PredefinedValueTypes } from "../Types/PredefinedValueTypes";
+import TypeQuery from "../Types/TypeInspection";
+
+export type ExecutorFunction = (parameters : number[]) => number;
 
 export class BuiltinFunction
 {
     constructor(
-        interupt : number,
-        type : Type,
-        details : FunctionDetails,
-        executor : (parameters : number[]) => number)
+        public readonly name : string,
+        public readonly type : Type,        
+        public readonly executor : ExecutorFunction)
     {
-        this.interupt = interupt;
-        this.type = type;
-        this.details = details;
-        this.executor = executor;
+        this.interupt = 0;
+        this.details = type.function!;
     }
 
-    public readonly interupt : number;
-    public readonly type : Type;
-    public readonly details : FunctionDetails;
-    public readonly executor : (parameters : number[]) => number;  
+    public interupt : number;        
+    public readonly details : FunctionDetails;        
 }
 
 export default class BuiltinFunctions
 {   
-    private static readonly rndDetails : FunctionDetails = new FunctionDetails(
-        [PredefinedValueTypes.Integer, PredefinedValueTypes.Integer], 
-        PredefinedValueTypes.Integer, true);
+    private _functionNameMap : { [index : string ] : BuiltinFunction } = {};
+    private _functions : BuiltinFunction[] = [];
 
-    public static readonly rnd : BuiltinFunction = new BuiltinFunction(
-        1,
-        new FunctionType(BuiltinFunctions.rndDetails.returnType.type, "int", BuiltinFunctions.rndDetails),
-        BuiltinFunctions.rndDetails,
-        (parameters : number[]) => {
-            if(parameters.length != 2)
-                throw new Error("Incorrect parameter count for rnd");
-
-            let lower = parameters[0];
-            let upper = parameters[1];
-
-            return Math.floor(Math.random() * (upper - lower + 1) + lower);
-        });
-
-    //public static readonly rnd : Type = new Type(BuiltinFunctions.rndDetails.returnType.type, "int", BuiltinFunctions.rndDetails);
-
-
-    public static find(name:string) : BuiltinFunction|null 
+    constructor(builtins? : BuiltinFunction[])
     {
-        let names = Object.keys(BuiltinFunctions).filter(n => n != "find");
-        if(names.indexOf(name) == -1)
+        builtins = builtins || [];
+        
+        const rndDetails = new FunctionDetails(
+            [PredefinedValueTypes.Integer, PredefinedValueTypes.Integer], 
+            PredefinedValueTypes.Integer, true);
+    
+        const rnd : BuiltinFunction = new BuiltinFunction(
+            "rnd",
+            new FunctionType(rndDetails.returnType.type, rndDetails.returnType.name, rndDetails),
+            (parameters : number[]) => {
+                if(parameters.length != 2)
+                    throw new Error("Incorrect parameter count for rnd");
+    
+                let lower = parameters[0];
+                let upper = parameters[1];
+    
+                return Math.floor(Math.random() * (upper - lower + 1) + lower);
+            }); 
+            
+        this.storeFunction(rnd);
+
+        for(let f of builtins)
+            this.storeFunction(f);
+    }
+
+    protected storeFunction(func : BuiltinFunction) : void
+    {
+        this._functionNameMap[func.name] = func;
+        func.interupt = this._functions.length;
+        this._functions.push(func);                
+    }
+
+    public findByName(name:string) : BuiltinFunction|null 
+    {
+        const func = this._functionNameMap[name];
+
+        if(!func)
             return null;
 
-        let func = (this as any)[name] as BuiltinFunction
-        
         return func;
     }
 
-    public static findByInterupt(interupt:number) : BuiltinFunction|null
+    public findByInterupt(interupt:number) : BuiltinFunction|null
     {
-        if(interupt == 1)
-            return this.rnd;
+        if(interupt < 0)
+            return null;
+        
+        if(interupt >= this._functions.length)
+            return null;
 
-        return null;
+        return this._functions[interupt];
     }
 }

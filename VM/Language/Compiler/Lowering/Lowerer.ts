@@ -222,4 +222,22 @@ export default class Lowerer extends BoundTreeTransformBase
 
         return getExpression;
     }
+
+    transformVariableDeclarationStatement(declaration: Nodes.BoundVariableDeclaration): Nodes.BoundStatement 
+    {
+        if(declaration.initialiser)
+        {
+            const initialiser = this.transformExpression(declaration.initialiser);
+
+            const newDeclaration = new Nodes.BoundVariableDeclaration(declaration.variable, null);
+            const variable = new Identifier(declaration.variable.name, declaration.variable.type, declaration.variable);
+            const variableExpression = new Nodes.BoundVariableExpression(variable);
+            const assignment = new Nodes.BoundAssignmentStatement(variableExpression, initialiser);
+
+            this._currentVariableDeclarationList.push(newDeclaration);
+            return assignment;        
+        }        
+
+        return declaration;
+    }
 }

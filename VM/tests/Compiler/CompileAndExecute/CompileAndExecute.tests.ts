@@ -436,7 +436,40 @@ func main() : int
 {
     return McCarthy(45);
 }
-`, 91]
+`, 91],
+[`
+func main() : int
+{            
+    let i : int = 1;
+    for let counter in 0 to 10
+    {
+        // variable declared and assigned inside a loop.
+        let r : int = counter * i; 
+        
+        i = i + r;
+    }
+
+    return i;
+}`, 39916800],
+[`
+func main() : int
+{            
+    let i : int = 1;
+
+    for let x in 0 to 10 // loop inclusive
+    {
+        let x1 = x * 2;
+        for let y in 0 to 10 // loop inclusive
+        {
+            // variable declared and assigned inside a loop.
+            let y1 : int = x1 * y; 
+        
+            i = i + y1;
+        }        
+    }
+
+    return i;
+}`, 6051]
     ].forEach((item) => {
         it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
             const text = item[0] as string;

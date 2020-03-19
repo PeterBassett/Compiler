@@ -138,8 +138,13 @@ __entrypoint:
 main:
     PUSH R6
     MOV R6 SP
+    MOV R1 0
+    PUSH R1
     MVI R1 0
     PUSH R1
+    MOV R1, R6-4
+    POP R2
+    MOV [R1] R2
     MVI R1 5
     PUSH R1
     MOV R1, R6-4
@@ -192,16 +197,41 @@ __entrypoint:
 main:
     PUSH R6
     MOV R6 SP
+    MOV R1 0
+    PUSHf R1
+    MOV R1 0
+    PUSH R1
+    MOV R1 0
+    PUSHb R1
+    MOV R1 0
+    PUSHb R1
+    MOV R1 0
+    PUSH R1
     LDRf R1 .floatLiteral_0
     PUSHf R1
+    MOV R1, R6-8
+    POPf R2
+    MOVf [R1] R2
     MVI R1 3
     PUSH R1
+    MOV R1, R6-12
+    POP R2
+    MOV [R1] R2
     MVIb R1 1
     PUSHb R1
+    MOV R1, R6-13
+    POPb R2
+    MOVb [R1] R2
     MVIb R1 1
     PUSHb R1
+    MOV R1, R6-14
+    POPb R2
+    MOVb [R1] R2
     MVI R1 0
     PUSH R1
+    MOV R1, R6-18
+    POP R2
+    MOV [R1] R2
     MVI R1 5
     PUSH R1
     MOV R1, R6-18
