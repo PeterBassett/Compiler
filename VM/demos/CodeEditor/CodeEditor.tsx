@@ -24,6 +24,7 @@ interface CodeEditorState
     compilationUnit: CompilationUnit;
     boundTree : BoundGlobalScope;
     diagnostics : Diagnostics;
+    asmCodeWithComments : GeneratedCode;
     asmCode : GeneratedCode;
     boundTreeText : string;
     loweredTreeText : string;
@@ -45,7 +46,8 @@ export default class CodeEditor extends React.Component<CodeEditorProps, CodeEdi
     constructor(props){
         super(props);
         
-        this.state = {mode:1, 
+        this.state = {mode:1,
+            asmCodeWithComments:null, 
             asmCode:null,
             boundTreeText:null,
             loweredTreeText:null,
@@ -124,14 +126,14 @@ func main() : int {
         let binder = new Binder();
         let visitor: BoundTreeStructureVisitor;        
         let lowerer = new Lowerer();
-        let optimiser = new ExpressionOptimiser();
-        let codeGenerator = new CodeGenerator();
+        let optimiser = new ExpressionOptimiser();        
         let compilationUnit : CompilationUnit;
         let boundTree : BoundGlobalScope;
         let boundTreeText : string;
         let newBoundTree : BoundGlobalScope;
         let loweredTreeText : string;
         let optimisedTreeText : string;
+        let resultWithComments : GeneratedCode;
         let result : GeneratedCode;
 
         try
@@ -190,7 +192,18 @@ func main() : int {
 
         try
         {
+            let codeGenerator = new CodeGenerator();
             result = codeGenerator.generate(newBoundTree);
+        }
+        catch(e)
+        {
+            
+        }
+
+        try
+        {
+            let codeGenerator = new CodeGenerator({comments:true, blankLines:true});
+            resultWithComments = codeGenerator.generate(newBoundTree);
         }
         catch(e)
         {
@@ -203,6 +216,7 @@ func main() : int {
             compilationUnit : compilationUnit, 
             boundTree : boundTree, 
             asmCode : result, 
+            asmCodeWithComments : resultWithComments,
             boundTreeText:boundTreeText, 
             loweredTreeText : loweredTreeText,
             optimisedTreeText : optimisedTreeText
@@ -276,9 +290,10 @@ func main() : int {
                 <span className="tabStyle" key="parseTree" onClick={ ()=> this.setMode(1) }>Parse Tree</span>
                 <span className="tabStyle" key="boundTree" onClick={ ()=> this.setMode(2) }>Bound Tree</span>
                 <span className="tabStyle" key="loweredTree" onClick={ ()=> this.setMode(3) }>Lowered Tree</span>
-                <span className="tabStyle" key="optimisedTree" onClick={ ()=> this.setMode(4) }>Optimised Tree</span>
-                <span className="tabStyle" key="asmCode" onClick={ ()=> this.setMode(5) }>ASM</span>
-                <span className="tabStyle" key="asmCode" onClick={ ()=> this.run() }>RUN</span>
+                <span className="tabStyle" key="optimisedTree" onClick={ ()=> this.setMode(4) }>Optimised Tree</span>                
+                <span className="tabStyle" key="asmCodeWithComments" onClick={ ()=> this.setMode(5) }>ASM with comments</span>
+                <span className="tabStyle" key="asmCode" onClick={ ()=> this.setMode(6) }>ASM</span>
+                <span className="tabStyle" key="run" onClick={ ()=> this.run() }>RUN</span>
                 {this.state.mode == 1 && this.state.compilationUnit && 
                 <div style={{height:"80vh", overflow:"scroll"}}>
                     
@@ -309,8 +324,15 @@ func main() : int {
                         <pre>{this.state.optimisedTreeText}</pre>
                     </div> 
                 </div>
+                }
+                {this.state.mode == 5 && this.state.asmCodeWithComments &&
+                <div style={{height:"80vh", overflow:"scroll"}}>                    
+                    <div>
+                        <pre>{this.state.asmCodeWithComments.text}</pre>
+                    </div> 
+                </div>
                 }                
-                {this.state.mode == 5 && this.state.asmCode &&
+                {this.state.mode == 6 && this.state.asmCode &&
                 <div style={{height:"80vh", overflow:"scroll"}}>                    
                     <div>
                         <pre>{this.state.asmCode.text}</pre>
