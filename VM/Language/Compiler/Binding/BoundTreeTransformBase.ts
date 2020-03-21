@@ -1,12 +1,5 @@
 import * as Nodes from "./BoundNode";
-import { FunctionDeclarationStatementSyntax } from "../Syntax/AST/ASTNode";
-import { Type } from "../../Types/TypeInformation";
-import { PredefinedValueTypes } from "../../Types/PredefinedValueTypes";
-import { BoundBinaryOperator } from "./BoundNode";
-import { SyntaxType } from "../Syntax/SyntaxType";
 import { isNonEmpty } from "../../../misc/NonEmptyArray";
-import { Identifier } from "../../Scope/DefinitionScope";
-import { BoundNodeVisitorBase } from "./BoundNodeVisitorBase";
 
 export default class BoundTreeTransformBase
 {
@@ -37,7 +30,6 @@ export default class BoundTreeTransformBase
             );
 
             newBody = this.flatten(newBody);
-            //newBody = this.liftVariableDeclarations(newBody);
 
             let func = new Nodes.BoundFunctionDeclaration(
                 f.identifier,
@@ -59,7 +51,6 @@ export default class BoundTreeTransformBase
                 funcs);
         }
 
-        /// do more here
         return root;
     }
 
