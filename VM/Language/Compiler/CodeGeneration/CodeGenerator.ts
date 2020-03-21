@@ -211,8 +211,15 @@ export default class CodeGenerator
                 let stmt = statement as Nodes.BoundBlockStatement;            
 
                 if(stmt.statements.length > 0)
-                {                    
-                    stmt.statements.forEach( s => this.writeStatement(s) );
+                {                  
+                    const variables = stmt.statements.filter( s => s.kind == Nodes.BoundNodeKind.VariableDeclaration );
+
+                    this.writeVariableDeclarations(variables);
+
+                    for(let i = variables.length; i < stmt.statements.length; i++)
+                    {
+                        this.writeStatement(stmt.statements[i]);
+                    }
                 }                    
                 break;
             }         
@@ -260,64 +267,7 @@ export default class CodeGenerator
             }
             case Nodes.BoundNodeKind.VariableDeclaration:
             {
-                let stmt = statement as Nodes.BoundVariableDeclaration;            
-                let valueType = stmt.variable.type.type; 
-                this.comment(`declare variable ${stmt.variable.name}`);
-                if(valueType != ValueType.Struct)
-                {
-                    if(stmt.initialiser)
-                    {
-                        this.comment(`calculate initialisation value for variable ${stmt.variable.name}`);
-                        this.writeExpression(stmt.initialiser);
-                    }
-                    else
-                    {
-                        this.comment(`default initialisation value for variable ${stmt.variable.name}`);
-                        this.instruction("MOV R1 0")
-                    }
-                }
-            
-                const size = this.typeSize(stmt.variable.type);
-                this.variableMap.peek()[stmt.variable.name] = { offset:this.stackIndex, size:size };
-                this.stackIndex += size;
-
-                this.comment(`reserve space on stack for variable ${stmt.variable.name} of type ${stmt.variable.type.name}`);                            
-
-                if(valueType != ValueType.Struct)
-                {
-                    const push = this.typedMnemonic(valueType, "PUSH");
-                    const type = this.mnemonicForType(valueType);
-                    this.instruction(`${push} R1`, `reserve space for a ${type} variable ${stmt.variable.name}`);                
-                }
-                else
-                {
-                    this.instruction(`SUB SP ${size}`, `reserve ${size} bytes space for struct ${stmt.variable.name} of type ${stmt.variable.type.name}`); 
-                    
-                    this.writeStructComment(stmt);
-
-                    if(stmt.initialiser && stmt.initialiser.kind === Nodes.BoundNodeKind.CallExpression)
-                    {
-                        this.comment(`Function Call initialisation value for variable ${stmt.variable.name}`);
-                        this.writeExpression(stmt.initialiser);
-
-                        const spec = this.variableMap.peek()[stmt.variable.name];
-
-                        let offset = spec.offset; 
-                        
-                        // need to find a more effective memory copy than a string of byte copies.
-                        this.comment(`Copy ${size} bytes on the stack`)                        
-                        for (let i = 0; i < size; i++)
-                        {
-                            this.instruction(`MOVb [R6-${offset + i}] [R3+${size-i}]`);                    
-                        } 
-                    }
-                    else
-                    {
-                        this.comment(`Zero ${size} bytes on the stack`)                        
-                        this.zeroStackbytes(size);
-                    }
-                }
-                break;
+                throw new Error("Not expecting unhandled Variable Declarations.");
             }    
             case Nodes.BoundNodeKind.AssignmentStatement:
             {
@@ -330,6 +280,33 @@ export default class CodeGenerator
             }
         }
     }
+    
+    writeVariableDeclarations(variables: Nodes.BoundStatement[]) 
+    {
+        if(variables.length === 0)
+            return;
+            
+        let totalSize = 0;
+
+        for(let statement of variables)
+        {
+            const stmt = statement as Nodes.BoundVariableDeclaration; 
+            const valueType = stmt.variable.type.type; 
+
+            const size = this.typeSize(stmt.variable.type);
+            this.variableMap.peek()[stmt.variable.name] = { offset:this.stackIndex, size:size };
+            this.stackIndex += size;
+            totalSize += size;
+
+            this.comment(`declare variable ${stmt.variable.name} of type ${stmt.variable.type.name} (${size} bytes)`);                            
+            
+            if(valueType === ValueType.Struct)
+                this.writeStructComment(stmt);
+        }
+    
+        const plural = variables.length == 1 ? "" : "s";
+        this.instruction(`SUB SP ${totalSize}`, `reserve ${totalSize} bytes space on stack for ${variables.length} variable${plural}`); 
+    }
 
     private writeAssignmentStatement(statement: Nodes.BoundAssignmentStatement) 
     {
@@ -339,14 +316,13 @@ export default class CodeGenerator
         {
             this.comment("Assign a struct");
             const source = this.getStructDataReference(statement.expression);
-            
-            //this.writeExpression(statement.expression);
 
             this.writeAddressExpression(statement.target);
             
             const size = this.typeSize(statement.target.type);
-            for (let i = 0; i < size; i++)
-                this.instruction(`MOVb [R1+${i}] ${source(i, 0)}`);                    
+
+            const dest = (i: number, _: number) => `[R1+${i}]`;
+            this.emitStackCopy(dest, source, size);
         }
         else
         {            
