@@ -214,7 +214,9 @@ export default class Lowerer extends BoundTreeTransformBase
 
         const variableDeclaration = new Nodes.BoundVariableDeclaration(variableSymbol, callExpression);
 
-        statements.push(variableDeclaration);
+        const assignment = this.transformVariableDeclarationStatement(variableDeclaration);
+
+        statements.push(assignment);
 
         const variableExpression = new Nodes.BoundVariableExpression(variable);
         
