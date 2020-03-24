@@ -307,8 +307,8 @@ func FlatEscape(imag : float, real : float) : color
 }      
 
 func main() : int {
-    let width : int = 100; // 1 to just make it quick. 200 makes a nice picture but takes quite a while
-    let height : int = 100;
+    let width : int = 1; // 1 to just make it quick. 200 makes a nice picture but takes quite a while
+    let height : int = 1;
 
     // an interesting point to zoom straight into
     let offsetX : float = -0.7;
@@ -466,13 +466,13 @@ func SmoothFastEscape(imag: float, real: float) : color
 }
 
 func main() : int {
-    let width : int = 100; // 1 to just make it quick. 200 makes a nice picture but takes quite a while
-    let height : int = 100;
+    let width : int = 1; // 1 to just make it quick. 200 makes a nice picture but takes quite a while
+    let height : int = 1;
 
     // an interesting point to zoom straight into
     let offsetX : float = -0.7;
     let offsetY : float = 0.0;
-    let zoom : float = 0.02664;
+    let zoom : float = 0.00964;
 
     Canvas(width, height);
 
