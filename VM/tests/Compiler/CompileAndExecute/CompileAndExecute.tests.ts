@@ -469,7 +469,60 @@ func main() : int
     }
 
     return i;
-}`, 6051]
+}`, 6051],
+[
+`func main() : float
+{
+    let a : float = -0.7;
+    let b : float = 0.004;
+
+    return b + a; 
+}`, -0.696],
+[
+`func main() : float
+{
+    let a : float = 0.7;
+    let b : float = 0.30001;
+    let c :float = a * b;
+
+    if(b + a > 1)
+        return 1;
+    else
+        return 0;
+
+}`, 1],
+[
+`func main() : float
+{
+    let a : float = 1.9;
+
+    if(a * a > 1)
+        return 1;
+    else
+        return 0;
+
+}`, 1],
+[`func main() : int
+{
+    let i : int = 62;
+
+    if (i < 16)
+    {
+        return 1;
+    }
+    else if (i < 32)
+    {
+        return 2;
+    }
+    else if (i < 64)
+    {
+        return 3;
+    }
+    else
+    { 
+        return 4;
+    }
+}`, 3]
     ].forEach((item) => {
         it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
             const text = item[0] as string;

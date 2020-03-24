@@ -9,6 +9,12 @@ import { Type } from "../../Types/TypeInformation";
 import { Value } from "../../Scope/ExecutionScope";
 import { Identifier } from "../../Scope/DefinitionScope";
 
+enum VarOrParam
+{
+    Variable,
+    Parameter
+}
+
 export default class CodeGenerator
 {
     private functionName! : string;
@@ -16,7 +22,7 @@ export default class CodeGenerator
     private sections : string[][] = [];
     private lines : string[] = [];
     private stackIndex : number = 0;
-    private variableMap! : Stack< { [index:string] : { offset:number, size:number } } >;
+    private variableMap! : Stack< { [index:string] : { offset:number, size:number, varOrParam : VarOrParam } } >;
     private labelCount:number = 0;
     private globalLiterals : { name :string, type: ValueType, value : any }[] = [];
 
@@ -59,7 +65,7 @@ export default class CodeGenerator
         this.dataSection = this.codeSection = this.initSection = this.entrySection = 0;;
 
         this.stackIndex = 0;
-        this.variableMap = new Stack<{ [index:string] : { offset:number, size:number } }>();
+        this.variableMap = new Stack<{ [index:string] : { offset:number, size:number, varOrParam : VarOrParam } }>();
         this.lines = [];  
         this.globalLiterals =[];  
         this.labelCount = 0;
@@ -176,10 +182,14 @@ export default class CodeGenerator
         const level = this.variableMap.peek();
         let size = Object.keys(level).reduce(
             (prev, curr) => {
-                return prev + level[curr].size;
+                let l = level[curr];
+                if(l.varOrParam === VarOrParam.Parameter)
+                    return prev;
+
+                return prev + l.size;
             }, 0
         );
-        this.variableMap.pop();
+        this.variableMap.pop();        
         this.stackIndex -= size;
     }
 
@@ -194,9 +204,9 @@ export default class CodeGenerator
         let offset = 0;
         func.parameters.forEach( p => {
             const size = this.typeSize(p.type);
-            this.variableMap.peek()[p.name] = { offset:offset, size:size };            
+            this.variableMap.peek()[p.name] = { offset:offset, size:size, varOrParam : VarOrParam.Parameter };            
             offset += size;
-        })
+        });
         
         this.writeStatement(func.blockBody);
         this.writeStackFrameEpilogue(func.identifier);
@@ -294,7 +304,7 @@ export default class CodeGenerator
             const valueType = stmt.variable.type.type; 
 
             const size = this.typeSize(stmt.variable.type);
-            this.variableMap.peek()[stmt.variable.name] = { offset:this.stackIndex, size:size };
+            this.variableMap.peek()[stmt.variable.name] = { offset:this.stackIndex, size:size, varOrParam : VarOrParam.Variable };
             this.stackIndex += size;
             totalSize += size;
 
@@ -1089,6 +1099,8 @@ export default class CodeGenerator
     
     writeUnaryExpression(expression: Nodes.BoundUnaryExpression) : void
     {
+        this.writeExpression(expression.operand);
+
         switch(expression.operator.operatorKind)
         {    
             case Nodes.BoundUnaryOperatorKind.Identity:
@@ -1104,7 +1116,7 @@ export default class CodeGenerator
             }
             case Nodes.BoundUnaryOperatorKind.Negation:
             {
-                this.instruction("NEG R1", "unary negation op");                                              
+                this.instruction(`NEG R1`, "unary negation op");                                              
                 break;
             }  
             case Nodes.BoundUnaryOperatorKind.Reference:
