@@ -370,9 +370,9 @@ func max(a : int, b : int) : int
 
 func GetColor(iterations : int) : color
 {
-    let r : int;
-    let g : int;
-    let b : int;
+    var r : int;
+    var g : int;
+    var b : int;
 
     if (iterations < 16)
     {
@@ -410,14 +410,14 @@ func GetColor(iterations : int) : color
 
 func MandelbrotFractionalEscapeTime(cr : float, ci : float) : float
 {            
-    let zr = cr;
-    let zi = ci;
+    var zr = cr;
+    var zi = ci;
     let log2 = Math_Log(2);
 
     for let counter in 0 to 128
     {
-        let r2 : float = zr * zr;
-        let i2 : float = zi * zi;
+        let r2 = zr * zr;
+        let i2 = zi * zi;
 
         if (r2 + i2 > 4.0)
         {
@@ -436,21 +436,20 @@ func MandelbrotFractionalEscapeTime(cr : float, ci : float) : float
 
 func Lerp(a : float, b : float, t : float) : float
 {
-    return ((a) + (t) * ((b) - (a)));
+    return a + t * (b - a);
 }
 
 func EscapeTimeToSmoothColour(value : float) : color
 {
-    let iValue : int = int(value);
+    let iValue = int(value);
     let coloura = GetColor(iValue);
     let colourb = GetColor(iValue + 1);
 
-   // Debug(value);
-    var t : float = value - iValue;    
+    let t = value - iValue;    
 
-    var r : int = int(Lerp(coloura.r, colourb.r, t));
-    var g : int = int(Lerp(coloura.g, colourb.g, t));
-    var b : int = int(Lerp(coloura.b, colourb.b, t));
+    let r = int(Lerp(coloura.r, colourb.r, t));
+    let g = int(Lerp(coloura.g, colourb.g, t));
+    let b = int(Lerp(coloura.b, colourb.b, t));
 
     let col : color;
     col.r = r;
@@ -462,40 +461,41 @@ func EscapeTimeToSmoothColour(value : float) : color
 
 func SmoothFastEscape(imag: float, real: float) : color
 {
-    var value : float = MandelbrotFractionalEscapeTime(real, imag);            
+    let value = MandelbrotFractionalEscapeTime(real, imag);            
     return EscapeTimeToSmoothColour(value);
 }
 
 func main() : int {
-    let width : int = 1; // 1 to just make it quick. 200 makes a nice picture but takes quite a while
-    let height : int = 1;
+    let width = 1; // 1 to just make it quick. 200 makes a nice picture but takes quite a while
+    let height = 1;
 
     // an interesting point to zoom straight into
-    let offsetX : float = -0.7;
-    let offsetY : float = 0.0;
-    let zoom : float = 0.00964;
+    let offsetX = -0.7;
+    let offsetY = 0.0;
+    let zoom = 0.01964;
 
     Canvas(width, height);
 
     // calculate the start position (x,y) in the complex plane
     // based on the zoom and the x y offsets
-    let realstart : float = -width  / 2.0 * zoom + offsetX;
-    let imagstart : float = -height / 2.0 * zoom + offsetY;
+    let realstart = -width  / 2.0 * zoom + offsetX;
+    let imagstart = -height / 2.0 * zoom + offsetY;
 
     // iterate over the xy region in both pixels and complex coordinates
-    let imag : float = imagstart;
+    var imag = imagstart;
 
     for let y in 0 to height
     {
         imag = imag + zoom;
-        let real : float = realstart;
+        var real = realstart;
+
         Debug(y);
         for let x in 0 to width
         {
             real = real + zoom;
 
             // calculate the output colour with complex coordinates
-            let col : color = SmoothFastEscape(imag, real);
+            let col = SmoothFastEscape(imag, real);
 
             DrawPixel(x, y, col.r, col.g, col.b);            
         }
