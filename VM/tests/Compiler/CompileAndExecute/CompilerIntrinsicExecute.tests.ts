@@ -162,6 +162,7 @@ describe("Compiler Intrinsic Execute", () => {
         }
         catch(e)
         {
+            console.log("stepCount = " + stepCount.toString());
             if(e.message != "HALT EXECUTION") 
                 throw e;
         }
@@ -488,7 +489,7 @@ func main() : int {
     {
         imag = imag + zoom;
         let real : float = realstart;
-        //Debug(y);
+        Debug(y);
         for let x in 0 to width
         {
             real = real + zoom;
