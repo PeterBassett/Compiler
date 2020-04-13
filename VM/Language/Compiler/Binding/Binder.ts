@@ -396,7 +396,7 @@ export default class Binder
 
             if(memberType.type === PredefinedValueTypes.Unit.type)
             {
-                this.diagnostics.reportInvalidTypeName(nameToDeclaration[name].typeName.identifier);
+                this.diagnostics.reportInvalidTypeName(nameToDeclaration[name].typeName.rootIdentifier());
             }
 
             boundDeclarations.push(new Nodes.BoundStructMemberDeclaration(
@@ -408,7 +408,7 @@ export default class Binder
         return boundDeclarations;
     }
 
-    private BindDefaultExpressionForType(typeName: AST.TypeNameSyntax): Nodes.BoundExpression {        
+    private BindDefaultExpressionForType(typeName: AST.TypeSyntax): Nodes.BoundExpression {        
         const type = TypeQuery.getTypeFromTypeSyntax(typeName, this.scope);
         const value = TypeQuery.getDefaultValueForType(type, this.scope);
 
@@ -463,7 +463,7 @@ export default class Binder
     }
 
     private BindFunction(identifier : Token, parameterList : AST.ParameterDeclarationListSyntax,
-        body : AST.BlockStatementSyntax, returnValue : AST.TypeNameSyntax) : Nodes.BoundFunctionDeclaration
+        body : AST.BlockStatementSyntax, returnValue : AST.TypeSyntax) : Nodes.BoundFunctionDeclaration
     {
         const parameters = this.BindFunctionParameterList(parameterList);
 
@@ -611,10 +611,27 @@ export default class Binder
                 return this.BindGetExpression(syntax);              
             case "DereferenceExpressionSyntax":
                 return this.BindDereferenceExpression(syntax);
-            case "TypeNameSyntax":             
-            case "ArrayIndexExpressionSyntax":            
+            case "NamedTypeSyntax":             
+                return this.BindNamedTypeSyntax(syntax);
+            case "PointerTypeSyntax":
+                return this.BindPointerTypeSyntax(syntax);
+            case "ArrayIndexExpressionSyntax":     
+                return this.BindArrayTypeSyntax(syntax);
+            default:       
                 throw new Error("Not Implemented");
         }
+    }
+
+    BindNamedTypeSyntax(syntax: AST.NamedTypeSyntax): Nodes.BoundExpression {
+        throw new Error("Method not implemented.");
+    }
+    
+    BindPointerTypeSyntax(syntax: AST.PointerTypeSyntax): Nodes.BoundExpression {
+        throw new Error("Method not implemented.");
+    }
+
+    BindArrayTypeSyntax(syntax: AST.ArrayIndexExpressionSyntax): Nodes.BoundExpression {
+        throw new Error("Method not implemented.");
     }
     
     private BindGetExpression(syntax: AST.GetExpressionSyntax) : Nodes.BoundExpression {

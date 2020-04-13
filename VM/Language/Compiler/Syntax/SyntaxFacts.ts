@@ -33,6 +33,8 @@ const lexemes : { lexeme : string, type : SyntaxType } [] = [
     { lexeme : "}", type : SyntaxType.RightBrace },
     { lexeme : "(", type : SyntaxType.LeftParen },
     { lexeme : ")", type : SyntaxType.RightParen },
+    { lexeme : "[", type : SyntaxType.LeftSquareBracket },
+    { lexeme : "]", type : SyntaxType.RightSquareBracket },    
     { lexeme : "return", type : SyntaxType.ReturnKeyword },
     { lexeme : "if", type : SyntaxType.IfKeyword },
     { lexeme : "else", type : SyntaxType.ElseKeyword },

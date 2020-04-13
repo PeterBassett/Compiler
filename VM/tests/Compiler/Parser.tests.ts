@@ -94,7 +94,7 @@ describe("A Parser object", () => {
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             ReturnStatementSyntax
                 IntegerLiteralExpressionSyntax<1>
@@ -107,7 +107,7 @@ describe("A Parser object", () => {
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             ReturnStatementSyntax
                 IntegerLiteralExpressionSyntax<1>
@@ -120,7 +120,7 @@ describe("A Parser object", () => {
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<float>
+        NamedTypeSyntax<float>
         BlockStatementSyntax
             ReturnStatementSyntax
                 FloatLiteralExpressionSyntax<3.14>
@@ -133,7 +133,7 @@ describe("A Parser object", () => {
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<string>
+        NamedTypeSyntax<string>
         BlockStatementSyntax
             ReturnStatementSyntax
                 StringLiteralExpressionSyntax<TEST>
@@ -147,12 +147,12 @@ describe("A Parser object", () => {
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
             ParameterDeclarationSyntax<a:int>
-                TypeNameSyntax<int>
+                NamedTypeSyntax<int>
             ParameterDeclarationSyntax<b:float>
-                TypeNameSyntax<float>
+                NamedTypeSyntax<float>
             ParameterDeclarationSyntax<c:string>
-                TypeNameSyntax<string>
-        TypeNameSyntax<int>
+                NamedTypeSyntax<string>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             ReturnStatementSyntax
                 IntegerLiteralExpressionSyntax<1>
@@ -172,7 +172,7 @@ describe("A Parser object", () => {
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             IfStatementSyntax
                 BinaryExpressionSyntax<==>
@@ -205,19 +205,19 @@ func b() : int
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             ReturnStatementSyntax
                 IntegerLiteralExpressionSyntax<1>
     FunctionDeclarationStatementSyntax<a>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             ReturnStatementSyntax
                 IntegerLiteralExpressionSyntax<2>
     FunctionDeclarationStatementSyntax<b>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             ReturnStatementSyntax
                 IntegerLiteralExpressionSyntax<3>
@@ -235,13 +235,13 @@ func function_with_underscores_in_its_name() : int
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             ReturnStatementSyntax
                 IntegerLiteralExpressionSyntax<1>
     FunctionDeclarationStatementSyntax<function_with_underscores_in_its_name>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             ReturnStatementSyntax
                 IntegerLiteralExpressionSyntax<2>
@@ -251,10 +251,10 @@ func function_with_underscores_in_its_name() : int
     LambdaDeclarationStatementSyntax<add>
         ParameterDeclarationListSyntax
             ParameterDeclarationSyntax<a:int>
-                TypeNameSyntax<int>
+                NamedTypeSyntax<int>
             ParameterDeclarationSyntax<b:int>
-                TypeNameSyntax<int>
-        TypeNameSyntax<int>
+                NamedTypeSyntax<int>
+        NamedTypeSyntax<int>
         BinaryExpressionSyntax<+>
             NameExpressionSyntax<a>
             NameExpressionSyntax<b>
@@ -276,8 +276,8 @@ func main() : int {
     FunctionDeclarationStatementSyntax<fib>
         ParameterDeclarationListSyntax
             ParameterDeclarationSyntax<n:int>
-                TypeNameSyntax<int>
-        TypeNameSyntax<int>
+                NamedTypeSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             IfStatementSyntax
                 ParenthesizedExpressionSyntax
@@ -307,10 +307,10 @@ func main() : int {
                                         IntegerLiteralExpressionSyntax<2>
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<n>
-                TypeNameSyntax<int>
+                NamedTypeSyntax<int>
                 IntegerLiteralExpressionSyntax<5>
             ReturnStatementSyntax
                 CallExpressionSyntax
@@ -325,7 +325,7 @@ func main() : int {
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<boolean>
+        NamedTypeSyntax<boolean>
         BlockStatementSyntax
             ReturnStatementSyntax
                 BooleanLiteralExpressionSyntax<true>
@@ -337,7 +337,7 @@ func main() : int {
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<boolean>
+        NamedTypeSyntax<boolean>
         BlockStatementSyntax
             ReturnStatementSyntax
                 BooleanLiteralExpressionSyntax<false>
@@ -350,11 +350,11 @@ func main() : int
 }`, 
 `CompilationUnitSyntax
     VariableDeclarationSyntax<global>
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         IntegerLiteralExpressionSyntax<5>
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             ReturnStatementSyntax
                 NameExpressionSyntax<global>
@@ -367,11 +367,11 @@ func main() : int
 }`, 
 `CompilationUnitSyntax
     VariableDeclarationSyntax<global>
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         IntegerLiteralExpressionSyntax<5>
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             ReturnStatementSyntax
                 NameExpressionSyntax<global>
@@ -386,10 +386,10 @@ func main() : int
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<n>
-                TypeNameSyntax<int>
+                NamedTypeSyntax<int>
                 IntegerLiteralExpressionSyntax<0>
             AssignmentStatementSyntax
                 NameExpressionSyntax<n>
@@ -410,10 +410,10 @@ func main() : int
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<n>
-                TypeNameSyntax<int>
+                NamedTypeSyntax<int>
                 IntegerLiteralExpressionSyntax<0>
             ForStatementSyntax
                 IntegerLiteralExpressionSyntax<1>
@@ -445,7 +445,7 @@ class test
     ClassDeclarationStatementSyntax<test>
         FunctionDeclarationStatementSyntax<print>
             ParameterDeclarationListSyntax
-            TypeNameSyntax<void>
+            NamedTypeSyntax<void>
             BlockStatementSyntax
                 ReturnStatementSyntax
 `],
@@ -477,27 +477,27 @@ class test
 `CompilationUnitSyntax
     ClassDeclarationStatementSyntax<test>
         VariableDeclarationSyntax<h>
-            TypeNameSyntax<int>
+            NamedTypeSyntax<int>
         VariableDeclarationSyntax<i>
-            TypeNameSyntax<int>
+            NamedTypeSyntax<int>
         FunctionDeclarationStatementSyntax<print>
             ParameterDeclarationListSyntax
-            TypeNameSyntax<void>
+            NamedTypeSyntax<void>
             BlockStatementSyntax
                 ReturnStatementSyntax
         VariableDeclarationSyntax<j>
-            TypeNameSyntax<string>
+            NamedTypeSyntax<string>
         FunctionDeclarationStatementSyntax<a>
             ParameterDeclarationListSyntax
-            TypeNameSyntax<float>
+            NamedTypeSyntax<float>
             BlockStatementSyntax
                 ReturnStatementSyntax
                     FloatLiteralExpressionSyntax<3.14>
         VariableDeclarationSyntax<k>
-            TypeNameSyntax<float>
+            NamedTypeSyntax<float>
         FunctionDeclarationStatementSyntax<b>
             ParameterDeclarationListSyntax
-            TypeNameSyntax<string>
+            NamedTypeSyntax<string>
             BlockStatementSyntax
                 ReturnStatementSyntax
                     StringLiteralExpressionSyntax<string value>
@@ -521,15 +521,15 @@ func main() : void
     ClassDeclarationStatementSyntax<test>
         FunctionDeclarationStatementSyntax<print>
             ParameterDeclarationListSyntax
-            TypeNameSyntax<void>
+            NamedTypeSyntax<void>
             BlockStatementSyntax
                 ReturnStatementSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<void>
+        NamedTypeSyntax<void>
         BlockStatementSyntax
             VariableDeclarationSyntax<a>
-                TypeNameSyntax<test>
+                NamedTypeSyntax<test>
             ExpressionStatementSyntax
                 CallExpressionSyntax
                     GetExpressionSyntax<print>
@@ -550,10 +550,10 @@ func main() : int
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<n>
-                TypeNameSyntax<int>
+                NamedTypeSyntax<int>
                 IntegerLiteralExpressionSyntax<0>
             WhileStatementSyntax
                 BinaryExpressionSyntax<<>
@@ -574,7 +574,7 @@ func main() : int
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<string>
+        NamedTypeSyntax<string>
         BlockStatementSyntax
             ReturnStatementSyntax
                 CallExpressionSyntax
@@ -597,17 +597,17 @@ func main() : int
 `CompilationUnitSyntax
     StructDeclarationStatementSyntax<pair>
         StructMemberDeclarationStatementSyntax<first:int>
-            TypeNameSyntax<int>
+            NamedTypeSyntax<int>
         StructMemberDeclarationStatementSyntax<second:bool>
-            TypeNameSyntax<bool>
+            NamedTypeSyntax<bool>
         StructMemberDeclarationStatementSyntax<third:int>
-            TypeNameSyntax<int>
+            NamedTypeSyntax<int>
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<a>
-                TypeNameSyntax<pair>
+                NamedTypeSyntax<pair>
             ReturnStatementSyntax
                 IntegerLiteralExpressionSyntax<1>
 `],
@@ -631,17 +631,17 @@ func main() : int
 `CompilationUnitSyntax
     StructDeclarationStatementSyntax<pair>
         StructMemberDeclarationStatementSyntax<first:int>
-            TypeNameSyntax<int>
+            NamedTypeSyntax<int>
         StructMemberDeclarationStatementSyntax<second:bool>
-            TypeNameSyntax<bool>
+            NamedTypeSyntax<bool>
         StructMemberDeclarationStatementSyntax<third:int>
-            TypeNameSyntax<int>
+            NamedTypeSyntax<int>
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<a>
-                TypeNameSyntax<pair>
+                NamedTypeSyntax<pair>
             AssignmentStatementSyntax
                 GetExpressionSyntax<first>
                     NameExpressionSyntax<a>
@@ -693,30 +693,30 @@ func main() : int
 `CompilationUnitSyntax
     StructDeclarationStatementSyntax<root>
         StructMemberDeclarationStatementSyntax<a1:int>
-            TypeNameSyntax<int>
+            NamedTypeSyntax<int>
     StructDeclarationStatementSyntax<leaf1>
         StructMemberDeclarationStatementSyntax<b1:int>
-            TypeNameSyntax<int>
+            NamedTypeSyntax<int>
         StructMemberDeclarationStatementSyntax<b2:root>
-            TypeNameSyntax<root>
+            NamedTypeSyntax<root>
     StructDeclarationStatementSyntax<leaf2>
         StructMemberDeclarationStatementSyntax<c1:int>
-            TypeNameSyntax<int>
+            NamedTypeSyntax<int>
         StructMemberDeclarationStatementSyntax<c2:leaf1>
-            TypeNameSyntax<leaf1>
+            NamedTypeSyntax<leaf1>
     StructDeclarationStatementSyntax<leaf3>
         StructMemberDeclarationStatementSyntax<d1:int>
-            TypeNameSyntax<int>
+            NamedTypeSyntax<int>
         StructMemberDeclarationStatementSyntax<d2:leaf2>
-            TypeNameSyntax<leaf2>
+            NamedTypeSyntax<leaf2>
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<d1>
-                TypeNameSyntax<leaf3>
+                NamedTypeSyntax<leaf3>
             VariableDeclarationSyntax<b1>
-                TypeNameSyntax<leaf2>
+                NamedTypeSyntax<leaf2>
             AssignmentStatementSyntax
                 GetExpressionSyntax<a1>
                     GetExpressionSyntax<b2>
@@ -741,11 +741,11 @@ func main() : int
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<ap>
-                TypeNameSyntax<*int>
-                    TypeNameSyntax<int>
+                PointerTypeSyntax
+                    NamedTypeSyntax<int>
                 NullLiteralExpressionSyntax
             ReturnStatementSyntax
                 IntegerLiteralExpressionSyntax<1>
@@ -758,12 +758,12 @@ func main() : int
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<ap>
-                TypeNameSyntax<**int>
-                    TypeNameSyntax<*int>
-                        TypeNameSyntax<int>
+                PointerTypeSyntax
+                    PointerTypeSyntax
+                        NamedTypeSyntax<int>
                 NullLiteralExpressionSyntax
             ReturnStatementSyntax
                 IntegerLiteralExpressionSyntax<1>
@@ -777,11 +777,11 @@ func main() : int
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<ap>
-                TypeNameSyntax<*int>
-                    TypeNameSyntax<int>
+                PointerTypeSyntax
+                    NamedTypeSyntax<int>
             AssignmentStatementSyntax
                 DereferenceExpressionSyntax
                     NameExpressionSyntax<ap>
@@ -802,14 +802,14 @@ func main() : int
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<a>
-                TypeNameSyntax<int>
+                NamedTypeSyntax<int>
                 IntegerLiteralExpressionSyntax<5>
             VariableDeclarationSyntax<ap>
-                TypeNameSyntax<*int>
-                    TypeNameSyntax<int>
+                PointerTypeSyntax
+                    NamedTypeSyntax<int>
             AssignmentStatementSyntax
                 NameExpressionSyntax<ap>
                 UnaryExpressionSyntax<&>
@@ -841,19 +841,19 @@ func main() : int
 `CompilationUnitSyntax
     StructDeclarationStatementSyntax<item>
         StructMemberDeclarationStatementSyntax<value:int>
-            TypeNameSyntax<int>
+            NamedTypeSyntax<int>
         StructMemberDeclarationStatementSyntax<next:item>
-            TypeNameSyntax<*item>
-                TypeNameSyntax<item>
+            PointerTypeSyntax
+                NamedTypeSyntax<item>
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<root>
-                TypeNameSyntax<item>
+                NamedTypeSyntax<item>
             VariableDeclarationSyntax<a>
-                TypeNameSyntax<*item>
-                    TypeNameSyntax<item>
+                PointerTypeSyntax
+                    NamedTypeSyntax<item>
             AssignmentStatementSyntax
                 NameExpressionSyntax<a>
                 UnaryExpressionSyntax<&>
@@ -882,11 +882,11 @@ func main() : int
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<ap>
-                TypeNameSyntax<*int>
-                    TypeNameSyntax<int>
+                PointerTypeSyntax
+                    NamedTypeSyntax<int>
                 NullLiteralExpressionSyntax
             IfStatementSyntax
                 ParenthesizedExpressionSyntax
@@ -912,11 +912,11 @@ func main() : int
 `CompilationUnitSyntax
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<ap>
-                TypeNameSyntax<*int>
-                    TypeNameSyntax<int>
+                PointerTypeSyntax
+                    NamedTypeSyntax<int>
                 NullLiteralExpressionSyntax
             IfStatementSyntax
                 ParenthesizedExpressionSyntax
@@ -949,19 +949,19 @@ func main() : int
 `CompilationUnitSyntax
     StructDeclarationStatementSyntax<item>
         StructMemberDeclarationStatementSyntax<value:int>
-            TypeNameSyntax<int>
+            NamedTypeSyntax<int>
         StructMemberDeclarationStatementSyntax<next:item>
-            TypeNameSyntax<*item>
-                TypeNameSyntax<item>
+            PointerTypeSyntax
+                NamedTypeSyntax<item>
     FunctionDeclarationStatementSyntax<main>
         ParameterDeclarationListSyntax
-        TypeNameSyntax<int>
+        NamedTypeSyntax<int>
         BlockStatementSyntax
             VariableDeclarationSyntax<root>
-                TypeNameSyntax<item>
+                NamedTypeSyntax<item>
             VariableDeclarationSyntax<a>
-                TypeNameSyntax<*item>
-                    TypeNameSyntax<item>
+                PointerTypeSyntax
+                    NamedTypeSyntax<item>
             AssignmentStatementSyntax
                 NameExpressionSyntax<a>
                 UnaryExpressionSyntax<&>
@@ -976,6 +976,87 @@ func main() : int
                 GetExpressionSyntax<value>
                     NameExpressionSyntax<root>
 `],
+[`
+// array of length 3 of int
+let root : [3]int;
+`, 
+`CompilationUnitSyntax
+    VariableDeclarationSyntax<root>
+        ArrayTypeSyntax
+            IntegerLiteralExpressionSyntax<3>
+            NamedTypeSyntax<int>
+`],
+[`
+// array of length 9 of int
+let root : [3*3]int;
+`, 
+`CompilationUnitSyntax
+    VariableDeclarationSyntax<root>
+        ArrayTypeSyntax
+            BinaryExpressionSyntax<*>
+                IntegerLiteralExpressionSyntax<3>
+                IntegerLiteralExpressionSyntax<3>
+            NamedTypeSyntax<int>
+`],
+[`
+// array of length 3 of array of length 2 of int
+let root : [3][2]int;
+`, 
+`CompilationUnitSyntax
+    VariableDeclarationSyntax<root>
+        ArrayTypeSyntax
+            IntegerLiteralExpressionSyntax<3>
+            ArrayTypeSyntax
+                IntegerLiteralExpressionSyntax<2>
+                NamedTypeSyntax<int>
+`],
+[`
+// pointer to array of length 3 of int
+let root : *[3]int;
+`, 
+`CompilationUnitSyntax
+    VariableDeclarationSyntax<root>
+        PointerTypeSyntax
+            ArrayTypeSyntax
+                IntegerLiteralExpressionSyntax<3>
+                NamedTypeSyntax<int>
+`],
+[`
+// array of length 3 of pointer to array of length 2 of pointer to int
+let root : [3]*[2]*int;
+`, 
+`CompilationUnitSyntax
+    VariableDeclarationSyntax<root>
+        ArrayTypeSyntax
+            IntegerLiteralExpressionSyntax<3>
+            PointerTypeSyntax
+                ArrayTypeSyntax
+                    IntegerLiteralExpressionSyntax<2>
+                    PointerTypeSyntax
+                        NamedTypeSyntax<int>
+`],
+[`
+struct test 
+{
+    first : int;
+    second : bool;
+}
+
+// array of length 3 of array of length 2 of int
+let root : [3]*pair;
+`, 
+`CompilationUnitSyntax
+    StructDeclarationStatementSyntax<test>
+        StructMemberDeclarationStatementSyntax<first:int>
+            NamedTypeSyntax<int>
+        StructMemberDeclarationStatementSyntax<second:bool>
+            NamedTypeSyntax<bool>
+    VariableDeclarationSyntax<root>
+        ArrayTypeSyntax
+            IntegerLiteralExpressionSyntax<3>
+            PointerTypeSyntax
+                NamedTypeSyntax<pair>
+`]
     ].forEach((item) => {
         it(`should parse source : ` + item[0], () => {
             let text = item[0] as string;
@@ -1045,7 +1126,7 @@ func main() : int
 `CompilationUnitSyntax(0,40)
     FunctionDeclarationStatementSyntax(0,40)
         ParameterDeclarationListSyntax(9,2)
-        TypeNameSyntax(14,5)
+        NamedTypeSyntax(14,5)
         BlockStatementSyntax(20,20)
             ReturnStatementSyntax(26,12)
                 FloatLiteralExpressionSyntax(33,4)

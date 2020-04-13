@@ -4,8 +4,9 @@ import { Type, FunctionDetails, ClassDetails, VariableDetails, FunctionType, Cla
 import { PredefinedValueTypes } from "./PredefinedValueTypes";
 import { ValueType } from "./ValueType";
 import { BoundFunctionDeclaration, BoundClassDeclaration, BoundVariableDeclaration } from "../Compiler/Binding/BoundNode";
-import { TypeNameSyntax } from "../Compiler/Syntax/AST/ASTNode";
+import { TypeSyntax } from "../Compiler/Syntax/AST/ASTNode";
 import { Value } from "../Scope/ExecutionScope";
+import { exhaustiveCheck } from "../../misc/exhaustive";
 
 export default class TypeQuery
 {
@@ -42,20 +43,31 @@ export default class TypeQuery
         }    
     }
 
-    public static getTypeFromTypeSyntax(type : TypeNameSyntax, scope:IScope<ScopeInfo>, returnUnitOnFailure:boolean = false) : Type
+    public static getTypeFromTypeSyntax(type : TypeSyntax, scope:IScope<ScopeInfo>, returnUnitOnFailure:boolean = false) : Type
     {
-        // are we dealing with a pointer to some type?
-        if(type.pointerToType !== null)
+        switch(type.kind)
         {
-            const baseType = TypeQuery.getTypeFromTypeSyntax(type.pointerToType, scope, returnUnitOnFailure);
+            // are we dealing with a pointer to some type?
+            case "PointerTypeSyntax":
+            {
+                const baseType = TypeQuery.getTypeFromTypeSyntax(type.pointerToType, scope, returnUnitOnFailure);
             
-            const pointerToType = new PointerType(baseType);
+                const pointerToType = new PointerType(baseType);
 
-            return pointerToType;
-        }
-        else
-            // base case
-            return this.getTypeFromName(type.identifier.lexeme, scope, returnUnitOnFailure);
+                return pointerToType;
+            }
+            case "ArrayTypeSyntax" : 
+            {
+                throw new Error("Array Types Not Implemented Yet");
+            }
+            case "NamedTypeSyntax":
+            {
+                // base case
+                return this.getTypeFromName(type.identifier.lexeme, scope, returnUnitOnFailure);
+            }
+            default:
+                return exhaustiveCheck(type);
+        }        
     }
     
     static getDefaultValueForType(type: Type, scope: IScope<ScopeInfo>): any {

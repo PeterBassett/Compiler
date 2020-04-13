@@ -119,6 +119,10 @@ export default class Lexer implements ILexer
                 return SyntaxType.LeftParen;
             case ')' :
                 return SyntaxType.RightParen;
+            case '[' :
+                return SyntaxType.LeftSquareBracket;
+            case ']' :
+                return SyntaxType.RightSquareBracket;                
             case ';' :
                 return SyntaxType.SemiColon;                
             case ':' :

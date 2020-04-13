@@ -34,15 +34,20 @@ export default class SyntaxTreeStructureVisitor
                 break;                
             case "ParameterDeclarationSyntax":
             case "StructMemberDeclarationStatementSyntax" :            
-                value = "<" + node.identifier.lexeme + ":" + (!!node.typeName ? node.typeName.identifier.lexeme : "INFERED") + ">";
+                value = "<" + node.identifier.lexeme + ":" + (!!node.typeName ? node.typeName.rootIdentifier().lexeme : "INFERED") + ">";
                 break;            
             case "GetExpressionSyntax":
                 value = "<" + node.name.lexeme + ">";
                 break;   
             case "NameExpressionSyntax":            
                 value = "<" + node.identifierToken.lexeme + ">";
-                break;            
-            case "TypeNameSyntax":
+                break;     
+            case "NamedTypeSyntax":
+            {
+                value = "<" + node.identifier.lexeme + ">";
+                break;
+            }          
+           /* case "PointerTypeSyntax":
             {
                 let pointer = "";
                 if(node.starToken)
@@ -57,7 +62,7 @@ export default class SyntaxTreeStructureVisitor
 
                 value = "<" + pointer + node.identifier.lexeme + ">";
                 break;
-            }                                        
+            }   */                                
         }
         
         this.structure += Array(this.indent+1).join("    ") + node.kind + value + "\n";

@@ -299,7 +299,7 @@ export default class Parser
                 new Token(SyntaxType.Identifier, name.lexeme + "<CONTAINS ERRORS>", name.position, name.line, name.character),
                 parameterList, 
                 new Token(SyntaxType.Colon, ":", 0, 0, 0),
-                AST.TypeNameSyntax(null, new Token(SyntaxType.IntKeyword, "int", 0, 0, 0), true, null),
+                AST.NamedTypeSyntax(new Token(SyntaxType.IntKeyword, "int", 0, 0, 0), true),
                 AST.BlockStatementSyntax(
                     new Token(SyntaxType.LeftBrace, "{", 0,0,0),
                     [
@@ -316,36 +316,45 @@ export default class Parser
         }
     }
 
-    parsePredefinedTypeOrIdentifier() : AST.TypeNameSyntax {
+    parsePredefinedTypeOrIdentifier() : AST.TypeSyntax {
         const token = this.peek(0);
 
         switch(token.kind)
         {
             case SyntaxType.Identifier:
-                return AST.TypeNameSyntax(null, this.match(SyntaxType.Identifier), false, null);
+                return AST.NamedTypeSyntax(this.match(SyntaxType.Identifier), false);
             case SyntaxType.IntKeyword:
             case SyntaxType.FloatKeyword:
             case SyntaxType.StringKeyword:
             case SyntaxType.BoolKeyword:
                 this.next();
-                return AST.TypeNameSyntax(null, token, true, null);
+                return AST.NamedTypeSyntax(token, true);
             case SyntaxType.Star:
             {
                 const starToken = this.next();
                 const type = this.parsePredefinedTypeOrIdentifier();
             
-                return AST.TypeNameSyntax(starToken, type.identifier, type.isPredefined, type);
+                return AST.PointerTypeSyntax(starToken, type);
+            }
+            case SyntaxType.LeftSquareBracket:
+            {
+                const leftBracket = this.next();
+                const length = this.parseExpression();
+                const rightBracket = this.next();
+                const elementType = this.parsePredefinedTypeOrIdentifier();
+
+                return AST.ArrayTypeSyntax(leftBracket, length, rightBracket, elementType);
             }
             default:
                 this.next();
                 this._diagnostics.reportInvalidTypeName(token);
-                return AST.TypeNameSyntax(null, new Token(SyntaxType.Identifier, 
+                return AST.NamedTypeSyntax(new Token(SyntaxType.Identifier, 
                     token.lexeme, 
                     token.position, 
                     token.line, 
                     token.character, 
                     token.leadingTrivia, 
-                    token.trailingTrivia), false, null)
+                    token.trailingTrivia), false)
         }
     }
 
@@ -425,7 +434,7 @@ export default class Parser
         const typeQualifier = this.matchAny(SyntaxType.LetKeyword, SyntaxType.VarKeyword);
         const identifier = this.match(SyntaxType.Identifier);
 
-        let typeDeclaration : AST.TypeNameSyntax | undefined = undefined;
+        let typeDeclaration : AST.TypeSyntax | undefined = undefined;
         let colonToken : Token | undefined = undefined;
         if(this.current.kind == SyntaxType.Colon)
         {

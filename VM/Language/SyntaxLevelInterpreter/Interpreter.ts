@@ -187,8 +187,10 @@ export default class Interpreter
                 return this.VisitParameterDeclarationSyntax(node);
             case "CallExpressionSyntax":
                 return this.VisitCallExpressionSyntax(node);    
-            case "TypeNameSyntax":
-                return this.VisitTypeNameSyntax(node);
+            case "NamedTypeSyntax":
+            case "PointerTypeSyntax":
+            case "ArrayTypeSyntax":
+                return this.VisitTypeSyntax(node);
             case "AssignmentStatementSyntax":                       
                 return this.VisitAssignmentStatementSyntax(node);                
             case "StructDeclarationStatementSyntax" :   
@@ -211,8 +213,33 @@ export default class Interpreter
         throw new Error("Method not implemented.");
     }
 
-    VisitTypeNameSyntax(node: AST.TypeNameSyntax): Value {
+    VisitPointerTypeSyntax(node: AST.PointerTypeSyntax): Value {
+        this.VisitTypeSyntax(node.pointerToType);
         throw new Error("Method not implemented.");
+    }
+
+    VisitArrayTypeSyntax(node: AST.ArrayTypeSyntax): Value {
+        this.VisitExpressionNode(node.length);
+        this.VisitTypeSyntax(node.elementType);
+        throw new Error("Method not implemented.");
+    }
+
+    VisitNamedTypeSyntax(node: AST.NamedTypeSyntax): Value {
+        throw new Error("Method not implemented.");
+    }
+
+    VisitTypeSyntax(node: AST.TypeSyntax): Value {
+        switch (node.kind)
+        {
+            case "ArrayTypeSyntax":
+                return this.VisitArrayTypeSyntax(node);
+            case "PointerTypeSyntax":
+                return this.VisitPointerTypeSyntax(node);
+            case "NamedTypeSyntax":
+                return this.VisitNamedTypeSyntax(node);
+            default:
+                return exhaustiveCheck(node);
+        }
     }
 
     VisitParameterDeclarationSyntax(node: AST.ParameterDeclarationSyntax) : Value
@@ -249,14 +276,14 @@ export default class Interpreter
         else
             value = Value.Unit;
 
-        this.scope.DefineIdentifier(stmt.identifier.lexeme, value, TypeQuery.getValueTypeFromName(stmt.typeName!.identifier.lexeme));
+        this.scope.DefineIdentifier(stmt.identifier.lexeme, value, TypeQuery.getValueTypeFromName(stmt.typeName!.rootIdentifier().lexeme));
 
         return value;
     }
 
     VisitFunctionDeclarationStatementSyntax(node : AST.FunctionDeclarationStatementSyntax): Value {
         let value = new Value(ValueType.Function, node);
-        this.scope.DefineIdentifier(node.identifier.lexeme, value, TypeQuery.getValueTypeFromName(node.returnValue.identifier.lexeme));
+        this.scope.DefineIdentifier(node.identifier.lexeme, value, TypeQuery.getValueTypeFromName(node.returnValue.rootIdentifier().lexeme));
         return value;
     }
     
@@ -571,8 +598,10 @@ export default class Interpreter
                 return this.VisitNameExpressionSyntax(node);            
             case "CallExpressionSyntax":                       
                 return this.VisitCallExpressionSyntax(node);      
-            case "TypeNameSyntax":
-                return this.VisitTypeNameSyntax(node);     
+            case "NamedTypeSyntax":                
+            case "PointerTypeSyntax":                
+            case "ArrayTypeSyntax":
+                return this.VisitTypeSyntax(node);
             case "GetExpressionSyntax":               
                 return this.VisitGetExpressionSyntax(node);     
             case "ArrayIndexExpressionSyntax":

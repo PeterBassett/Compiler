@@ -38,6 +38,8 @@ export enum SyntaxType {
     LeftBrace,
     RightParen,
     LeftParen,
+    LeftSquareBracket,
+    RightSquareBracket,
     Identifier,
     SemiColon,
     //keywords

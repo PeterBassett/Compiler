@@ -25,7 +25,7 @@ export default class SyntaxTreeVisitor
                 value = "<" + node.identifier.lexeme + ">";
                 break;
             case "ParameterDeclarationSyntax":
-                value = "<" + node.identifier.lexeme + ":" + (!!node.typeName ? node.typeName.identifier.lexeme : "INFERED") + ">";
+                value = "<" + node.identifier.lexeme + ":" + (!!node.typeName ? node.typeName.rootIdentifier().lexeme : "INFERED") + ">";
                 break;            
         }
         
