@@ -296,7 +296,7 @@ export default class BoundTreeTransformBase
         return statement;
     }
     
-    protected transformExpression(expression: Nodes.BoundExpression) : Nodes.BoundExpression {
+    public transformExpression(expression: Nodes.BoundExpression) : Nodes.BoundExpression {
         switch(expression.kind)
         {
             case Nodes.BoundNodeKind.AssignmentStatement:

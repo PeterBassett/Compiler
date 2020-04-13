@@ -2,24 +2,26 @@ import { Diagnostics, DiagnosticType } from "../Diagnostics/Diagnostics";
 import CompilationUnit from "../Syntax/CompilationUnit";
 import * as AST from "../Syntax/AST/ASTNode";
 import { SyntaxType } from "../Syntax/SyntaxType";
-import { Type, FunctionDetails, StructDetails, ClassType, StructType, ClassDetails } from "../../Types/TypeInformation";
+import { Type, FunctionDetails, StructDetails, ClassType, StructType, ClassDetails, PointerType, ArrayType } from "../../Types/TypeInformation";
 import { ValueType } from "../../Types/ValueType";
 import { PredefinedValueTypes } from "../../Types/PredefinedValueTypes";
 import { using } from "../../../misc/disposable";
 import { exhaustiveCheck } from "../../../misc/exhaustive";
-import { DefinitionScope, Identifier } from "../../Scope/DefinitionScope";
+import { DefinitionScope, Identifier, ScopeInfo } from "../../Scope/DefinitionScope";
 import * as Nodes from "./BoundNode";
 import TypeQuery from "../../Types/TypeInspection";
 import TextSpan from "../Syntax/Text/TextSpan";
 import BuiltinFunctions from "../BuiltinFunctions";
 import Conversion from "./Conversion";
 import Token from "../Syntax/Token";
+import { IScope } from "../../Scope/Scope";
+import ExpressionOptimiser from "../Optimisation/ExpressionOptimiser";
 
 // responsible for transforming a SyntaxTree into a BoundTree
 // this discards syntax detail complexity and enforces semantic rules.
 // it is the start of the type checker
 export default class Binder
-{
+{    
     private diagnostics! : Diagnostics;
     private scope!: DefinitionScope;
     
@@ -321,7 +323,7 @@ export default class Binder
 
         if(syntax.typeName)
         {
-            type = TypeQuery.getTypeFromTypeSyntax(syntax.typeName, this.scope);
+            type = this.getTypeFromTypeSyntax(syntax.typeName, this.scope, this);
         }
 
         let initialiser : Nodes.BoundExpression | null = null;        
@@ -392,7 +394,7 @@ export default class Binder
 
         for(let declaration of declarations)
         {
-            const memberType = TypeQuery.getTypeFromTypeSyntax(declaration.typeName, this.scope, true);            
+            const memberType = this.getTypeFromTypeSyntax(declaration.typeName, this.scope, this, true);            
 
             if(memberType.type === PredefinedValueTypes.Unit.type)
             {
@@ -409,7 +411,7 @@ export default class Binder
     }
 
     private BindDefaultExpressionForType(typeName: AST.TypeSyntax): Nodes.BoundExpression {        
-        const type = TypeQuery.getTypeFromTypeSyntax(typeName, this.scope);
+        const type = this.getTypeFromTypeSyntax(typeName, this.scope, this);
         const value = TypeQuery.getDefaultValueForType(type, this.scope);
 
         return new Nodes.BoundLiteralExpression(value, type);
@@ -469,7 +471,7 @@ export default class Binder
 
         let declaration : Nodes.BoundFunctionDeclaration;
 
-        const returnType = TypeQuery.getTypeFromTypeSyntax(returnValue, this.scope);
+        const returnType = this.getTypeFromTypeSyntax(returnValue, this.scope, this);
 
         declaration = new Nodes.BoundFunctionDeclaration(identifier.lexeme, parameters, returnType, undefined);
 
@@ -524,7 +526,7 @@ export default class Binder
     {        
         const parameters = this.BindFunctionParameterList(node.parameterList);
 
-        const returnType = TypeQuery.getTypeFromTypeSyntax(node.returnValue, this.scope);
+        const returnType = this.getTypeFromTypeSyntax(node.returnValue, this.scope, this);
 
         const declaration = new Nodes.BoundFunctionDeclaration(node.identifier.lexeme,
             parameters,          
@@ -564,7 +566,7 @@ export default class Binder
     {    
         const name = parameter.identifier.lexeme;        
         
-        const type = TypeQuery.getTypeFromTypeSyntax(parameter.typeName, this.scope);
+        const type = this.getTypeFromTypeSyntax(parameter.typeName, this.scope, this);
 
         const variable = new Nodes.VariableSymbol(name, false, type, false, true);
 
@@ -582,7 +584,7 @@ export default class Binder
         return result;
     }
 
-    private BindExpression(syntax: AST.ExpressionNode) : Nodes.BoundExpression
+    BindExpression(syntax: AST.ExpressionNode) : Nodes.BoundExpression
     {
         switch(syntax.kind)
         {
@@ -695,7 +697,7 @@ export default class Binder
         const variableFound = this.BindExpression(syntax.nameExpression) as Nodes.BoundVariableExpression;
         const declaration = this.functionMap[name];
         
-        const typeConversionCall = TypeQuery.getTypeFromName(syntax.nameExpression.identifierToken.lexeme, this.scope, true);
+        const typeConversionCall = this.getTypeFromName(syntax.nameExpression.identifierToken.lexeme, this.scope, true);
 
         if (syntax.callArguments.length == 1 && typeConversionCall.type != ValueType.Unit && typeConversionCall.isPredefined)
         {
@@ -732,7 +734,7 @@ export default class Binder
         else
         {
             callName = declaration.identifier.lexeme;
-            returnType = TypeQuery.getTypeFromTypeSyntax(declaration.returnValue, this.scope);
+            returnType = this.getTypeFromTypeSyntax(declaration.returnValue, this.scope, this);
         }
 
         // if we have not found a definition and we are currently NOT allowed to make placeholders we have an error
@@ -966,5 +968,112 @@ export default class Binder
         }
 
         return new Nodes.BoundConversionExpression(type, expression);
+    }
+
+    public getTypeFromName(name : string, scope:IScope<ScopeInfo>, returnUnitOnFailure:boolean = false) : Type
+    {
+        switch(name)
+        {
+            case "int":
+                return PredefinedValueTypes.Integer;
+            case "float" : 
+                return PredefinedValueTypes.Float;
+            case "bool":
+                return PredefinedValueTypes.Boolean;
+            case "string" : 
+                return PredefinedValueTypes.String;
+            default:
+            {
+                let identifier = scope.scope.info.Find(scope.scope, name);
+
+                if(identifier == Identifier.Undefined)
+                    if(returnUnitOnFailure)
+                        return PredefinedValueTypes.Unit;
+                    else
+                        throw new Error("Undefined Type");
+
+                if(!identifier.type.isClass && !identifier.type.isStruct)
+                    if(returnUnitOnFailure)
+                        return PredefinedValueTypes.Unit;
+                    else
+                        throw new Error("Undefined Type");
+
+                return identifier.type;
+            }
+        }    
+    }
+
+    public getTypeFromTypeSyntax(type : AST.TypeSyntax, scope:IScope<ScopeInfo>, binder : Binder, returnUnitOnFailure:boolean = false) : Type
+    {
+        switch(type.kind)
+        {
+            // are we dealing with a pointer to some type?
+            case "PointerTypeSyntax":
+            {
+                const baseType = this.getTypeFromTypeSyntax(type.pointerToType, scope, binder, returnUnitOnFailure);            
+                const pointerToType = new PointerType(baseType);
+                return pointerToType;
+            }
+            case "ArrayTypeSyntax" : 
+            {
+                let lengthExpr = binder.BindExpression(type.length);
+
+                // is the array length compile time const
+                if(!binder.isCompileTypeConstant(lengthExpr))
+                {
+                    this.diagnostics.reportNonConstantArrayBound(type.rootIdentifier().lexeme, type.length.span())
+                    lengthExpr = new Nodes.BoundErrorExpression();
+                }
+                else
+                {
+                    const optimiser = new ExpressionOptimiser();
+                    lengthExpr = optimiser.transformExpression(lengthExpr);
+                }
+
+                const baseType = this.getTypeFromTypeSyntax(type.elementType, scope, binder, returnUnitOnFailure);            
+                        
+                if(lengthExpr.type.type === ValueType.Int || lengthExpr.kind === Nodes.BoundNodeKind.LiteralExpression)                
+                {
+                    const length = (lengthExpr as Nodes.BoundLiteralExpression).value;
+                    const arrayType = new ArrayType(baseType, length);
+                    return arrayType;
+                }
+                else
+                {
+                    this.diagnostics.reportInvalidArrayBound(type.rootIdentifier().lexeme, type.length.span())
+                    const arrayType = new ArrayType(baseType, 0);
+                    return arrayType;
+                }        
+            }
+            case "NamedTypeSyntax":
+            {
+                // base case
+                return this.getTypeFromName(type.identifier.lexeme, scope, returnUnitOnFailure);
+            }
+            default:
+                return exhaustiveCheck(type);
+        }        
+    }
+
+    isCompileTypeConstant(expr: Nodes.BoundExpression) : boolean
+    {
+        switch(expr.kind)
+        {
+            case Nodes.BoundNodeKind.LiteralExpression:                
+                return true;
+            case Nodes.BoundNodeKind.UnaryExpression:
+            {
+                const unary = expr as Nodes.BoundUnaryExpression;
+                return this.isCompileTypeConstant(unary.operand);
+            }
+            case Nodes.BoundNodeKind.BinaryExpression:
+            {
+                const binary = expr as Nodes.BoundBinaryExpression;
+                return this.isCompileTypeConstant(binary.left) &&
+                       this.isCompileTypeConstant(binary.right);
+            }
+            default :
+                return false;
+        }
     }
 }

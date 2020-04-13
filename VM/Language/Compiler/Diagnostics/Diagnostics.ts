@@ -30,7 +30,9 @@ export enum DiagnosticType {
     NotAllPathsReturn,
     DuplicateStructMember,
     UndefinedStructMember,
-    AssignmentRequiresLValue
+    AssignmentRequiresLValue,
+    NonConstantArrayBound,
+    InvalidArrayBound
 }
 
 export class Diagnostic
@@ -61,7 +63,7 @@ export class Diagnostic
 }
 
 export class Diagnostics
-{    
+{            
     private readonly _diagnostics : Diagnostic[];
     private readonly _source : SourceText;
 
@@ -192,6 +194,16 @@ export class Diagnostics
 
     public reportAssignmentRequiresLValue(kind: string, span: TextSpan) : void {        
         this.report(`lvalue required as left operand of assignment, found ${kind}`, DiagnosticType.AssignmentRequiresLValue, span);
+    }
+
+    public reportNonConstantArrayBound(arrayName: string, span: TextSpan) : void 
+    {
+        this.report(`non-constant array bound ${arrayName}`, DiagnosticType.NonConstantArrayBound, span);
+    }
+
+    public reportInvalidArrayBound(arrayName: string, span: TextSpan) : void
+    {
+        this.report(`invalid array bound ${arrayName}`, DiagnosticType.InvalidArrayBound, span);
     }
 
     public get text() : SourceText

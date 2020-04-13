@@ -1042,7 +1042,7 @@ struct test
     second : bool;
 }
 
-// array of length 3 of array of length 2 of int
+// array of length 3 pointer to pair
 let root : [3]*pair;
 `, 
 `CompilationUnitSyntax
@@ -1056,7 +1056,39 @@ let root : [3]*pair;
             IntegerLiteralExpressionSyntax<3>
             PointerTypeSyntax
                 NamedTypeSyntax<pair>
-`]
+`]/*,
+[`
+// array of length 3 int with initialisation vector
+let root : [3]int = {1, 2, 3};
+`, 
+`CompilationUnitSyntax
+    StructDeclarationStatementSyntax<test>
+        StructMemberDeclarationStatementSyntax<first:int>
+            NamedTypeSyntax<int>
+        StructMemberDeclarationStatementSyntax<second:bool>
+            NamedTypeSyntax<bool>
+    VariableDeclarationSyntax<root>
+        ArrayTypeSyntax
+            IntegerLiteralExpressionSyntax<3>
+            PointerTypeSyntax
+                NamedTypeSyntax<pair>
+`],
+[`
+// array with no length with initialsation vector
+let root : [...]int = {1, 2, 3, 4, 5, 6};
+`, 
+`CompilationUnitSyntax
+    StructDeclarationStatementSyntax<test>
+        StructMemberDeclarationStatementSyntax<first:int>
+            NamedTypeSyntax<int>
+        StructMemberDeclarationStatementSyntax<second:bool>
+            NamedTypeSyntax<bool>
+    VariableDeclarationSyntax<root>
+        ArrayTypeSyntax
+            IntegerLiteralExpressionSyntax<3>
+            PointerTypeSyntax
+                NamedTypeSyntax<pair>
+`]*/
     ].forEach((item) => {
         it(`should parse source : ` + item[0], () => {
             let text = item[0] as string;

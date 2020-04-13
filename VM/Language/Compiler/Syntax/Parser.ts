@@ -436,23 +436,27 @@ export default class Parser
 
         let typeDeclaration : AST.TypeSyntax | undefined = undefined;
         let colonToken : Token | undefined = undefined;
+        
         if(this.current.kind == SyntaxType.Colon)
         {
             colonToken = this.match(SyntaxType.Colon);
             // we have a type declaration
             typeDeclaration = this.parsePredefinedTypeOrIdentifier();
         }
+
         let equalsToken : Token | undefined = undefined;
-        let initialiseationExpression : AST.ExpressionNode | undefined = undefined;
+        let initialisationExpression : AST.ExpressionNode | undefined = undefined;
+
         if(this.current.kind == SyntaxType.Equals)
         {
             equalsToken = this.match(SyntaxType.Equals);
             // we have a type declaration
-            initialiseationExpression = this.parseExpression();
+            initialisationExpression = this.parseExpression();
         }
+
         this.match(SyntaxType.SemiColon);
 
-        return AST.VariableDeclarationSyntax(typeQualifier, identifier, colonToken, typeDeclaration, equalsToken, initialiseationExpression, undefined );
+        return AST.VariableDeclarationSyntax(typeQualifier, identifier, colonToken, typeDeclaration, equalsToken, initialisationExpression, undefined );
     }
     
     parseReturnStatement(): AST.StatementNode {

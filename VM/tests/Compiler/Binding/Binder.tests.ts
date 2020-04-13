@@ -694,7 +694,82 @@ func main() : int
                 FalseBranch
                     ReturnStatement
                         LiteralExpression<0:int>
-`] 
+`],
+[
+`func main() : int
+{
+    let ap : [3]int;
+    return 0;
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<ap:[3]int>
+                LiteralExpression<null:[3]int>
+            ReturnStatement
+                LiteralExpression<0:int>
+`],
+[
+`func main() : int
+{
+    let ap : *[3]int = null;
+    return 0;
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<ap:*[3]int>
+                LiteralExpression<0:*[3]int>
+            ReturnStatement
+                LiteralExpression<0:int>
+`],
+[
+`func main() : int
+{
+    let ap : [3][2]int;
+    return 0;
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<ap:[3][2]int>
+                LiteralExpression<null:[3][2]int>
+            ReturnStatement
+                LiteralExpression<0:int>
+`],
+[
+`func main() : int
+{
+    let ap : *[3]*[2]*int;
+    return 0;
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<ap:*[3]*[2]*int>
+                LiteralExpression<0:*[3]*[2]*int>
+            ReturnStatement
+                LiteralExpression<0:int>
+`],
+[
+`func main() : int
+{
+    let ap : [3*2+1]int;
+    return 0;
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<ap:[7]int>
+                LiteralExpression<null:[7]int>
+            ReturnStatement
+                LiteralExpression<0:int>
+`],
 /*,[`
 class test
 {

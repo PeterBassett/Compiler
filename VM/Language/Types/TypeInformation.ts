@@ -1,5 +1,5 @@
 import { IScope, Scope } from "../Scope/Scope";
-import { BoundFunctionDeclaration, BoundVariableDeclaration, BoundClassDeclaration, BoundStructMemberDeclaration } from "../Compiler/Binding/BoundNode";
+import { BoundFunctionDeclaration, BoundVariableDeclaration, BoundClassDeclaration, BoundStructMemberDeclaration, BoundExpression } from "../Compiler/Binding/BoundNode";
 import { GetKeywordType } from "../Compiler/Syntax/SyntaxFacts";
 import { ScopeInfo, Identifier } from "../Scope/DefinitionScope";
 import { PredefinedValueTypes } from "../Types/PredefinedValueTypes";
@@ -131,6 +131,8 @@ export class Type
     }
 
     public pointerToType : Type|null;
+    public elementType : Type|null;
+    public arrayLength : number|null;
     public variable: VariableDetails|null;
     public function: FunctionDetails|null;
     public classDetails: ClassDetails|null;
@@ -151,6 +153,8 @@ export class Type
         this.variable = null;
         this.classDetails = null;
         this.structDetails = null;
+        this.elementType = null;
+        this.arrayLength = null;
     }
 
     clone(): Type {
@@ -235,5 +239,14 @@ export class PointerType extends Type
     constructor(pointerToType : Type) {
         super(ValueType.Pointer, "*" + pointerToType.name);
         this.pointerToType = pointerToType;
+    }
+}
+
+export class ArrayType extends Type
+{
+    constructor(elementType : Type, length:number) {
+        super(ValueType.Array, `[${length}]${elementType.name}`);        
+        this.elementType = elementType;
+        this.arrayLength = length;
     }
 }

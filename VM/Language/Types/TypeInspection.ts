@@ -1,75 +1,16 @@
 import { IScope } from "../Scope/Scope";
 import { ScopeInfo, Identifier } from "../Scope/DefinitionScope";
-import { Type, FunctionDetails, ClassDetails, VariableDetails, FunctionType, ClassType, PointerType } from "./TypeInformation";
+import { Type, FunctionDetails, ClassDetails, VariableDetails, FunctionType, ClassType, PointerType, ArrayType } from "./TypeInformation";
 import { PredefinedValueTypes } from "./PredefinedValueTypes";
 import { ValueType } from "./ValueType";
 import { BoundFunctionDeclaration, BoundClassDeclaration, BoundVariableDeclaration } from "../Compiler/Binding/BoundNode";
 import { TypeSyntax } from "../Compiler/Syntax/AST/ASTNode";
 import { Value } from "../Scope/ExecutionScope";
 import { exhaustiveCheck } from "../../misc/exhaustive";
+import Binder from "../Compiler/Binding/Binder";
 
 export default class TypeQuery
-{
-    public static getTypeFromName(name : string, scope:IScope<ScopeInfo>, returnUnitOnFailure:boolean = false) : Type
-    {
-        switch(name)
-        {
-            case "int":
-                return PredefinedValueTypes.Integer;
-            case "float" : 
-                return PredefinedValueTypes.Float;
-            case "bool":
-                return PredefinedValueTypes.Boolean;
-            case "string" : 
-                return PredefinedValueTypes.String;
-            default:
-            {
-                let identifier = scope.scope.info.Find(scope.scope, name);
-
-                if(identifier == Identifier.Undefined)
-                    if(returnUnitOnFailure)
-                        return PredefinedValueTypes.Unit;
-                    else
-                        throw new Error("Undefined Type");
-
-                if(!identifier.type.isClass && !identifier.type.isStruct)
-                    if(returnUnitOnFailure)
-                        return PredefinedValueTypes.Unit;
-                    else
-                        throw new Error("Undefined Type");
-
-                return identifier.type;
-            }
-        }    
-    }
-
-    public static getTypeFromTypeSyntax(type : TypeSyntax, scope:IScope<ScopeInfo>, returnUnitOnFailure:boolean = false) : Type
-    {
-        switch(type.kind)
-        {
-            // are we dealing with a pointer to some type?
-            case "PointerTypeSyntax":
-            {
-                const baseType = TypeQuery.getTypeFromTypeSyntax(type.pointerToType, scope, returnUnitOnFailure);
-            
-                const pointerToType = new PointerType(baseType);
-
-                return pointerToType;
-            }
-            case "ArrayTypeSyntax" : 
-            {
-                throw new Error("Array Types Not Implemented Yet");
-            }
-            case "NamedTypeSyntax":
-            {
-                // base case
-                return this.getTypeFromName(type.identifier.lexeme, scope, returnUnitOnFailure);
-            }
-            default:
-                return exhaustiveCheck(type);
-        }        
-    }
-    
+{   
     static getDefaultValueForType(type: Type, scope: IScope<ScopeInfo>): any {
         switch(type.type)
         {
@@ -84,6 +25,7 @@ export default class TypeQuery
             case ValueType.Class:
                 return null;    
             case ValueType.Struct:
+            case ValueType.Array:
                 return null;
         }
         
