@@ -618,7 +618,7 @@ export default class Binder
             case "PointerTypeSyntax":
                 return this.BindPointerTypeSyntax(syntax);
             case "ArrayIndexExpressionSyntax":     
-                return this.BindArrayTypeSyntax(syntax);
+                return this.BindArrayIndexExpressionSyntax(syntax);
             default:       
                 throw new Error("Not Implemented");
         }
@@ -636,6 +636,57 @@ export default class Binder
         throw new Error("Method not implemented.");
     }
     
+    BindArrayIndexExpressionSyntax(syntax: AST.ArrayIndexExpressionSyntax): Nodes.BoundExpression {        
+        const index = this.BindExpression(syntax.index);
+
+        this.ValidateArrayIndex(syntax, index);
+
+        let left : Nodes.BoundExpression;
+
+        switch(syntax.left.kind)
+        {
+            case "ArrayIndexExpressionSyntax":
+                left = this.BindArrayIndexExpressionSyntax(syntax.left as AST.ArrayIndexExpressionSyntax);
+                break;
+            case "DereferenceExpressionSyntax":
+                left = this.BindDereferenceExpression(syntax.left as AST.DereferenceExpressionSyntax);
+                break;
+            case "GetExpressionSyntax":
+                left = this.BindGetExpression(syntax.left as AST.GetExpressionSyntax);
+                break;
+            case "NameExpressionSyntax":
+                left = this.BindNameExpression(syntax.left as AST.NameExpressionSyntax);
+                break;
+            default:
+                left = new Nodes.BoundErrorExpression();
+                exhaustiveCheck(syntax.left);
+        }       
+        
+        if(!left.type.elementType)       
+        {
+            this.diagnostics.reportInvalidIndexing(left.type, syntax.left.span());
+        }
+
+        return new Nodes.BoundArrayIndexExpression(left, index);
+    }    
+
+    ValidateArrayIndex(syntax: AST.ArrayIndexExpressionSyntax, index: Nodes.BoundExpression) 
+    {
+        if(index.type.type !== PredefinedValueTypes.Integer.type)
+        {
+            this.diagnostics.reportInvalidArrayIndexType(syntax.index.span());
+            return;
+        }    
+
+        if(index.kind === Nodes.BoundNodeKind.LiteralExpression)
+        {
+            const literal = index as Nodes.BoundLiteralExpression;
+            
+            if(literal.value % 1 !== 0)
+                this.diagnostics.reportNegativeArrayIndex(syntax.index.span());            
+        }
+    }
+
     private BindGetExpression(syntax: AST.GetExpressionSyntax) : Nodes.BoundExpression {
         let left = this.BindExpression(syntax.left);
         
@@ -877,7 +928,10 @@ export default class Binder
             case "DereferenceExpressionSyntax":
                 return this.BindAssignToDereferenceExpressionStatement(syntax.target, syntax.expression);                
             case "ArrayIndexExpressionSyntax":
-                return this.BindAssignToArrayIndexExpressionStatement(syntax.target, syntax.expression);                
+                return this.BindAssignToArrayIndexExpressionStatement(syntax.target, syntax.expression);      
+            default:
+                this.diagnostics.reportAssignmentRequiresLValue("", syntax.span());
+                return this.BindErrorStatement();
         }
     }
 
@@ -909,7 +963,17 @@ export default class Binder
         return new Nodes.BoundAssignmentStatement(left, convertedExpression);
     }
 
-    BindDereferenceExpression(syntax: AST.DereferenceExpressionSyntax) : Nodes.BoundExpression{
+    BindAssignToArrayIndexExpressionStatement(target: AST.ArrayIndexExpressionSyntax, expression: AST.ExpressionNode): Nodes.BoundExpression
+    {
+        const left = this.BindExpression(target);
+        const right = this.BindExpression(expression);
+        
+        const convertedExpression = this.BindConversion(expression.span(), right, left.type);
+
+        return new Nodes.BoundAssignmentStatement(left, convertedExpression);
+    }
+
+    BindDereferenceExpression(syntax: AST.DereferenceExpressionSyntax) : Nodes.BoundExpression {
         const operand = this.BindExpression(syntax.operand);
         if(syntax.operatorToken.kind !== SyntaxType.Star)
         {
@@ -924,11 +988,6 @@ export default class Binder
         }
 
         return new Nodes.BoundDereferenceExpression(operand, operand.type.pointerToType!);
-    }
-
-    BindAssignToArrayIndexExpressionStatement(target: AST.ArrayIndexExpressionSyntax, expression: AST.ExpressionNode): Nodes.BoundExpression
-    {
-        throw new Error("Arrays not implemented yet.");
     }
     
     private BindErrorStatement() : Nodes.BoundStatement

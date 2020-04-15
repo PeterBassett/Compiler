@@ -32,7 +32,10 @@ export enum DiagnosticType {
     UndefinedStructMember,
     AssignmentRequiresLValue,
     NonConstantArrayBound,
-    InvalidArrayBound
+    InvalidArrayBound,
+    InvalidIndexing,
+    InvalidArrayIndexType,
+    NegativeArrayIndex
 }
 
 export class Diagnostic
@@ -63,7 +66,7 @@ export class Diagnostic
 }
 
 export class Diagnostics
-{            
+{
     private readonly _diagnostics : Diagnostic[];
     private readonly _source : SourceText;
 
@@ -205,6 +208,21 @@ export class Diagnostics
     {
         this.report(`invalid array bound ${arrayName}`, DiagnosticType.InvalidArrayBound, span);
     }
+
+    public reportNegativeArrayIndex(span: TextSpan) : void
+    {
+        this.report(`invalid array index, index must be non-negative`, DiagnosticType.NegativeArrayIndex, span);
+    }    
+
+    public reportInvalidArrayIndexType(span: TextSpan) : void
+    {
+        this.report(`non-integer array index`, DiagnosticType.InvalidArrayIndexType, span);
+    }
+
+    public reportInvalidIndexing(type: Type, span: TextSpan) : void 
+    {
+        this.report(`type ${type} does not support indexing`, DiagnosticType.InvalidIndexing, span);
+    }            
 
     public get text() : SourceText
     {

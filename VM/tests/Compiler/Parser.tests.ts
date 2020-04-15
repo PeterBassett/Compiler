@@ -1056,7 +1056,36 @@ let root : [3]*pair;
             IntegerLiteralExpressionSyntax<3>
             PointerTypeSyntax
                 NamedTypeSyntax<pair>
-`]/*,
+`],
+[`
+func main() : int
+{
+    let root : [3]int;
+    root[0] = 123;
+    return root[0];
+}
+`, 
+`CompilationUnitSyntax
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        NamedTypeSyntax<int>
+        BlockStatementSyntax
+            VariableDeclarationSyntax<root>
+                ArrayTypeSyntax
+                    IntegerLiteralExpressionSyntax<3>
+                    NamedTypeSyntax<int>
+            AssignmentStatementSyntax
+                ArrayIndexExpressionSyntax
+                    NameExpressionSyntax<root>
+                    IntegerLiteralExpressionSyntax<0>
+                IntegerLiteralExpressionSyntax<123>
+            ReturnStatementSyntax
+                ArrayIndexExpressionSyntax
+                    NameExpressionSyntax<root>
+                    IntegerLiteralExpressionSyntax<0>
+`],
+
+/*,
 [`
 // array of length 3 int with initialisation vector
 let root : [3]int = {1, 2, 3};

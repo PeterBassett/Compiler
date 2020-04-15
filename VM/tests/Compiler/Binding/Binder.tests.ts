@@ -770,6 +770,32 @@ func main() : int
             ReturnStatement
                 LiteralExpression<0:int>
 `],
+[
+`
+func main() : int
+{
+    let root : [3]int;
+    root[1] = 123;
+    return root[1];
+}
+`,
+`BoundGlobalScope
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<root:[3]int>
+                LiteralExpression<null:[3]int>
+            AssignmentStatement
+                ArrayIndex
+                    VariableExpression<root:[3]int>
+                    LiteralExpression<1:int>
+                LiteralExpression<123:int>
+            ReturnStatement
+                ArrayIndex
+                    VariableExpression<root:[3]int>
+                    LiteralExpression<1:int>
+`
+]
 /*,[`
 class test
 {
@@ -809,7 +835,7 @@ func main() : int
         });
     });
 [
-    [`func add(a:int, b:int):int => a + b;
+[`func add(a:int, b:int):int => a + b;
 func main() : int
 {
     return add(1, 2);

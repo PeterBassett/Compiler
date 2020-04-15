@@ -166,6 +166,8 @@ export class Type
         a.isStruct = this.isStruct;        
         a.isPredefined = this.isPredefined;
         a.pointerToType = this.pointerToType;
+        a.elementType = this.elementType;
+        a.arrayLength = this.arrayLength;
 
         if(this.function)
             a.function = this.function.clone();

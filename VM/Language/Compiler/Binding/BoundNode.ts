@@ -707,13 +707,13 @@ export class BoundConversionExpression extends BoundExpression
 
 export class BoundArrayIndexExpression extends BoundExpression
 {    
-    constructor(public readonly left : BoundVariableExpression, public index: BoundExpression)
+    constructor(public readonly left : BoundExpression, public index: BoundExpression)
     {
         super();
     }
 
     public get kind(): BoundNodeKind { return BoundNodeKind.ArrayIndex; };
-    public get type(): Type { return this.left.type; }
+    public get type(): Type { return this.left.type.elementType!; }
 }
 
 export class BoundDereferenceExpression extends BoundExpression

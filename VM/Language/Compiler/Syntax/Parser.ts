@@ -8,6 +8,7 @@ import TextSpan from "./Text/TextSpan";
 import Token from "./Token";
 import Lexer from "./Lexer";
 import SyntaxTrivia from "./SyntaxTrivia";
+import { BoundErrorExpression } from "../Binding/BoundNode";
 
 class ExpectedEofException extends Error
 {
@@ -764,6 +765,20 @@ export default class Parser
 
                 expr = AST.GetExpressionSyntax(expr, dotToken, name);       
             }
+            else if (this.peekType() == SyntaxType.LeftSquareBracket) 
+            {              
+                let leftBracket = this.match(SyntaxType.LeftSquareBracket);
+                let indexExpression = this.parseExpression();
+                let rightBracket = this.match(SyntaxType.RightSquareBracket);
+
+                // make sure the expression is addressable
+                if(AST.isAddressable(expr))
+                    expr = AST.ArrayIndexExpressionSyntax(expr, leftBracket, indexExpression, rightBracket);
+                else
+                {
+                    this._diagnostics.reportAssignmentRequiresLValue(expr.kind, expr.span());                    
+                }                
+            }            
             else
                 break;  
         } 
