@@ -16,7 +16,6 @@ import RegisterBank from "../../../VirtualMachine/CPU/RegisterBank";
 import CPU from "../../../VirtualMachine/CPU/CPU";
 import InstructionCoderVariable from "../../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
 import { AssembledOutput } from "../../../Assembler/AssembledOutput";
-import TextSpan from "../../../Language/Compiler/Syntax/Text/TextSpan";
 
 export default function run(text : string) : number 
 {
@@ -47,7 +46,6 @@ function compile(text : string) : GeneratedCode
 
 function CreateInstructionCoder() : InstructionCoder
 {
-    const instructionCoder32 = new InstructionCoder32Bit();
     const instructionCoderVariable = new InstructionCoderVariable();
 
     return instructionCoderVariable;
@@ -55,7 +53,7 @@ function CreateInstructionCoder() : InstructionCoder
 
 function assemble(assemblyCode : string) : AssembledOutput
 {
-    const logger : Logger = (lineNumber : number, characterNumber : number, message : string) => {};
+    const logger : Logger = () => {};
     const instructionCoder = CreateInstructionCoder();        
     const assembler = new Assembler(logger, AssemblyParser, defaultPreprocessor, instructionCoder, 0);
 
@@ -64,13 +62,11 @@ function assemble(assemblyCode : string) : AssembledOutput
 
 function execute(output : AssembledOutput) : number
 {
-    let assembler : Assembler;
     let ram : RAM;
     let flags : Flags;
     let registers : RegisterBank;
     const ramSize = 1 << 16;
     let cpu : CPU;
-    let ip : number;
 
     const maximumSteps = 500000;
     

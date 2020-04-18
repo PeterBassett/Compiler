@@ -16,7 +16,7 @@ import RegisterBank from "../../../VirtualMachine/CPU/RegisterBank";
 import CPU from "../../../VirtualMachine/CPU/CPU";
 import { AssembledOutput } from "../../../Assembler/AssembledOutput";
 import BuiltinFunctions, { BuiltinFunction } from "../../../Language/Compiler/BuiltinFunctions";
-import { PredefinedType, FunctionDetails, Type, FunctionType } from "../../../Language/Types/TypeInformation";
+import { FunctionDetails, FunctionType } from "../../../Language/Types/TypeInformation";
 import { PredefinedValueTypes } from "../../../Language/Types/PredefinedValueTypes";
 import { ValueType } from "../../../Language/Types/ValueType";
 
@@ -120,7 +120,7 @@ describe("Compiler Intrinsic Execute", () => {
 
     function assemble(assemblyCode : string) : AssembledOutput
     {
-        let logger : Logger = (lineNumber : number, characterNumber : number, message : string) => {};
+        let logger : Logger = () => {};
         let instructionCoder = new InstructionCoder32Bit();
         let assembler = new Assembler(logger, AssemblyParser, defaultPreprocessor, instructionCoder, 0);
 
@@ -129,13 +129,11 @@ describe("Compiler Intrinsic Execute", () => {
 
     function execute(output : AssembledOutput) : number
     {
-        let assembler : Assembler;
         let ram : RAM;
         let flags : Flags;
         let registers : RegisterBank;
         let instructionCoder : InstructionCoder;
         let cpu : CPU;
-        let ip : number;
 
         ram = new RAM(ramSize);
         registers = new RegisterBank(ramSize);
