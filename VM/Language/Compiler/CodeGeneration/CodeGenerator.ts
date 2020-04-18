@@ -8,6 +8,8 @@ import BuiltinFunctions from "../BuiltinFunctions";
 import { Type } from "../../Types/TypeInformation";
 import { Value } from "../../Scope/ExecutionScope";
 import { Identifier } from "../../Scope/DefinitionScope";
+import { isPredefinedType } from "../Syntax/SyntaxFacts";
+import TextSpan from "../Syntax/Text/TextSpan";
 
 enum VarOrParam
 {
@@ -312,6 +314,9 @@ export default class CodeGenerator
             
             if(valueType === ValueType.Struct)
                 this.writeStructComment(stmt);
+            
+            if(valueType === ValueType.Array)
+                this.writeArrayComment(stmt);
         }
     
         const plural = variables.length == 1 ? "" : "s";
@@ -357,6 +362,7 @@ export default class CodeGenerator
         this.comment("-----------------------------");
     }
 
+    // move the address of some lvalue into R1
     writeAddressExpression(expression: Nodes.BoundExpression) 
     {
         switch (expression.kind)
@@ -395,8 +401,33 @@ export default class CodeGenerator
                 break;
             }
             case Nodes.BoundNodeKind.ArrayIndex:
+            {
+                this.comment("------------------------------------------");
+                this.comment("ArrayIndex");
+                const target = expression as Nodes.BoundArrayIndexExpression;
+                this.writeExpression(target.index);
+                const elementSize = this.typeSize(target.type);
+                this.instruction(`MUL R1 ${elementSize}`, "Multiply index by size of element");
+                this.instruction("PUSH R1", "Push index for later use");
+                this.writeAddressExpression(target.left);
+
+                this.instruction("POP R2", "Pop index for use");
+                this.comment("Index into the array");
+                this.instruction("ADD R1 R2");
+
+                this.comment("R1 now contains the address of the indexed element");
+                break;
+            }
             default:
                 throw new Error("Not an lvalue");
+        }
+    }
+
+    private writeArrayComment(stmt: Nodes.BoundVariableDeclaration)
+    {
+        if (this.writeComments) 
+        {
+            this.comment("array " + stmt.variable.type.name);
         }
     }
 
@@ -523,6 +554,18 @@ export default class CodeGenerator
                 
                 return this.typeSizeCache[type.typeid];
             }
+            case ValueType.Array:
+            {
+                if(this.typeSizeCache[type.typeid])
+                    return this.typeSizeCache[type.typeid];
+
+                const elementSize = this.typeSize(type.elementType!);
+                const size = type.arrayLength! * elementSize;
+                
+                this.typeSizeCache[type.typeid] = size;
+                
+                return this.typeSizeCache[type.typeid];
+            }
             default : 
                 this.diagnostics.reportUnsupportedType(type.type);
                 return 4;                       
@@ -601,6 +644,7 @@ export default class CodeGenerator
             case ValueType.Pointer:
             case ValueType.Null:
             case ValueType.Struct:
+            case ValueType.Array:
             case ValueType.Int:
                 return op;
             case ValueType.Float:
@@ -662,6 +706,12 @@ export default class CodeGenerator
                         // reserve space on the stack for this
                         this.instruction(`SUB SP ${size}`, "Reserve space on stack for struct");                                            
                         break;
+                    case ValueType.Array :
+                        // calculate size of structure
+                        const arraySize = this.typeSize(exp.type);
+                        // reserve space on the stack for this
+                        this.instruction(`SUB SP ${arraySize}`, "Reserve space on stack for array");                                            
+                        break;                        
                     case ValueType.Null: 
                         this.instruction(`${mvi} R1 0`, "Loading literal NULL");
                         break;
@@ -738,7 +788,12 @@ export default class CodeGenerator
             {
                 this.writeDereferenceExpression(expression as Nodes.BoundDereferenceExpression);
                 break;
-            }        
+            }    
+            case Nodes.BoundNodeKind.ArrayIndex:
+            {
+                this.writeArrayIndexExpression(expression as Nodes.BoundArrayIndexExpression);                 
+                break;                
+            }                
             default:
             {
                 throw new Error(`Unexpected Expression Type ${expression.kind}`);
@@ -746,10 +801,61 @@ export default class CodeGenerator
         }
     }
 
-    writeDereferenceExpression(expression: Nodes.BoundDereferenceExpression) {
+    private writeDereferenceExpression(expression: Nodes.BoundDereferenceExpression) {
         const variable = expression.operand as Nodes.BoundVariableExpression;
         const address = this.getDataReference(variable.variable, true);
         this.instruction(`MOV R1 ${address(0,0)}`, "value at address");                 
+    }
+
+    private writeArrayIndexExpression(expression: Nodes.BoundArrayIndexExpression) {
+        // check if index is a literal and shortcut asm.
+        //if(expression.index.kind === Nodes.BoundNodeKind.LiteralExpression)
+
+        this.comment("ArrayIndex index expression");
+        this.writeExpression(expression.index);
+
+        const elementSize = this.typeSize(expression.type);
+        this.instruction(`MUL R1 ${elementSize}`, "Multiply index by size of element");
+        this.instruction("PUSH R1", "Push index for later use");
+        
+        switch(expression.left.kind)
+        {
+            case Nodes.BoundNodeKind.VariableExpression:
+            {
+                const variable = expression.left as Nodes.BoundVariableExpression;
+                const address = this.getDataReference(variable.variable, false);
+                this.instruction(`MOV R1 ${address(0 ,0)}`, "value at address");    
+                
+                break;
+            }
+            case Nodes.BoundNodeKind.ArrayIndex:
+            {
+                const arrayIndexExpression = expression.left as Nodes.BoundArrayIndexExpression;
+                this.writeArrayIndexExpression(arrayIndexExpression);
+                break;   
+            }
+            case Nodes.BoundNodeKind.GetExpression:
+            {
+                const getExpression = expression.left as Nodes.BoundGetExpression;
+                this.writeAddressExpression(getExpression);
+                break;   
+            }            
+            default :
+            {
+                this.diagnostics.reportInvalidIndexing(expression.left.type, new TextSpan(0,0));
+                throw new Error("Unexpected indexing source node");
+            }
+        }
+
+        this.instruction("POP R2", "Pop index and use");
+        this.instruction(`ADD R1 R2`, "Add array index to the array start");  
+
+        // if we are getting a primitive type, load the value inself into R1, otherwise the address.
+        if(expression.type.isPredefined)
+        {
+            const mov = this.typedMnemonic(expression.type.type, "MOV");
+            this.instruction(`${mov} R1 [R1]`, "value at address");      
+        }
     }
     
     private writeStructReturnTypeSetup(exp: Nodes.BoundCallExpression) {

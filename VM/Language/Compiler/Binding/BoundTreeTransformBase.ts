@@ -344,6 +344,11 @@ export default class BoundTreeTransformBase
                 const expr = this.transformDereferenceExpression(expression as Nodes.BoundDereferenceExpression);
                 return (expr !== expression) ? expr : expression;                                
             }
+            case Nodes.BoundNodeKind.ArrayIndex:
+            {
+                const expr = this.transformArrayIndexExpression(expression as Nodes.BoundArrayIndexExpression);
+                return (expr !== expression) ? expr : expression;                                
+            }
             default:
                 throw new Error(`Unhandled expression type ${expression.kind}`);
         }
@@ -441,6 +446,16 @@ export default class BoundTreeTransformBase
 
         if(operand !== expression.operand)
             return new Nodes.BoundDereferenceExpression(operand, operand.type);
+
+        return expression;
+    }
+
+    protected transformArrayIndexExpression(expression: Nodes.BoundArrayIndexExpression) {
+        const left = this.transformExpression(expression.left);        
+        const index = this.transformExpression(expression.index);        
+
+        if(index !== expression.index || left != expression.left)
+            return new Nodes.BoundArrayIndexExpression(left, index);
 
         return expression;
     }
