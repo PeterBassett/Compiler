@@ -240,7 +240,34 @@ func main() : int {
   
     // array after updating 
     return arr[3];
-}`, 750]
+}`, 750],
+[`
+// function taking a pointer to an array of 5 ints 
+func updatearray(a : [5]int) : int
+{ 
+    // updating the copy of the arry passed by value
+    a[3] = 2;
+    
+    return a[3];
+} 
+  
+// Main Function 
+func main() : int { 
+  
+    // Taking an pointer to an array 
+    let arr : [5]int;
+    arr[0] = 78;
+    arr[1] = 89;
+    arr[2] = 45;
+    arr[3] = 56;
+    arr[4] = 14;
+  
+    // passing array by value to a function 
+    let result : int = updatearray(arr);
+  
+    // array after updating 
+    return arr[3] * result;
+}`, 56 * 2],
     ].forEach((item) => {
         it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
             const text = item[0] as string;
