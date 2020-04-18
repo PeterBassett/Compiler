@@ -678,7 +678,14 @@ export default class Parser
         switch(this.current.kind)
         {
             case SyntaxType.LeftParen : 
-                return this.parseParenthesizedExpression();
+            {
+                const expr = this.parseParenthesizedExpression();
+
+                if(this.peekType() === SyntaxType.LeftSquareBracket)
+                    return this.parseArrayIndexExpressionSyntax(expr); 
+                
+                return expr;
+            }
             case SyntaxType.TrueKeyword : 
             case SyntaxType.FalseKeyword : 
                 return this.parseBooleanLiteral();                
@@ -767,22 +774,25 @@ export default class Parser
             }
             else if (this.peekType() == SyntaxType.LeftSquareBracket) 
             {              
-                let leftBracket = this.match(SyntaxType.LeftSquareBracket);
-                let indexExpression = this.parseExpression();
-                let rightBracket = this.match(SyntaxType.RightSquareBracket);
-
-                // make sure the expression is addressable
-                if(AST.isAddressable(expr))
-                    expr = AST.ArrayIndexExpressionSyntax(expr, leftBracket, indexExpression, rightBracket);
-                else
-                {
-                    this._diagnostics.reportAssignmentRequiresLValue(expr.kind, expr.span());                    
-                }                
+                expr = this.parseArrayIndexExpressionSyntax(expr);                
             }            
             else
                 break;  
         } 
 
+        return expr;
+    }
+
+    private parseArrayIndexExpressionSyntax(expr: AST.ExpressionNode): AST.ExpressionNode  {
+        let leftBracket = this.match(SyntaxType.LeftSquareBracket);
+        let indexExpression = this.parseExpression();
+        let rightBracket = this.match(SyntaxType.RightSquareBracket);
+        // make sure the expression is addressable
+        if (AST.isAddressable(expr))
+            expr = AST.ArrayIndexExpressionSyntax(expr, leftBracket, indexExpression, rightBracket);
+        else {
+            this._diagnostics.reportAssignmentRequiresLValue(expr.kind, expr.span());
+        }
         return expr;
     }
 

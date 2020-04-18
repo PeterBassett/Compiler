@@ -641,25 +641,26 @@ export default class Binder
 
         this.ValidateArrayIndex(syntax, index);
 
+        const leftSyntax = AST.stripParentheses(syntax.left) as AST.AddressableExpressionNode;
         let left : Nodes.BoundExpression;
 
-        switch(syntax.left.kind)
+        switch(leftSyntax.kind)
         {
             case "ArrayIndexExpressionSyntax":
-                left = this.BindArrayIndexExpressionSyntax(syntax.left as AST.ArrayIndexExpressionSyntax);
+                left = this.BindArrayIndexExpressionSyntax(leftSyntax as AST.ArrayIndexExpressionSyntax);
                 break;
             case "DereferenceExpressionSyntax":
-                left = this.BindDereferenceExpression(syntax.left as AST.DereferenceExpressionSyntax);
+                left = this.BindDereferenceExpression(leftSyntax as AST.DereferenceExpressionSyntax);
                 break;
             case "GetExpressionSyntax":
-                left = this.BindGetExpression(syntax.left as AST.GetExpressionSyntax);
+                left = this.BindGetExpression(leftSyntax as AST.GetExpressionSyntax);
                 break;
             case "NameExpressionSyntax":
-                left = this.BindNameExpression(syntax.left as AST.NameExpressionSyntax);
+                left = this.BindNameExpression(leftSyntax as AST.NameExpressionSyntax);
                 break;
             default:
                 left = new Nodes.BoundErrorExpression();
-                exhaustiveCheck(syntax.left);
+                exhaustiveCheck(leftSyntax);
         }       
         
         if(!left.type.elementType)       

@@ -211,7 +211,36 @@ func main() : int
     root[2].b[3] = 21;      
 
     return root[2].b[1]; // 15;
-}`, 15]
+}`, 15],
+[`
+// function taking a pointer to an array of 5 ints 
+func updatearray(a : *[5]int) : int
+{ 
+  
+    // updating the array value at specified index 
+    (*a)[3] = 750;
+
+    // HACK : Need to make void functions work
+    return 1;
+} 
+  
+// Main Function 
+func main() : int { 
+  
+    // Taking an pointer to an array 
+    let arr : [5]int;
+    arr[0] = 78;
+    arr[1] = 89;
+    arr[2] = 45;
+    arr[3] = 56;
+    arr[4] = 14;
+  
+    // passing pointer to an array to a function 
+    updatearray(&arr);
+  
+    // array after updating 
+    return arr[3];
+}`, 750]
     ].forEach((item) => {
         it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
             const text = item[0] as string;

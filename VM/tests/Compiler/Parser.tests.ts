@@ -1084,7 +1084,75 @@ func main() : int
                     NameExpressionSyntax<root>
                     IntegerLiteralExpressionSyntax<0>
 `],
+[`
+func updatearray(a : *[2]int) : int
+{   
+    // updating the array value at specified index 
+    (*a)[1] = 750;
 
+    // HACK : Need to make void functions work
+    return 1;
+} 
+  
+func main() : int { 
+  
+    // Taking an pointer to an array 
+    let arr : [2]int;
+    arr[0] = 78;
+    arr[1] = 89;
+
+    updatearray(&arr);
+  
+    return arr[1];
+}
+`, 
+`CompilationUnitSyntax
+    FunctionDeclarationStatementSyntax<updatearray>
+        ParameterDeclarationListSyntax
+            ParameterDeclarationSyntax<a:int>
+                PointerTypeSyntax
+                    ArrayTypeSyntax
+                        IntegerLiteralExpressionSyntax<2>
+                        NamedTypeSyntax<int>
+        NamedTypeSyntax<int>
+        BlockStatementSyntax
+            AssignmentStatementSyntax
+                ArrayIndexExpressionSyntax
+                    ParenthesizedExpressionSyntax
+                        DereferenceExpressionSyntax
+                            NameExpressionSyntax<a>
+                    IntegerLiteralExpressionSyntax<1>
+                IntegerLiteralExpressionSyntax<750>
+            ReturnStatementSyntax
+                IntegerLiteralExpressionSyntax<1>
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        NamedTypeSyntax<int>
+        BlockStatementSyntax
+            VariableDeclarationSyntax<arr>
+                ArrayTypeSyntax
+                    IntegerLiteralExpressionSyntax<2>
+                    NamedTypeSyntax<int>
+            AssignmentStatementSyntax
+                ArrayIndexExpressionSyntax
+                    NameExpressionSyntax<arr>
+                    IntegerLiteralExpressionSyntax<0>
+                IntegerLiteralExpressionSyntax<78>
+            AssignmentStatementSyntax
+                ArrayIndexExpressionSyntax
+                    NameExpressionSyntax<arr>
+                    IntegerLiteralExpressionSyntax<1>
+                IntegerLiteralExpressionSyntax<89>
+            ExpressionStatementSyntax
+                CallExpressionSyntax
+                    NameExpressionSyntax<updatearray>
+                    UnaryExpressionSyntax<&>
+                        NameExpressionSyntax<arr>
+            ReturnStatementSyntax
+                ArrayIndexExpressionSyntax
+                    NameExpressionSyntax<arr>
+                    IntegerLiteralExpressionSyntax<1>
+`],
 /*,
 [`
 // array of length 3 int with initialisation vector

@@ -795,6 +795,65 @@ func main() : int
                     VariableExpression<root:[3]int>
                     LiteralExpression<1:int>
 `
+],
+[
+`func updatearray(a : *[2]int) : int
+{   
+    // updating the array value at specified index 
+    (*a)[1] = 750;
+
+    // HACK : Need to make void functions work
+    return 1;
+} 
+  
+func main() : int { 
+  
+    // Taking an pointer to an array 
+    let arr : [2]int;
+    arr[0] = 78;
+    arr[1] = 89;
+
+    updatearray(&arr);
+  
+    return arr[1];
+}`,
+`BoundGlobalScope
+    FunctionDefinition<updatearray:int>
+        ParameterDeclarationList
+            ParameterDeclaration<a:*[2]int>
+        BlockStatement
+            AssignmentStatement
+                ArrayIndex
+                    DereferenceExpression
+                        VariableExpression<a:*[2]int>
+                    LiteralExpression<1:int>
+                LiteralExpression<750:int>
+            ReturnStatement
+                LiteralExpression<1:int>
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<arr:[2]int>
+                LiteralExpression<null:[2]int>
+            AssignmentStatement
+                ArrayIndex
+                    VariableExpression<arr:[2]int>
+                    LiteralExpression<0:int>
+                LiteralExpression<78:int>
+            AssignmentStatement
+                ArrayIndex
+                    VariableExpression<arr:[2]int>
+                    LiteralExpression<1:int>
+                LiteralExpression<89:int>
+            ExpressionStatement
+                CallExpression<updatearray>
+                    UnaryExpression<&>
+                        VariableExpression<arr:[2]int>
+            ReturnStatement
+                ArrayIndex
+                    VariableExpression<arr:[2]int>
+                    LiteralExpression<1:int>
+`
 ]
 /*,[`
 class test

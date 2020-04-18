@@ -2,6 +2,7 @@ import Token from "../Token";
 import TextSpan from "../Text/TextSpan";
 import { exhaustiveCheck } from "../../../../misc/exhaustive";
 import { ClassDeclaration } from "estree";
+import { Value } from "../../../Scope/ExecutionScope";
 
 function getSyntaxNodeFromPosition(root:SyntaxNode, line: number, ch: number) : SyntaxNode
 {
@@ -120,6 +121,9 @@ export type AddressableExpressionNode = NameExpressionSyntax |
 
 export function isAddressable(value: SyntaxNode): value is AddressableExpressionNode
 {
+    // walk down the tree to find the root of a parenthesised expression
+    value = stripParentheses(value);
+
     // remember to add to this when you make a new member of AddressableExpressionNode
     switch(value.kind)
     {
@@ -131,6 +135,14 @@ export function isAddressable(value: SyntaxNode): value is AddressableExpression
     }
 
     return false;
+}
+
+export function stripParentheses(value : SyntaxNode) : SyntaxNode
+{
+    while(value.kind == "ParenthesizedExpressionSyntax")
+        value = value.expression;
+
+    return value;
 }
 
 // things that do not produce a value
