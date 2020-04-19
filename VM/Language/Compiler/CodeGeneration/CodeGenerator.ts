@@ -327,7 +327,7 @@ export default class CodeGenerator
     {
         this.comment("-----------------------------");
 
-        if(statement.target.type.type == ValueType.Struct)
+        if(statement.target.type.isLarge)
         {
             this.comment("Assign a struct");
             const source = this.getStructDataReference(statement.expression);
@@ -448,9 +448,9 @@ export default class CodeGenerator
 
     writeReturnStatement(expression: Nodes.BoundExpression) 
     {    
-        if(expression.type.isStruct)
+        if(expression.type.isLarge)
         {
-            // we are returning a struct, ok. lets copy to the address stored in R3
+            // we are returning a large value, ok. lets copy to the address stored in R3
             const size = this.typeSize(expression.type);
             const dest = (i: number, _: number) => `[R3+${i}]`;
             const source = this.getStructDataReference(expression);
@@ -859,10 +859,10 @@ export default class CodeGenerator
     }
     
     private writeStructReturnTypeSetup(exp: Nodes.BoundCallExpression) {
-        if (!exp.returnType.isStruct) 
+        if (!exp.returnType.isLarge) 
             return;
             
-        // struct return types are pushed to the stack, essentially as the first parameter
+        // large return types are pushed to the stack, essentially as the first parameter
         // and the location is stored in R3 for easy addressing
         const returnTypeSize = this.typeSize(exp.returnType);
         this.instruction(`SUB SP ${returnTypeSize}`);

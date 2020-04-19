@@ -20,29 +20,31 @@ export default class StringDiagnosticsPrinter implements IDiagnosticsPrinter
 
     printDiagnostic(diagnostics : Diagnostics, diagnostic : Diagnostic) : string
     {
-        try{
-        let source = diagnostics.text;
-        let lineIndex = diagnostics.text.getLineIndexContainingPosition(diagnostic.span.start);
-        let line = diagnostics.text.getline(lineIndex);
-        let pointer = Array((diagnostic.span.start - line.start)).join(" ") + 
-                      Array(diagnostic.span.length + 1).join("^");
+        try
+        {
+            let source = diagnostics.text;
+            let lineIndex = diagnostics.text.getLineIndexContainingPosition(diagnostic.span.start);
+            let line = diagnostics.text.getline(lineIndex);
+            let char = diagnostic.span.start - line.start;
+            let pointer = Array((char) + 1).join(" ") + 
+                        Array(diagnostic.span.length + 1).join("^");
 
-        let prefix = source.toString(line.start, diagnostic.span.start);
-        let error = source.toString(diagnostic.span.start, diagnostic.span.end);
-        let suffix = source.toString(diagnostic.span.end, line.end);
+            let prefix = source.toString(line.start, diagnostic.span.start);
+            let error = source.toString(diagnostic.span.start, diagnostic.span.end);
+            let suffix = source.toString(diagnostic.span.end, line.end);
 
-        if(prefix == "\n")
-            prefix = "";
+            if(prefix == "\n")
+                prefix = "";
 
-        if(error == "\n")
-            error = "";
+            if(error == "\n")
+                error = "";
 
-        if(suffix == "\n")
-            suffix = "";
+            if(suffix == "\n")
+                suffix = "";
 
-        return `${diagnostic.message} (${diagnostic.span.start}, ${diagnostic.span.length})
-${prefix}${error}${suffix}
-${pointer}`;
+            return `${diagnostic.message} (${lineIndex}, ${char})
+    ${prefix}${error}${suffix}
+    ${pointer}`;
         }
         catch(ex)
         {

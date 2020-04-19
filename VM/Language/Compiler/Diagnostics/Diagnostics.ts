@@ -140,7 +140,7 @@ export class Diagnostics
     }    
 
     public reportUndefinedName(span: TextSpan, name: string): void {
-        this.report(`Variable '${name}' doesn't exist.`, DiagnosticType.UndefinedName, span);
+        this.report(`Name '${name}' does not exist.`, DiagnosticType.UndefinedName, span);
     }
 
     public reportIncorrectArgumentCount(expectedParameterCount: number, callsiteParameterCount: number, span: TextSpan): void {
@@ -221,7 +221,7 @@ export class Diagnostics
 
     public reportInvalidIndexing(type: Type, span: TextSpan) : void 
     {
-        this.report(`type ${type} does not support indexing`, DiagnosticType.InvalidIndexing, span);
+        this.report(`type ${type.name} does not support indexing`, DiagnosticType.InvalidIndexing, span);
     }            
 
     public get text() : SourceText

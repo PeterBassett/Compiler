@@ -123,7 +123,13 @@ export class Type
     public name : string;
     public isClass : boolean;    
     public isStruct : boolean;
-    public isPredefined : boolean;
+    public isArray: boolean;    
+    public isPredefined : boolean;   
+    
+    public get isLarge() : boolean
+    {
+        return this.isStruct || this.isArray || this.isClass;
+    }
 
     public get isPointer() : boolean
     {
@@ -145,7 +151,8 @@ export class Type
         this.name = name;
         this.isClass = type == ValueType.Class;
         this.isStruct = type == ValueType.Struct;
-        
+        this.isArray = type == ValueType.Array;
+                
         this.isPredefined = false;
         this.pointerToType = null;
         
@@ -164,6 +171,7 @@ export class Type
 
         a.isClass = this.isClass;
         a.isStruct = this.isStruct;        
+        a.isArray = this.isArray;
         a.isPredefined = this.isPredefined;
         a.pointerToType = this.pointerToType;
         a.elementType = this.elementType;

@@ -16,6 +16,8 @@ import RegisterBank from "../../../VirtualMachine/CPU/RegisterBank";
 import CPU from "../../../VirtualMachine/CPU/CPU";
 import InstructionCoderVariable from "../../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
 import { AssembledOutput } from "../../../Assembler/AssembledOutput";
+import { Diagnostics } from "../../../Language/Compiler/Diagnostics/Diagnostics";
+import StringDiagnosticsPrinter from "../../../Language/Compiler/Diagnostics/StringDiagnosticsPrinter";
 
 export default function run(text : string) : number 
 {
@@ -26,18 +28,41 @@ export default function run(text : string) : number
     return result;
 }
 
+function assertNoError(source : string, diagnostics : Diagnostics) : void
+{
+    if(diagnostics.length > 0)
+    {
+        const printer = new StringDiagnosticsPrinter();
+        expect(diagnostics.length).toEqual(0);
+
+        diagnostics.map( (d, i) => {
+            const output = printer.printDiagnostic(diagnostics, d);
+            fail(`${source} : ${output}`);
+            return "";
+        });
+    }
+}
+
 function compile(text : string) : GeneratedCode
 {
     const source = new SourceText(text);        
+    
     const parser = new Parser(source);
     const compilationUnit = parser.parse();
+    assertNoError("Parsing", compilationUnit.diagnostics);
+    
     const binder = new Binder();
     const boundTree = binder.Bind(compilationUnit);
+    assertNoError("Binding", boundTree.diagnostics);
+    
     const lowerer = new Lowerer();
     const newBoundTree = lowerer.lower(boundTree);
+    assertNoError("Lowering", newBoundTree.diagnostics);
+
     const codeGenerator = new CodeGenerator();
     const result = codeGenerator.generate(newBoundTree);
-    
+    assertNoError("CodeGen", result.diagnostics);
+
     if(!result.success)
         throw new Error(result.diagnostics.get(0).message);
 

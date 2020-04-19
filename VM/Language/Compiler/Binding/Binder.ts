@@ -721,7 +721,7 @@ export default class Binder
         return new Nodes.BoundGetExpression(left, result.type, result.name);
     }
 
-    BindNameExpression(syntax: AST.NameExpressionSyntax): Nodes.BoundVariableExpression 
+    BindNameExpression(syntax: AST.NameExpressionSyntax, reportErrorOnUndefined : boolean = true): Nodes.BoundVariableExpression 
     {
         const name = syntax.identifierToken.lexeme;
 
@@ -734,7 +734,7 @@ export default class Binder
 
         const identifier = this.scope.FindVariable(name);
 
-        if (!identifier)
+        if (identifier == Identifier.Undefined && reportErrorOnUndefined)
         {
             this.diagnostics.reportUndefinedName(syntax.identifierToken.span, name);
             return new Nodes.BoundVariableExpression(Identifier.Undefined);
@@ -746,16 +746,17 @@ export default class Binder
     private BindCallExpression(syntax: AST.CallExpressionSyntax): Nodes.BoundExpression 
     {
         const name = syntax.nameExpression.identifierToken.lexeme;
-        const variableFound = this.BindExpression(syntax.nameExpression) as Nodes.BoundVariableExpression;
-        const declaration = this.functionMap[name];
         
-        const typeConversionCall = this.getTypeFromName(syntax.nameExpression.identifierToken.lexeme, this.scope, true);
+        const typeConversionCall = this.getTypeFromName(name, this.scope, true);
 
         if (syntax.callArguments.length == 1 && typeConversionCall.type != ValueType.Unit && typeConversionCall.isPredefined)
         {
             const argument = this.BindExpression(syntax.callArguments[0]);
             return this.BindConversion(syntax.callArguments[0].span(), argument, typeConversionCall, true);
         }
+
+        const variableFound = this.BindNameExpression(syntax.nameExpression, false) as Nodes.BoundVariableExpression;
+        const declaration = this.functionMap[name];
             
         let variable : Identifier | null = null;
         
@@ -998,6 +999,14 @@ export default class Binder
     
     private BindConversion(diagnosticSpan : TextSpan, expression : Nodes.BoundExpression, type : Type, allowExplicit : boolean = false, logDiagnostics : boolean = true) : Nodes.BoundExpression
     {
+        // if we dont have a type at this point there is an error in the program.
+        if(!expression.type)
+        {
+            if(logDiagnostics)
+                this.diagnostics.reportCannotConvert(diagnosticSpan, PredefinedValueTypes.Error, type);
+            return new Nodes.BoundErrorExpression();
+        }
+
         const conversion = Conversion.classifyConversion(expression.type, type);
 
         if (!conversion.Exists)

@@ -227,7 +227,6 @@ func updatearray(a : *[5]int) : int
 // Main Function 
 func main() : int { 
   
-    // Taking an pointer to an array 
     let arr : [5]int;
     arr[0] = 78;
     arr[1] = 89;
@@ -242,7 +241,7 @@ func main() : int {
     return arr[3];
 }`, 750],
 [`
-// function taking a pointer to an array of 5 ints 
+// function taking a copy of an array of 5 ints 
 func updatearray(a : [5]int) : int
 { 
     // updating the copy of the arry passed by value
@@ -252,9 +251,8 @@ func updatearray(a : [5]int) : int
 } 
   
 // Main Function 
-func main() : int { 
-  
-    // Taking an pointer to an array 
+func main() : int 
+{ 
     let arr : [5]int;
     arr[0] = 78;
     arr[1] = 89;
@@ -268,6 +266,27 @@ func main() : int {
     // array after updating 
     return arr[3] * result;
 }`, 56 * 2],
+[`
+// function returning an array of 5 ints 
+func createarray() : [5]int
+{ 
+    let arr : [5]int;
+    arr[0] = 78;
+    arr[1] = 89;
+    arr[2] = 45;
+    arr[3] = 56;    
+    arr[4] = 14;
+    
+    return arr;
+} 
+  
+// Main Function 
+func main() : int {     
+    let result = createarray();
+  
+    // array after updating 
+    return result[3];
+}`, 56],
     ].forEach((item) => {
         it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
             const text = item[0] as string;
