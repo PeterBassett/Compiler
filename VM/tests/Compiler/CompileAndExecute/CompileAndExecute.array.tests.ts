@@ -287,6 +287,44 @@ func main() : int {
     // array after updating 
     return result[3];
 }`, 56],
+[`
+func echo(a : int) : int
+{     
+    return a;
+} 
+
+func main() : int 
+{ 
+    let arr : [5]int;
+    arr[0] = 78;
+    arr[1] = 89;
+    arr[2] = 45;
+    arr[3] = 56;
+    arr[4] = 14;
+  
+    return echo(arr[3]);
+}`, 56],
+[`
+func main() : int 
+{ 
+    // make an array
+    let arr : [5]int;
+    //populate it
+    arr[0] = 78;
+    arr[1] = 89;
+    arr[2] = 45;
+    arr[3] = 56; // this is the one we are interested in
+    arr[4] = 14;
+
+    // copy it, not make a reference to
+    let copy = arr;
+
+    // change the source array
+    arr[3] = 2;
+
+    // those values should be different now.
+    return copy[3] + arr[3];
+}`, 56 + 2]
     ].forEach((item) => {
         it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
             const text = item[0] as string;

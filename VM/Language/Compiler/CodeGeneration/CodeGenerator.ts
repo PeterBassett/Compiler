@@ -330,7 +330,7 @@ export default class CodeGenerator
         if(statement.target.type.isLarge)
         {
             this.comment("Assign a struct");
-            const source = this.getStructDataReference(statement.expression);
+            const source = this.getLargeDataReference(statement.expression);
 
             this.writeAddressExpression(statement.target);
             
@@ -453,7 +453,7 @@ export default class CodeGenerator
             // we are returning a large value, ok. lets copy to the address stored in R3
             const size = this.typeSize(expression.type);
             const dest = (i: number, _: number) => `[R3+${i}]`;
-            const source = this.getStructDataReference(expression);
+            const source = this.getLargeDataReference(expression);
             this.emitStackCopy(dest, source, size);
         }
         else
@@ -596,7 +596,7 @@ export default class CodeGenerator
         {
             if(field.name == memberPath[0])
             {
-                if(field.type.type === ValueType.Struct && memberPath.length > 1)                 
+                if(field.type.isStruct && memberPath.length > 1)                 
                 {
                     const result = this.structMember(field.type, memberPath.slice(1));
 
@@ -678,10 +678,7 @@ export default class CodeGenerator
             case Nodes.BoundNodeKind.LiteralExpression:
             {
                 let exp = expression as Nodes.BoundLiteralExpression;           
-                let mvi = "";
-                
-                if(exp.type.type !== ValueType.Struct)
-                    mvi = this.typedMnemonic(exp.type.type, "MVI");
+                let mvi = this.typedMnemonic(exp.type.type, "MVI");
 
                 const hannah = "beautiful"; // PB: LEAVE IN PLACE. IT DOESNT WORK WITHOUT THIS LINE.
 
@@ -746,24 +743,12 @@ export default class CodeGenerator
             {
                 const exp = expression as Nodes.BoundVariableExpression;
 
-                if(exp.variable.type.type != ValueType.Struct)
-                {
-                    const mov = this.typedMnemonic(exp.variable.type.type, "MOV");
+                const mov = this.typedMnemonic(exp.variable.type.type, "MOV");
 
-                    const description = this.getDataReferenceDescription(exp.variable, true);
-                    const address = this.getDataReference(exp.variable, true);
+                const description = this.getDataReferenceDescription(exp.variable, true);
+                const address = this.getDataReference(exp.variable, true);
 
-                    this.instruction(`${mov} R1 ${address(0,0)}`, `read ${description.description} ${exp.variable.name} from the ${description.source}`);
-                }
-                else
-                {
-                    const mov = this.typedMnemonic(ValueType.Pointer, "MOV");
-
-                    const description = this.getDataReferenceDescription(exp.variable, false);
-                    const address = this.getDataReference(exp.variable, false);
-
-                    this.instruction(`${mov} R1, ${address(0,0)}`, `read ${description.description} ${exp.variable.name} from the ${description.source}`);
-                }
+                this.instruction(`${mov} R1, ${address(0,0)}`, `read ${description.description} ${exp.variable.name} from the ${description.source}`);
 
                 break;
             }                  
@@ -779,8 +764,6 @@ export default class CodeGenerator
             }
             case Nodes.BoundNodeKind.ConversionExpression:
             {
-                //let expr = expression as Nodes.BoundConversionExpression;
-                //this.writeExpression(expr.expression);
                 this.writeConversionExpression(expression as Nodes.BoundConversionExpression);   
                 break;
             }            
@@ -901,7 +884,8 @@ export default class CodeGenerator
             const argumentSize = this.typeSize(arg.type);
             argumentStackSize += argumentSize;
         
-            if (arg.type.type != ValueType.Struct) {
+            if (!arg.type.isLarge) 
+            {
                 // emit the sub expression, which may be arbitrarily complex
                 this.writeExpression(arg);
                 // push the result, which will always be in R1, to the stack
@@ -910,10 +894,10 @@ export default class CodeGenerator
             }
             else 
             {
-                // structs types cannot be part of a artithmetic expression
+                // large types cannot be part of a artithmetic expression
                 // so this amounts to only a few possible source memory locations 
                 // to copy from
-                const source = this.getStructDataReference(arg);
+                const source = this.getLargeDataReference(arg);
                 this.instruction(`SUB SP ${argumentSize}`);
                 const dest = (i: number, _: number) => `[SP+${i}]`;
                 this.emitStackCopy(dest, source, argumentSize);
@@ -950,7 +934,7 @@ export default class CodeGenerator
         }
     }
     
-    getStructDataReference(expression: Nodes.BoundExpression) : (offset:number, chunk:number)=>string {
+    getLargeDataReference(expression: Nodes.BoundExpression) : (offset:number, chunk:number)=>string {
         switch(expression.kind)
         {
             case Nodes.BoundNodeKind.LiteralExpression:
@@ -971,17 +955,17 @@ export default class CodeGenerator
             {
                 const exp = expression as Nodes.BoundCallExpression;
                 
-                if(exp.returnType.isStruct)
+                if(exp.returnType.isLarge)
                 {
-                    // We have a call returning a structure.
-                    // once the call is done the returned structure will be on the stack
+                    // We have a call returning a large type.
+                    // once the call is done the returned data will be on the stack
                     // and its address will be in R3
                     this.writeExpression(exp);
 
-                    // now R3 holds the address of the structure!
+                    // now R3 holds the address of the data!
                     return (i, _c) => `[R3+${i}]`;
                 }
-                throw new Error("Expected Struct Type");
+                throw new Error("Expected Large Type");
             }
             default:
             {
@@ -1094,19 +1078,6 @@ export default class CodeGenerator
         }
 
         throw new Error("Expected variable expression")
-    }
-    
-    pushStruct(struct: Type, comment:string = "") {
-        const fields = struct.structDetails!.fields;
-        for(let field of fields)
-        {
-            if(field.type.type != ValueType.Struct)
-            {
-                const push = this.mnemonicForType(field.type.type);
-                this.instruction(`${push} R1`);
-            }
-            else this.pushStruct(field.type, `nested struct ${field.type.name}`);
-        }
     }
 
     writeConversionExpression(expression: Nodes.BoundConversionExpression) : void

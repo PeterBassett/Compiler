@@ -56,8 +56,8 @@ describe("A CodeGenerator object", () => {
         {
             let output = scope.text;
             
-            if(output != expected)
-                printDiff(output, expected);
+            //if(output != expected)
+             //   printDiff(output, expected);
 
             expect(output).toEqual(expected);
         } 
@@ -149,7 +149,7 @@ main:
     MOV R1, R6-4
     POP R2
     MOV [R1] R2
-    MOV R1 [R6-4]
+    MOV R1, [R6-4]
 main_epilogue:
     MOV SP R6
     POP R6
@@ -227,7 +227,7 @@ main:
     MOV R1, R6-18
     POP R2
     MOV [R1] R2
-    MOV R1 [R6-18]
+    MOV R1, [R6-18]
 main_epilogue:
     MOV SP R6
     POP R6
@@ -265,7 +265,7 @@ __entrypoint:
 main:
     PUSH R6
     MOV R6 SP
-    MOV R1 [.secondsInAYear]
+    MOV R1, [.secondsInAYear]
 main_epilogue:
     MOV SP R6
     POP R6
@@ -313,7 +313,7 @@ main_epilogue:
 test:
     PUSH R6
     MOV R6 SP
-    MOVf R1 [R6+8]
+    MOVf R1, [R6+8]
 test_epilogue:
     MOV SP R6
     POP R6
