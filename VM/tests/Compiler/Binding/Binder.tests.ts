@@ -32,8 +32,8 @@ describe("A Binder object", () => {
             
             visitor.Visit(scope);
             
-            if(visitor.structure != structure)
-                printDiff(visitor.structure, structure);
+            //if(visitor.structure != structure)
+            //    printDiff(visitor.structure, structure);
 
             expect(visitor.structure).toEqual(structure);
         }

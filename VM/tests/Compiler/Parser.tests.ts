@@ -31,8 +31,8 @@ describe("A Parser object", () => {
             
             visitor.Visit(compilationUnit.compilationUnit);
             
-            if(visitor.structure != structure)
-                printDiff(visitor.structure, structure);
+            //if(visitor.structure != structure)
+             //   printDiff(visitor.structure, structure);
 
             expect(visitor.structure).toEqual(structure);
         }

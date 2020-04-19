@@ -31,8 +31,8 @@ describe("A ControlFlowAnalyser object", () => {
         const cfg = ControlFlowGraph.Create(newBoundTree.functions[0].blockBody);
         const renderer = new ControlFlowGraphRenderer(cfg);
         const writer = new StringWriter();
-        renderer.WriteTo(writer);
-        console.log(writer.toString());
+        //renderer.WriteTo(writer);
+        //console.log(writer.toString());
     }
 
 [

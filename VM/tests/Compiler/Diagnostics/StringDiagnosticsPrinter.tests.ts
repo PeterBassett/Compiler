@@ -16,8 +16,8 @@ describe("A StringDiagnosticsPrinter ", () => {
 
         let diagnosticsPrinter = new StringDiagnosticsPrinter();
         diagnosticsPrinter.print(compilationUnit.diagnostics);
-        console.clear();
-        console.log(diagnosticsPrinter.toString());
+        //console.clear();
+        //console.log(diagnosticsPrinter.toString());
     }
     
 [

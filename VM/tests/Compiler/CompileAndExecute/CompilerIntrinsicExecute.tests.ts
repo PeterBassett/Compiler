@@ -160,7 +160,7 @@ describe("Compiler Intrinsic Execute", () => {
         }
         catch(e)
         {
-            console.log("stepCount = " + stepCount.toString());
+            //console.log("stepCount = " + stepCount.toString());
             if(e.message != "HALT EXECUTION") 
                 throw e;
         }
@@ -518,7 +518,7 @@ func main() : int {
             let result = run(text);
             let t1 = performance.now();
 
-            console.log("execution took " + (t1-t0) + "ms");
+            //console.log("execution took " + (t1-t0) + "ms");
             
             expect(result).toEqual(expected);
         });
