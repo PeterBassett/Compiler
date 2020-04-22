@@ -123,7 +123,7 @@ export default class Parser
 
     private matchAny(...types : SyntaxType[]) : Token
     {        
-        if(types.filter( t => t == this.current.kind))
+        if(this.peekAny(...types))
             return this.next();
 
         this.isErrorRecovery = true;
@@ -132,8 +132,13 @@ export default class Parser
         const text = SyntaxFacts.GetText(types[0]);
 
         return new Token(types[0], text, this.current.position, this.current.line, this.current.character, [], []);    
-    } 
-
+    }
+    
+    private peekAny(...types : SyntaxType[]) : boolean
+    {        
+        return types.filter( t => t == this.current.kind).length > 0;
+    }
+    
     public parse() : CompilationUnit
     {
         try

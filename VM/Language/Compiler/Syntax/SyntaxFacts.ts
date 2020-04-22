@@ -56,7 +56,11 @@ const lexemes : { lexeme : string, type : SyntaxType } [] = [
     { lexeme : "struct", type : SyntaxType.StructKeyword },    
     { lexeme : "break", type : SyntaxType.BreakKeyword },
     { lexeme : "continue", type : SyntaxType.ContinueKeyword },
-    { lexeme : ".", type : SyntaxType.Dot }
+    { lexeme : ".", type : SyntaxType.Dot },
+    { lexeme : "public", type : SyntaxType.PublicKeyword },
+    { lexeme : "protected", type : SyntaxType.ProtectedKeyword },
+    { lexeme : "private", type : SyntaxType.PrivateKeyword },
+    { lexeme : "constructor", type : SyntaxType.ConstructorKeyword },
 ];
 
 type SyntaxTypeToLexeme = { [k in SyntaxType] :string; };
@@ -102,6 +106,10 @@ export function GetKeywordType(lexeme : string) : SyntaxType
         case "struct" : return SyntaxType.StructKeyword;
         case "break" : return SyntaxType.BreakKeyword;
         case "continue" : return SyntaxType.ContinueKeyword;
+        case "public" : return SyntaxType.PublicKeyword;    
+        case "private" : return SyntaxType.PrivateKeyword;
+        case "protected" : return SyntaxType.ProtectedKeyword;
+        case "constructor" : return SyntaxType.ConstructorKeyword;
         default: return SyntaxType.Identifier;
     }
 }

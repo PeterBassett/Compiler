@@ -3,7 +3,7 @@ import SourceText from "../../Language/Compiler/Syntax/Text/SourceText";
 import SyntaxTreeVisitor from "./SyntaxTreeStructureVisitor";
 import CompilationUnit from "../../Language/Compiler/Syntax/CompilationUnit";
 import StringDiagnosticsPrinter from "../../Language/Compiler/Diagnostics/StringDiagnosticsPrinter";
-import { DiagnosticType } from "../../Language/Compiler/Diagnostics/Diagnostics";
+import { DiagnosticType, Diagnostics } from "../../Language/Compiler/Diagnostics/Diagnostics";
 import SyntaxTreeStructureVisitor from "./SyntaxTreeStructureVisitor";
 import SyntaxTreeNodeTextSpanVisitor from "./SyntaxTreeNodeTextSpanVisitor";
 
@@ -25,6 +25,8 @@ describe("A Parser object", () => {
         expect(compilationUnit.diagnostics).toBeTruthy();
         expect(compilationUnit.diagnostics.length).toEqual(0);
 
+        assertNoDiagnositcs("Parser", compilationUnit.diagnostics);
+        
         if(compilationUnit.success)
         {
             let visitor = new SyntaxTreeStructureVisitor();
@@ -35,6 +37,21 @@ describe("A Parser object", () => {
              //   printDiff(visitor.structure, structure);
 
             expect(visitor.structure).toEqual(structure);
+        }
+    }
+
+    function assertNoDiagnositcs(source : string, diagnostics : Diagnostics) : void
+    {
+        if(diagnostics.length > 0)
+        {
+            const printer = new StringDiagnosticsPrinter();
+            expect(diagnostics.length).toEqual(0);
+
+            diagnostics.map( (d, i) => {
+                const output = printer.printDiagnostic(diagnostics, d);
+                fail(`${source} : ${output}`);
+                return "";
+            });
         }
     }
 
@@ -1153,6 +1170,19 @@ func main() : int {
                     NameExpressionSyntax<arr>
                     IntegerLiteralExpressionSyntax<1>
 `],
+[
+`class test 
+{
+    public let a : int = 50;
+}
+
+func main() : int
+{
+    let c : test;
+    return c.a;
+}
+`,``
+]
 /*,
 [`
 // array of length 3 int with initialisation vector

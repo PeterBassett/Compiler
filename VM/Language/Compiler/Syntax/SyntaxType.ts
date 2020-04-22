@@ -68,5 +68,9 @@ export enum SyntaxType {
     SkippedTokensTrivia,
     ClassKeyword,
     StructKeyword,
-    Dot
+    Dot,
+    PublicKeyword,
+    PrivateKeyword,
+    ProtectedKeyword,
+    ConstructorKeyword
 }
