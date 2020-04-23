@@ -1170,7 +1170,7 @@ func main() : int {
                     NameExpressionSyntax<arr>
                     IntegerLiteralExpressionSyntax<1>
 `],
-[
+/*[
 `class test 
 {
     public let a : int = 50;
@@ -1183,7 +1183,7 @@ func main() : int
 }
 `,``
 ]
-/*,
+,
 [`
 // array of length 3 int with initialisation vector
 let root : [3]int = {1, 2, 3};
