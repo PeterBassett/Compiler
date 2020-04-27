@@ -91,6 +91,11 @@ export class AssemblyLineParser
         else if(instruction.operandCount == 2)
         {
             const op1 = this.parseOperand();
+
+            // if there is a trailing comma, skip it.
+            if(this.more && this.current.token === OperandToken.COMMA)
+                this.next();
+
             const op2 = this.parseOperand();
 
             let modes = new OpcodeModes(
@@ -258,6 +263,15 @@ export class AssemblyLineParser
 
         this.next();
         // labels are not expected to produce final values
+
+        // lets also parse an optional relative value
+        if(this.more && this.current.token === OperandToken.PLUS)
+        {
+            this.next(); // get rid of the plus
+            
+            this.match(OperandToken.NUMBER);
+        }
+
         return new ValueOrRegister(undefined, false, 0);
     }
 

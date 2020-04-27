@@ -7,6 +7,7 @@ import { assemble } from "./Assemble";
 import { parseDataLabels } from "./Preprocessors/ParseDataLabels";
 import { replaceLabels, calculateTextSectionEncodedLength } from "./Preprocessors/ReplaceLabels";
 import { replaceDataLabels } from "./Preprocessors/ReplaceDataLabels";
+import { performConstantFolding } from "./Preprocessors/ConstantFolding";
 import InstructionCoder from "../VirtualMachine/CPU/Instruction/InstructionCoder";
 import { AssembledOutput } from "./AssembledOutput";
 
@@ -59,7 +60,9 @@ export default class Assembler
 
         const replacedDataLabelsText = replaceDataLabels(replacedLabelText, dataLabels, this.baseMemoryOffset);
 
-        const binary = assemble(replacedDataLabelsText, dataLabels, 0, this.encoder);
+        const constantFoldedText = performConstantFolding(replacedLabelText);
+
+        const binary = assemble(constantFoldedText, dataLabels, 0, this.encoder);
 
         return new AssembledOutput(binary.machineCode, binary.readonlyRegions);
     }

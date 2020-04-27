@@ -7,7 +7,7 @@ describe("The AssemblyLineParser class ", () => {
     function test(instruction : string, expected : Instruction)
     {
         let lexer = new AssemblyLineLexer(instruction);
-        let parser = new AssemblyLineParser(lexer);
+        let parser = new AssemblyLineParser(lexer, true);
         
         const actual = parser.Parse();
         
@@ -25,8 +25,10 @@ describe("The AssemblyLineParser class ", () => {
     const b1101 = new OpcodeModes(new OpcodeMode(true, true), new OpcodeMode(false, true));
     const b1110 = new OpcodeModes(new OpcodeMode(false, true), new OpcodeMode(true, true));
     const b0100 = new OpcodeModes(new OpcodeMode(false, true), new OpcodeMode(false, false));
+    const b0001 = new OpcodeModes(new OpcodeMode(true, false), new OpcodeMode(false, false));
     const b1111 = new OpcodeModes(new OpcodeMode(true, true), new OpcodeMode(true, true));
     const b1010 = new OpcodeModes(new OpcodeMode(false, false), new OpcodeMode(true, true));
+    const b1011 = new OpcodeModes(new OpcodeMode(false, true), new OpcodeMode(true, true));
     
     it("parses a line of assembly with lowercase mnemonic", () => {
         test("mvi R0 555", new Instruction(OpCodes.MVI,b1000,0,0,0,555));
@@ -127,4 +129,16 @@ describe("The AssemblyLineParser class ", () => {
     it("parses a line of assembly with register relative non pointer", () => {
         test("MOV R1 R3-4", new Instruction(OpCodes.MOV,b1100,3,1,0,-4));
     });
+
+    it("parses a line of assembly with register relative non pointer and register relative pointer", () => {
+        test("MOVf [R1+0], R2+0", new Instruction(OpCodes.MOVf,b1011,2,1,0,0));
+    });    
+
+    it("parses a line of assembly with global data ref", () => {
+        test("MOV R1, .s1", new Instruction(OpCodes.MOV,b1000,0,1,0,0));
+    });
+
+    it("parses a line of assembly with relative global data ref", () => {
+        test("MOV R1, .s1+0", new Instruction(OpCodes.MOV,b1000,0,1,0,0));
+    });        
 });

@@ -39,13 +39,17 @@ describe("The parseDataLabels function ", () => {
             ".three size 456",
             ".four \"another test\"",
             ".five word 345",
+            ".six long 12345",
+            ".seven float 3.14159",
         ],
         [
-            { label : ".one", data : "test", size: 9, type : DataLabels.DataLabelType.String, address: 0 },
-            { label : ".two", data : 123, size : 1, type : DataLabels.DataLabelType.Byte, address : 9 },
-            { label : ".three", data:null, size : 456, type : DataLabels.DataLabelType.Buffer, address : 10 },
-            { label : ".four", data : "another test", size : 25, type : DataLabels.DataLabelType.String, address : 466 },
-            { label : ".five", data : 345, size : 2, type : DataLabels.DataLabelType.Int16, address : 491 }            
+            { label : ".one",   data : "test",          size: 9,      type : DataLabels.DataLabelType.String, address: 0 },
+            { label : ".two",   data : 123,             size : 1,     type : DataLabels.DataLabelType.Byte,   address : 9 },
+            { label : ".three", data : null,            size : 456,   type : DataLabels.DataLabelType.Buffer, address : 10 },
+            { label : ".four",  data : "another test",  size : 25,    type : DataLabels.DataLabelType.String, address : 466 },
+            { label : ".five",  data : 345,             size : 2,     type : DataLabels.DataLabelType.Int16,  address : 491 },
+            { label : ".six",   data : 12345,           size : 4,     type : DataLabels.DataLabelType.Int32,  address : 493 },
+            { label : ".seven", data : 3.14159,         size : 8,     type : DataLabels.DataLabelType.Float,  address : 497 }
         ])
     });  
     
