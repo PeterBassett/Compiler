@@ -63,6 +63,13 @@ export default class Binder
     {
         this.returnStatementsInFunction = [];
         this._globalVariablesDefined = false;
+        
+        const structs : Nodes.BoundStructDeclaration[] = this.BindStructDeclarations(
+            declarations.filter(d => {
+                return d.kind == "StructDeclarationStatementSyntax"
+            } ) as AST.StructDeclarationStatementSyntax[]
+        );
+
         const variables : Nodes.BoundVariableDeclaration[] = this.BindGlobalVariableDeclarations(
             declarations.filter(d => {
                 return d.kind == "VariableDeclarationSyntax";
@@ -74,12 +81,6 @@ export default class Binder
             declarations.filter(d => {
                 return d.kind == "ClassDeclarationStatementSyntax"
             } ) as AST.ClassDeclarationStatementSyntax[]
-        );
-
-        const structs : Nodes.BoundStructDeclaration[] = this.BindStructDeclarations(
-            declarations.filter(d => {
-                return d.kind == "StructDeclarationStatementSyntax"
-            } ) as AST.StructDeclarationStatementSyntax[]
         );
 
         // three stage

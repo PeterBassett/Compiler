@@ -324,7 +324,155 @@ func main() : int
 
     // those values should be different now.
     return copy[3] + arr[3];
-}`, 56 + 2]
+}`, 56 + 2],
+[`
+// make a global array
+let arr : [5]int;
+
+func main() : int 
+{     
+    //populate it
+    arr[0] = 78;
+    arr[1] = 89;
+    arr[2] = 45;
+    arr[3] = 56; // this is the one we are interested in
+    arr[4] = 14;
+
+    // copy it, not make a reference to
+    let copy = arr;
+
+    // change the source array
+    arr[3] = 2;
+
+    // those values should be different now.
+    return copy[3] + arr[3];
+}`, 56 + 2],
+[`
+// make a global array
+let arr : [5]int;
+
+func main() : int 
+{     
+    let local : [5]int;
+    local[0] = 78;
+    local[1] = 89;
+    local[2] = 45;
+    local[3] = 56; // this is the one we are interested in
+    local[4] = 14;
+
+    // copy it, not make a reference to
+    arr = local;
+
+    // change the source array
+    local[3] = 2;
+
+    // those values should be different now.
+    return local[3] + arr[3];
+}`, 56 + 2],
+[`
+struct pair
+{
+    a : int;
+    b : int;
+}
+struct indirectPair
+{
+    c : *pair;
+    d : *pair;
+}
+struct root
+{
+    e : int;
+    f : [3]indirectPair;
+}
+func main() : int
+{
+    let r : [5]root;
+    let ip : indirectPair;
+    let p1 : pair;
+    let p2 : pair;
+    
+    r[1].e = 123;
+    r[1].f[2] = ip;
+
+    r[1].f[2].c = &p1;
+    r[1].f[2].d = &p2;
+
+    r[1].f[2].c.a = 5;
+
+    return r[1].f[2].c.a;
+}`, 5],
+[`
+struct pair
+{
+    a : int;
+    b : int;
+}
+struct indirectPair
+{
+    c : *pair;
+    d : *pair;
+}
+struct root
+{
+    e : int;
+    f : [3]indirectPair;
+}
+
+// globals
+let r : [5]root;
+let ip : indirectPair;
+let p1 : pair;
+let p2 : pair;
+
+func main() : int
+{   
+    r[1].e = 123;
+    r[1].f[2] = ip;
+
+    r[1].f[2].c = &p1;
+    r[1].f[2].d = &p2;
+
+    r[1].f[2].c.a = 5;
+
+    return r[1].f[2].c.a;
+}`, 5],
+[`
+struct pair
+{
+    a : int;
+    b : int;
+}
+struct indirectPair
+{
+    c : *pair;
+    d : *pair;
+}
+struct root
+{
+    e : int;
+    f : [3]indirectPair;
+}
+
+// globals
+let r : [5]root;
+let ip : indirectPair;
+let p1 : pair;
+let p2 : pair;
+
+func main() : int
+{   
+    r[1].e = 123;
+    r[1].f[2] = ip;
+
+    r[1].f[2].c = &p1;
+    r[1].f[2].d = &p2;
+
+    r[1].f[2].c.a = 5;
+    r[1].f[2].c.b = 27;
+
+    return r[1].f[2].c.a + r[1].f[2].c.b;
+}`, 27 + 5],
     ].forEach((item) => {
         it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
             const text = item[0] as string;

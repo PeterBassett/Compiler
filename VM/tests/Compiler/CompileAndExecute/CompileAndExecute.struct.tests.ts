@@ -84,6 +84,30 @@ func main() : int
 }`, 3],
 [`struct leaf 
 {
+    la : int;
+    lb : int;
+}
+struct root 
+{
+    a : leaf;
+    b : leaf;
+}
+func main() : int
+{
+    let a : root;
+    a.a.la = 3;
+    a.a.lb = 1;
+
+    let l : leaf;
+    l.la = 5;
+    l.lb = 8;
+
+    a.b = l;
+
+    return a.b.la + a.b.lb;
+}`, 13],
+[`struct leaf 
+{
     a : int;
 }
 
@@ -417,7 +441,279 @@ func foo2() : float
 func main() : float
 {
     return foo2();
-}`, 3.14159]
+}`, 3.14159],
+[`struct root 
+{
+    b:float;
+    flag : bool;
+    a : int;
+}
+
+// global structs
+let s1 : root;
+
+func main() : int
+{
+    // struct assignment
+    s1.a = 6;
+    s1.b = 5.3;
+    s1.flag = false;
+ 
+    return s1.a;
+}`, 6],
+[`struct root 
+{
+    b:float;
+    flag : bool;
+    a : int;
+}
+
+// global structs
+let s1 : root;
+
+func main() : float
+{
+    // struct assignment
+    s1.a = 6;
+    s1.b = 5.3;
+    s1.flag = false;
+ 
+    return s1.b;
+}`, 5.3],
+[`struct root 
+{
+    b:float;
+    flag : bool;
+    a : int;
+}
+
+// global structs
+let s1 : root;
+
+func main() : bool
+{
+    // struct assignment
+    s1.a = 6;
+    s1.b = 5.3;
+    s1.flag = false;
+ 
+    return s1.flag;
+}`, 0],
+[`struct root 
+{
+    b:float;
+    flag : bool;
+    a : int;
+}
+
+// global structs
+let s1 : root;
+
+func main() : bool
+{
+    // struct assignment
+    s1.a = 6;
+    s1.b = 5.3;
+    s1.flag = true;
+ 
+    return s1.flag;
+}`, 1],
+[`struct root 
+{
+    b:float;
+    flag : bool;
+    a : int;
+}
+
+// global structs
+let s0 : root;
+let s1 : root;
+let s2 : root;
+
+func main() : int
+{
+    // struct assignment
+    s1.a = 6;
+    s1.b = 5.3;
+    s1.flag = true;
+ 
+    return s1.a;
+}`, 6],
+[`struct root 
+{
+    b:float;
+    flag : bool;
+    a : int;
+}
+
+// global structs
+let s0 : root;
+let s1 : root;
+let s2 : root;
+
+func main() : int
+{
+    // struct assignment
+    s1.a = 6;
+    s1.b = 5.3;
+    s1.flag = true;
+
+    s2.a = s1.a;
+    s2.b = s1.b;
+    s2.flag= s1.flag;
+ 
+    return s2.a;
+}`, 6],
+[`struct root 
+{
+    b:float;
+    flag : bool;
+    a : int;
+}
+
+// global structs
+let s1 : root;
+let s2 : root;
+
+func main() : int
+{
+    // struct assignment
+    s1.a = 6;
+    s1.b = 5.3;
+    s1.flag = false;
+ 
+    // create copy of struct
+    s2 = s1;
+
+    return s2.a;
+}`, 6],
+[`struct leaf 
+{
+    la : int;
+    lb : int;
+}
+struct root 
+{
+    a : leaf;
+    b : leaf;
+}
+
+let a : root;
+
+func main() : int
+{
+    a.a.la = 3;
+    a.a.lb = 1;
+
+    let l : leaf;
+    l.la = 5;
+    l.lb = 8;
+
+    a.b = l;
+
+    return a.b.la + a.b.lb;
+}`, 13],
+[`struct leaf 
+{
+    la : int;
+    lb : int;
+}
+struct root 
+{
+    a : leaf;
+    b : leaf;
+}
+
+let l : leaf;
+ 
+func main() : int
+{
+    let a : root;
+    a.a.la = 3;
+    a.a.lb = 1;
+
+    l.la = 5;
+    l.lb = 8;
+
+    a.b = l;
+
+    return a.b.la + a.b.lb;
+}`, 13],
+[`struct leaf 
+{
+    la : int;
+    lb : int;
+}
+struct root 
+{
+    a : leaf;
+    b : leaf;
+}
+
+let a : root;
+let l : leaf;
+ 
+func main() : int
+{
+    a.a.la = 3;
+    a.a.lb = 1;
+
+    l.la = 5;
+    l.lb = 8;
+
+    a.b = l;
+
+    return a.b.la + a.b.lb;
+}`, 13],
+[`struct leaf 
+{
+    la : int;
+    lb : int;
+}
+struct root 
+{
+    a : leaf;
+    b : leaf;
+}
+
+// other way around
+let l : leaf;
+let a : root;
+ 
+func main() : int
+{
+    a.a.la = 3;
+    a.a.lb = 1;
+
+    l.la = 5;
+    l.lb = 8;
+
+    a.b = l;
+
+    return a.b.la + a.b.lb;
+}`, 13],
+[`struct leaf 
+{
+    la : int;
+    lb : int;
+}
+struct root 
+{
+    a : leaf;
+    b : leaf;
+}
+
+let a : root;
+ 
+func main() : int
+{
+    a.a.la = 3;
+    a.a.lb = 1;
+
+    a.b = a.a;
+
+    return a.b.la + a.b.lb;
+}`, 4],
 /*
 ,
 [`func main() : string {

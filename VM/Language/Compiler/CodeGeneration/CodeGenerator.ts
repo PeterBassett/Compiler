@@ -1,7 +1,7 @@
 import * as Nodes from "../Binding/BoundNode";
 import { ValueType, ValueTypeNameMap } from "../../Types/ValueType";
 import { Diagnostics } from "../Diagnostics/Diagnostics";
-import { StructDeclarationStatementSyntax, IfStatementSyntax } from "../Syntax/AST/ASTNode";
+import { StructDeclarationStatementSyntax, IfStatementSyntax, ExpressionStatementSyntax } from "../Syntax/AST/ASTNode";
 import GeneratedCode from "./GeneratedCode";
 import Stack from "../../../misc/Stack";
 import BuiltinFunctions from "../BuiltinFunctions";
@@ -26,7 +26,7 @@ export default class CodeGenerator
     private stackIndex : number = 0;
     private variableMap! : Stack< { [index:string] : { offset:number, size:number, varOrParam : VarOrParam } } >;
     private labelCount:number = 0;
-    private globalLiterals : { name :string, type: ValueType, value : any }[] = [];
+    private globalLiterals : { name :string, type: ValueType, value : any, index:number, size:number }[] = [];
 
     private dataSection = 0;
     private entrySection = 0;
@@ -133,9 +133,15 @@ export default class CodeGenerator
             const expression = v.initialiser!;
             const valueType = v.variable.type.type;
         
-            if(expression.kind == Nodes.BoundNodeKind.LiteralExpression)
+            if(expression.type.isLarge)
+            {
+                const size = this.typeSize(expression.type);
+                
+                this.data(valueType, v.variable.name, size, `Global variable Declaration for ${v.variable.name}`);
+            }
+            else if(expression.kind == Nodes.BoundNodeKind.LiteralExpression)
             {                
-                let exp = expression as Nodes.BoundLiteralExpression;           
+                const exp = expression as Nodes.BoundLiteralExpression;           
                 this.data(valueType, v.variable.name, exp.value, `Global variable Declaration for ${v.variable.name}`);
             }            
             else
@@ -330,14 +336,28 @@ export default class CodeGenerator
         if(statement.target.type.isLarge)
         {
             this.comment("Assign a struct");
-            const source = this.getLargeDataReference(statement.expression);
+
+            this.writeAddressExpression(statement.expression);
+            this.instruction(`PUSH R1`, "Push address of value to the stack");
+
+            this.writeAddressExpression(statement.target);
+
+            this.instruction(`POP R2`, "Pop address of value to the stack");
+
+            const size = this.typeSize(statement.target.type);
+
+            const source = (i: number, _: number) => `[R2+${i}]`;
+            const dest = (i: number, _: number) => `[R1+${i}]`;
+            this.emitStackCopy(dest, source, size);
+
+            /*const source = this.getLargeDataReference(statement.expression);
 
             this.writeAddressExpression(statement.target);
             
             const size = this.typeSize(statement.target.type);
 
             const dest = (i: number, _: number) => `[R1+${i}]`;
-            this.emitStackCopy(dest, source, size);
+            this.emitStackCopy(dest, source, size);*/
         }
         else
         {            
@@ -361,6 +381,63 @@ export default class CodeGenerator
         this.comment("Assignment Complete");
         this.comment("-----------------------------");
     }
+   /* private writeAssignmentStatement(statement: Nodes.BoundAssignmentStatement) 
+    {
+        if(statement.target.type.isLarge && statement.expression.kind === Nodes.BoundNodeKind.LiteralExpression)
+        {
+            const literal = statement.expression as Nodes.BoundLiteralExpression;
+
+            if(literal.value !== null)
+            {
+                throw new Error("Large type literals not yet implemented");                
+            }
+
+            // we are assigning to a large type and currently we only allow null.
+            this.writeAddressExpression(statement.target);
+
+            this.comment("Assign a large type");
+            const size = this.typeSize(statement.target.type);
+            const source = (i: number, _: number) => `0`; // copy null value
+            const dest =   (i: number, _: number) => `[R1+${i}]`;
+            this.emitStackCopy(dest, source, size);
+
+            return;
+        }
+
+        this.comment("-----------------------------");
+            
+        if(statement.target.type.isLarge)
+        {
+            console.log("test");
+        }
+
+        this.comment("Assignment a non struct value");
+        this.writeExpression(statement.expression);
+        
+        const push = this.typedMnemonic(statement.target.type.type, "PUSH");
+        this.instruction(`${push} R1`, "Push value to assign to stack");
+        this.writeAddressExpression(statement.target);
+
+        const pop = this.typedMnemonic(statement.target.type.type, "POP");
+        this.instruction(`${pop} R2`, "Pop value to assign to R2");
+
+        if(!statement.target.type.isLarge)
+        {
+            const mov = this.typedMnemonic(statement.target.type.type, "MOV");        
+            this.instruction(`${mov} [R1] R2`, "Copy value in R2 to address in R1");
+        }
+        else
+        {
+            this.comment("Assign a large type");
+            const size = this.typeSize(statement.target.type);
+            const source = (i: number, _: number) => `[R2+${i}]`;
+            const dest =   (i: number, _: number) => `[R1+${i}]`;
+            this.emitStackCopy(dest, source, size);
+        }
+
+        this.comment("Assignment Complete");
+        this.comment("-----------------------------");
+    }*/
 
     // move the address of some lvalue into R1
     writeAddressExpression(expression: Nodes.BoundExpression) 
@@ -418,6 +495,32 @@ export default class CodeGenerator
                 this.comment("R1 now contains the address of the indexed element");
                 break;
             }
+            case Nodes.BoundNodeKind.CallExpression:
+            {
+                const exp = expression as Nodes.BoundCallExpression;
+                
+                if(exp.returnType.isLarge)
+                {
+                    // We have a call returning a large type.
+                    // once the call is done the returned data will be on the stack
+                    // and its address will be in R3
+                    this.writeExpression(exp);
+
+                    this.instruction("MOV R1 R3", "move address of large type to to r1");
+
+                    // now R3 holds the address of the data!
+                    //return (i, _c) => `[R3+${i}]`;
+
+                    break;
+                }
+                throw new Error("Expected Large Type");
+            }     
+            case Nodes.BoundNodeKind.LiteralExpression:
+            {
+                const exp = expression as Nodes.BoundLiteralExpression;
+                this.writeExpression(expression);
+                break;
+            }       
             default:
                 throw new Error("Not an lvalue");
         }
@@ -498,6 +601,7 @@ export default class CodeGenerator
 
         while(remaining > 0)
         {
+            
             let inst = `MOVf`;
             let chunk = 8;
 
@@ -519,7 +623,7 @@ export default class CodeGenerator
                 chunk = 1;
             }
 
-            this.instruction(`${inst} ${to(size - remaining, chunk)} ${from(size - remaining, chunk)}`); 
+            this.instruction(`${inst} ${to(size - remaining, chunk)}, ${from(size - remaining, chunk)}`); 
             remaining -= chunk;
         }
     }
@@ -618,9 +722,13 @@ export default class CodeGenerator
         throw new Error(`Member not found on struct ${type.name}`);
     }
 
-    mnemonicForType(type: ValueType) : string
+    dataMnemonicForGlobalType(type: ValueType) : string
     {
         switch(type) {
+            case ValueType.Array:
+            case ValueType.Struct:
+            case ValueType.Class:
+                return "size"
             case ValueType.Boolean:
                 return "byte";
             case ValueType.Pointer:
@@ -689,26 +797,37 @@ export default class CodeGenerator
                         this.instruction(`${mvi} R1 ${exp.value}`, "Loading literal int");
                         break;
                     case ValueType.Float :
+                    {
                         this.setCurrentSection(this.dataSection);                        
                         const label = this.numberedLiteral(ValueType.Float, "floatLiteral", exp.value, "Storing literal float");
                         this.setCurrentSection(this.codeSection);
                         this.instruction(`LDRf R1 ${label}`, "Loading literal float");                            
                         break;
+                    }
                     case ValueType.Boolean :
                         this.instruction(`${mvi} R1 ${ (exp.value ? "1" : "0") }`, "Loading literal boolean");                    
                         break;
                     case ValueType.Struct :
-                        // calculate size of structure
-                        const size = this.structSize(exp.type);
-                        // reserve space on the stack for this
-                        this.instruction(`SUB SP ${size}`, "Reserve space on stack for struct");                                            
-                        break;
                     case ValueType.Array :
-                        // calculate size of structure
+                    {
+                        // until we implement struct or array literals
+                        if(exp.value != null)
+                            throw new Error("Expected null literal");
+
+                        this.setCurrentSection(this.dataSection);      
+                        const size = this.typeSize(exp.type);                  
+                        const label = this.largeLiteral(exp.type.type, size, "largeLiteral", exp.value, "Storing large literal");
+                        this.setCurrentSection(this.codeSection);
+                        this.instruction(`MOV R1 ${label}`, "address of large literal"); 
+                        /*
+                        // calculate size of large type
                         const arraySize = this.typeSize(exp.type);
-                        // reserve space on the stack for this
-                        this.instruction(`SUB SP ${arraySize}`, "Reserve space on stack for array");                                            
-                        break;                        
+                        // reserve space on the stack for it and record the address in R1
+                        this.instruction(`SUB SP ${arraySize}`, "Reserve space on stack for array");         
+                        //this.instruction(`MOV R1 SP`, "Where is the memory for that variable?");          
+                        */                             
+                        break;               
+                    }         
                     case ValueType.Null: 
                         this.instruction(`${mvi} R1 0`, "Loading literal NULL");
                         break;
@@ -967,6 +1086,38 @@ export default class CodeGenerator
                 }
                 throw new Error("Expected Large Type");
             }
+            /*case Nodes.BoundNodeKind.GetExpression:
+            {
+                const exp = expression as Nodes.BoundGetExpression;
+                
+                this.comment("------------------------------------------");
+                this.comment("GetExpression");
+                const target = expression as Nodes.BoundGetExpression;
+                this.writeAddressExpression(target.left);
+                                
+                const member = this.structMember(target.left.type, [target.member]);
+
+                if(member.offset > 0)
+                {
+                    //
+                    this.comment(`Reference struct member ${target.member}`);
+                    this.instruction(`MVI R2 ${member.offset}`, `Member at ${member.offset} bytes`);
+                    this.instruction(`ADD R1 R2`, "add offset");
+                }
+                this.comment("------------------------------------------");                
+                break;
+
+                if(exp.returnType.isLarge)
+                {
+                    // We have a call returning a large type.
+                    // once the call is done the returned data will be on the stack
+                    // and its address will be in R3
+                    this.writeExpression(exp);
+
+                    // now R3 holds the address of the data!
+                    return (i, _c) => `[R3+${i}]`;
+                }
+            }  */          
             default:
             {
                 throw new Error("Unhandled expression type");
@@ -993,7 +1144,14 @@ export default class CodeGenerator
         }
         else if(identifier.variable && identifier.variable!.isGlobal)
         {           
-            return (offset) => addAddress(`.${identifier.name}`);
+            return (i) => {
+                if(i < 0)
+                    throw new Error("Invalid negative index from global");
+                else if(i > 0)
+                    return addAddress(`.${identifier.name}+${i}`);
+                else
+                    return addAddress(`.${identifier.name}`);
+            }
         }
         else
         {
@@ -1157,15 +1315,44 @@ export default class CodeGenerator
 
         this.globalLiterals.push({
             name : label,
+            size : type === ValueType.Int ? 4 : (type === ValueType.Float ? 8 : 0),
             type : type,
-            value : value
+            value : value,
+            index : this.sections[this.dataSection].length - 1
+        });
+
+        return label;
+    }
+
+    largeLiteral(type:ValueType, size: number, namePrefix: string, value: any, comment: string) {
+        this.setCurrentSection(this.dataSection);
+
+        const foundItems = this.globalLiterals.filter( (v) => {
+            return  v.value == value &&
+                    v.size == size &&
+                    v.type == type;
+        });
+
+        if(foundItems.length > 0)        
+            return foundItems[0].name;
+        
+        const label = this.data(type, namePrefix + "_" + this.labelCount, size, comment);        
+
+        this.labelCount++;
+
+        this.globalLiterals.push({
+            name : label,
+            size : size,
+            type : type,
+            value : value,
+            index : this.sections[this.dataSection].length - 1
         });
 
         return label;
     }
     
     data(type: ValueType, name: string, value: any, comment: string) {
-        let slotType = this.mnemonicForType(type);
+        let slotType = this.dataMnemonicForGlobalType(type);
         let line = "    ." + name + " " + slotType + " " + value;
         this.lines.push(line);
         return "." + name;
