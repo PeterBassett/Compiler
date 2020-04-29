@@ -26,7 +26,7 @@ primitives, it simulates a fairly restricted 16 bit computer.
     * integer, float, boolean primitive data types
     * structs    
     * arrays
-    * pointers types for all of the above.
+    * pointer types for all of the above.
     * reference & and dereference * operators.
     * Mathematical, logical and bitwise operators        
     * global variables of all types
