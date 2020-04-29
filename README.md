@@ -21,8 +21,18 @@ at the moment precomputes the output of expressions involving literals.
 * Virtual Machine to execute the binaries.
 * The VM is "low level" in that it does not provide some higher level VM
 primitives, it simulates a fairly restricted 16 bit computer.
-* Currently the code generator supports generating code for integer, float, boolean, structs and Pointers for varables and parameters, reference & and dereference * operators.
+* Currently the code generator supports generating code for 
+    * functions 
+    * integer, float, boolean primitive data types
+    * structs    
+    * arrays
+    * pointers types for all of the above.
+    * reference & and dereference * operators.
+    * Mathematical, logical and bitwise operators        
+    * global variables of all types
 
 Next Steps
-* global struct variables
-* Arrays
+* byte primitive data type
+* type coercion of numeric literals
+* unions
+* casting
