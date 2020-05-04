@@ -23,7 +23,7 @@ at the moment precomputes the output of expressions involving literals.
 primitives, it simulates a fairly restricted 16 bit computer.
 * Currently the code generator supports generating code for 
     * functions 
-    * integer, float, boolean primitive data types
+    * byte, integer, float, boolean primitive data types
     * structs    
     * arrays
     * pointer types for all of the above.
