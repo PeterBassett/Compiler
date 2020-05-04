@@ -117,6 +117,19 @@ describe("A Parser object", () => {
                 IntegerLiteralExpressionSyntax<1>
 ` ],
 
+[`func main() : byte
+{
+    return 1;
+}`, 
+`CompilationUnitSyntax
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        NamedTypeSyntax<byte>
+        BlockStatementSyntax
+            ReturnStatementSyntax
+                IntegerLiteralExpressionSyntax<1>
+`],
+
 [`func main() : int
 {
     return 1;
@@ -597,6 +610,19 @@ func main() : int
                 CallExpressionSyntax
                     NameExpressionSyntax<string>
                     FloatLiteralExpressionSyntax<3.14159>
+`],
+[`func main() : byte {
+    return byte(1);
+}`,
+`CompilationUnitSyntax
+    FunctionDeclarationStatementSyntax<main>
+        ParameterDeclarationListSyntax
+        NamedTypeSyntax<byte>
+        BlockStatementSyntax
+            ReturnStatementSyntax
+                CallExpressionSyntax
+                    NameExpressionSyntax<byte>
+                    IntegerLiteralExpressionSyntax<1>
 `],
 [`
 struct pair 

@@ -4,6 +4,7 @@ export enum ValueType {
     Error,
     Function,
     Boolean,
+    Byte,
     Int,
     Float,
     String,

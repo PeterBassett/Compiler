@@ -35,7 +35,8 @@ export enum DiagnosticType {
     InvalidArrayBound,
     InvalidIndexing,
     InvalidArrayIndexType,
-    NegativeArrayIndex
+    NegativeArrayIndex,
+    CannotConvertConstant
 }
 
 export class Diagnostic
@@ -66,7 +67,7 @@ export class Diagnostic
 }
 
 export class Diagnostics
-{
+{    
     private readonly _diagnostics : Diagnostic[];
     private readonly _source : SourceText;
 
@@ -223,6 +224,11 @@ export class Diagnostics
     {
         this.report(`type ${type.name} does not support indexing`, DiagnosticType.InvalidIndexing, span);
     }            
+
+    public reportCannotConvertConstant(literalValue: any, type: Type, span : TextSpan) : void
+    {
+        this.report(` Constant value '${literalValue}' cannot be converted to a '${type.name}'`, DiagnosticType.CannotConvertConstant, span);
+    }
 
     public get text() : SourceText
     {

@@ -1,7 +1,9 @@
 import { Type, PredefinedType } from "./TypeInformation";
 import { ValueType } from "./ValueType";
 
-export class PredefinedValueTypes {
+export class PredefinedValueTypes
+{
+    public static Byte: Type = new PredefinedType(ValueType.Byte, "byte");
     public static Integer: Type = new PredefinedType(ValueType.Int, "int");
     public static Float: Type = new PredefinedType(ValueType.Float, "float");
     public static String: Type = new PredefinedType(ValueType.String, "string");

@@ -595,13 +595,13 @@ export default class Binder
                 const boolLiteral = syntax.literalToken.lexeme === "true";
                 return new Nodes.BoundLiteralExpression(boolLiteral, PredefinedValueTypes.Boolean);
             case "StringLiteralExpressionSyntax":
-                return new Nodes.BoundLiteralExpression(syntax.literalToken.lexeme, PredefinedValueTypes.String);
+                return new Nodes.BoundLiteralExpression(syntax.literalToken.lexeme, PredefinedValueTypes.String);            
             case "IntegerLiteralExpressionSyntax":
                 return new Nodes.BoundLiteralExpression(parseInt(syntax.literalToken.lexeme), PredefinedValueTypes.Integer);
             case "NullLiteralExpressionSyntax":
                 return new Nodes.BoundLiteralExpression(0, PredefinedValueTypes.Null);                
             case "ParenthesizedExpressionSyntax":
-                return this.BindExpression(syntax.expression);                
+                return this.BindExpression(syntax.expression);
             case "BinaryExpressionSyntax":
                 return this.BindBinaryExpression(syntax);
             case "UnaryExpressionSyntax":
@@ -818,19 +818,18 @@ export default class Binder
             const parameters = syntax.callArguments.map( node => {
                 return {
                     expression : this.BindExpression(node),
-                    span : node.span
+                    span : node.span()
                 };
             });        
 
             const boundParameters : Nodes.BoundExpression[] = [];
             for(let i = 0; i < Math.min(parameters.length, declaredParameters.length); i++)
             {
-                const convertedParameter = this.BindConversion(parameters[i].span(), parameters[i].expression, declaredParameters[i]);
+                const convertedParameter = this.BindConversion(parameters[i].span, parameters[i].expression, declaredParameters[i]);
                 
-                //if(!parameters[i].expression.type.isAssignableTo( declaredParameters[i] ))
                 if(convertedParameter.kind == Nodes.BoundNodeKind.ErrorExpression)
                 {
-                    this.diagnostics.reportCannotConvertParameter(parameters[i].expression.type, declaredParameters[i], parameters[i].span());
+                    this.diagnostics.reportCannotConvertParameter(parameters[i].expression.type, declaredParameters[i], parameters[i].span);
                 }
 
                 boundParameters.push(convertedParameter);
@@ -865,45 +864,15 @@ export default class Binder
         let boundLeft =  this.BindExpression(syntax.left);
         let boundRight = this.BindExpression(syntax.right);
 
-        let boundOperator = Nodes.BoundBinaryOperator.Bind(syntax.operatorToken.kind, boundLeft.type, boundRight.type);
+        let e = this.BindBinaryConversion(syntax, boundLeft, boundRight);
 
-        if (boundOperator == null)
+        const boundOperator = Nodes.BoundBinaryOperator.Bind(syntax.operatorToken.kind, e.left.type, e.right.type);
+
+        if(boundOperator == null)
         {
-            const leftToRight = this.BindConversion(syntax.span(), boundLeft, boundRight.type, false, false);
-
-            if(leftToRight.kind == Nodes.BoundNodeKind.ErrorExpression)
-            {            
-                const rightToLeft = this.BindConversion(syntax.span(), boundRight, boundLeft.type, false, false);
-
-                if(rightToLeft.kind == Nodes.BoundNodeKind.ErrorExpression)
-                {
-                    this.diagnostics.reportUndefinedBinaryOperator(syntax.operatorToken.span, 
-                        syntax.operatorToken.lexeme, boundLeft.type, boundRight.type);                            
-                    
-                    return boundLeft;
-                }
-                else
-                {
-                    boundRight = rightToLeft;
-                }
-            }
-            else
-            {                
-                boundLeft = leftToRight;
-            }
-
-            boundOperator = Nodes.BoundBinaryOperator.Bind(syntax.operatorToken.kind, boundLeft.type, boundRight.type);
-
-            if(boundOperator == null)
-            {
-                this.diagnostics.reportUndefinedBinaryOperator(syntax.operatorToken.span, 
-                    syntax.operatorToken.lexeme, boundLeft.type, boundRight.type);                            
-                
-                return boundLeft;
-            }
+            return boundLeft;
         }
-
-        return new Nodes.BoundBinaryExpression(boundLeft, boundOperator, boundRight);        
+        return new Nodes.BoundBinaryExpression(e.left, boundOperator, e.right);
     }
 
     private BindUnaryExpression(syntax : AST.UnaryExpressionSyntax) : Nodes.BoundExpression
@@ -925,53 +894,53 @@ export default class Binder
         switch(syntax.target.kind)
         {
             case "NameExpressionSyntax":
-                return this.BindAssignToVariableStatement(syntax.target, syntax.expression);
+                return this.BindAssignToVariableStatement(syntax.target, syntax.expression, syntax);
             case "GetExpressionSyntax":
-                return this.BindAssignToGetExpressionStatement(syntax.target, syntax.expression);
+                return this.BindAssignToGetExpressionStatement(syntax.target, syntax.expression, syntax);
             case "DereferenceExpressionSyntax":
-                return this.BindAssignToDereferenceExpressionStatement(syntax.target, syntax.expression);                
+                return this.BindAssignToDereferenceExpressionStatement(syntax.target, syntax.expression, syntax);                
             case "ArrayIndexExpressionSyntax":
-                return this.BindAssignToArrayIndexExpressionStatement(syntax.target, syntax.expression);      
+                return this.BindAssignToArrayIndexExpressionStatement(syntax.target, syntax.expression, syntax);      
             default:
                 this.diagnostics.reportAssignmentRequiresLValue("", syntax.span());
                 return this.BindErrorStatement();
         }
     }
 
-    private BindAssignToVariableStatement(target: AST.NameExpressionSyntax, source : AST.ExpressionNode): Nodes.BoundStatement {
+    private BindAssignToVariableStatement(target: AST.NameExpressionSyntax, source : AST.ExpressionNode, assignment : AST.AssignmentStatementSyntax): Nodes.BoundStatement {
         const identifier = this.BindNameExpression(target);
         const right = this.BindExpression(source);
-        const convertedExpression = this.BindConversion(source.span(), right, identifier.type);
+        const convertedExpression = this.BindConversion(assignment.span(), right, identifier.type);
 
         return new Nodes.BoundAssignmentStatement(identifier, convertedExpression);
     }
 
-    BindAssignToGetExpressionStatement(target: AST.GetExpressionSyntax, expression: AST.ExpressionNode): Nodes.BoundStatement 
+    BindAssignToGetExpressionStatement(target: AST.GetExpressionSyntax, expression: AST.ExpressionNode, assignment : AST.AssignmentStatementSyntax): Nodes.BoundStatement 
     {
         const left = this.BindGetExpression(target);
         const right = this.BindExpression(expression);
 
-        const convertedExpression = this.BindConversion(expression.span(), right, left.type);
+        const convertedExpression = this.BindConversion(assignment.span(), right, left.type);
 
         return new Nodes.BoundAssignmentStatement(left, convertedExpression);
     }
 
-    BindAssignToDereferenceExpressionStatement(target: AST.DereferenceExpressionSyntax, expression: AST.ExpressionNode): Nodes.BoundStatement 
+    BindAssignToDereferenceExpressionStatement(target: AST.DereferenceExpressionSyntax, expression: AST.ExpressionNode, assignment : AST.AssignmentStatementSyntax): Nodes.BoundStatement 
     {
         const left = this.BindDereferenceExpression(target);
         const right = this.BindExpression(expression);
 
-        const convertedExpression = this.BindConversion(expression.span(), right, left.type);
+        const convertedExpression = this.BindConversion(assignment.span(), right, left.type);
 
         return new Nodes.BoundAssignmentStatement(left, convertedExpression);
     }
 
-    BindAssignToArrayIndexExpressionStatement(target: AST.ArrayIndexExpressionSyntax, expression: AST.ExpressionNode): Nodes.BoundExpression
+    BindAssignToArrayIndexExpressionStatement(target: AST.ArrayIndexExpressionSyntax, expression: AST.ExpressionNode, assignment : AST.AssignmentStatementSyntax): Nodes.BoundExpression
     {
         const left = this.BindExpression(target);
         const right = this.BindExpression(expression);
         
-        const convertedExpression = this.BindConversion(expression.span(), right, left.type);
+        const convertedExpression = this.BindConversion(assignment.span(), right, left.type);
 
         return new Nodes.BoundAssignmentStatement(left, convertedExpression);
     }
@@ -998,6 +967,200 @@ export default class Binder
         return new Nodes.BoundExpressionStatement(new Nodes.BoundErrorExpression());
     }
     
+    private SpecialiseLiterals(left : Nodes.BoundExpression, right : Nodes.BoundExpression) : { left : Nodes.BoundExpression, right : Nodes.BoundExpression }
+    {
+        // they are the same type, we have nothing to do
+        if(left.type.equals(right.type))
+            return { left, right };
+
+        // they are both literals
+        if(left.kind == Nodes.BoundNodeKind.LiteralExpression && right.kind == Nodes.BoundNodeKind.LiteralExpression)
+        {
+            /// int and float
+            if(left.type === PredefinedValueTypes.Integer && right.type === PredefinedValueTypes.Float)
+            {
+                const boundLeft = left as Nodes.BoundLiteralExpression;
+                return {
+                    // promote the int to a float
+                    left : new Nodes.BoundLiteralExpression(boundLeft.value, PredefinedValueTypes.Float),
+                    right
+                };
+            }
+
+            if(left.type === PredefinedValueTypes.Float && right.type === PredefinedValueTypes.Integer)
+            {
+                const boundright = right as Nodes.BoundLiteralExpression;
+                return {
+                    // promote the int to a float
+                    left,
+                    right : new Nodes.BoundLiteralExpression(boundright.value, PredefinedValueTypes.Float)
+                };
+            }
+
+            /// byte and float
+            if(left.type === PredefinedValueTypes.Byte && right.type === PredefinedValueTypes.Float)
+            {
+                const boundLeft = left as Nodes.BoundLiteralExpression;
+                return {
+                    // promote the Byte to a float
+                    left : new Nodes.BoundLiteralExpression(boundLeft.value, PredefinedValueTypes.Float),
+                    right
+                };
+            }
+
+            if(left.type === PredefinedValueTypes.Float && right.type === PredefinedValueTypes.Byte)
+            {
+                const boundright = right as Nodes.BoundLiteralExpression;
+                return {
+                    // promote the Byte to a float
+                    left,
+                    right : new Nodes.BoundLiteralExpression(boundright.value, PredefinedValueTypes.Float)
+                };
+            }
+
+
+            /// byte and int
+            if(left.type === PredefinedValueTypes.Byte && right.type === PredefinedValueTypes.Integer)
+            {
+                const boundLeft = left as Nodes.BoundLiteralExpression;
+                return {
+                    // promote the Byte to a Integer
+                    left : new Nodes.BoundLiteralExpression(boundLeft.value, PredefinedValueTypes.Integer),
+                    right
+                };
+            }
+
+            if(left.type === PredefinedValueTypes.Integer && right.type === PredefinedValueTypes.Byte)
+            {
+                const boundright = right as Nodes.BoundLiteralExpression;
+                return {
+                    // promote the Byte to a Integer
+                    left,
+                    right : new Nodes.BoundLiteralExpression(boundright.value, PredefinedValueTypes.Integer)
+                };
+            }
+        } 
+        // only one of them is a literal we generally promote to the type of the non literal
+        // except where the non literal is a compile type const, i.e. operators
+        // on literals
+        else if(left.kind == Nodes.BoundNodeKind.LiteralExpression || right.kind == Nodes.BoundNodeKind.LiteralExpression)
+        {
+            // left is a literal and right is not   
+            if(left.kind == Nodes.BoundNodeKind.LiteralExpression)
+            {
+                if(left.type === PredefinedValueTypes.Integer && right.type === PredefinedValueTypes.Float)
+                {
+                    const boundLeft = left as Nodes.BoundLiteralExpression;
+                    return {
+                        // promote the float to an int
+                        left : new Nodes.BoundLiteralExpression(boundLeft.value, PredefinedValueTypes.Float),
+                        right
+                    };
+                }
+
+                if(left.type === PredefinedValueTypes.Byte && right.type === PredefinedValueTypes.Float)
+                {
+                    const boundLeft = left as Nodes.BoundLiteralExpression;
+                    return {
+                        // promote the float to an int
+                        left : new Nodes.BoundLiteralExpression(boundLeft.value, PredefinedValueTypes.Float),
+                        right
+                    };
+                }
+
+                if(left.type === PredefinedValueTypes.Byte && right.type === PredefinedValueTypes.Integer)
+                {
+                    const boundLeft = left as Nodes.BoundLiteralExpression;
+                    return {
+                        // promote the float to an int
+                        left : new Nodes.BoundLiteralExpression(boundLeft.value, PredefinedValueTypes.Float),
+                        right
+                    };
+                }
+            }
+            else
+            {
+                // right is a literal and left is not
+                
+                if(left.type === PredefinedValueTypes.Float && right.type === PredefinedValueTypes.Integer)
+                {
+                    const boundright = right as Nodes.BoundLiteralExpression;
+                    return {
+                        // promote the int to a float
+                        left,
+                        right : new Nodes.BoundLiteralExpression(boundright.value, PredefinedValueTypes.Float)
+                    };
+                }
+
+                if(left.type === PredefinedValueTypes.Float && right.type === PredefinedValueTypes.Byte)
+                {
+                    const boundright = right as Nodes.BoundLiteralExpression;
+                    return {
+                        // promote the byte to a float
+                        left,
+                        right : new Nodes.BoundLiteralExpression(boundright.value, PredefinedValueTypes.Float)
+                    };
+                }
+
+                if(left.type === PredefinedValueTypes.Integer && right.type === PredefinedValueTypes.Byte)
+                {
+                    const boundright = right as Nodes.BoundLiteralExpression;
+                    return {
+                        // promote the float to an int
+                        left,
+                        right : new Nodes.BoundLiteralExpression(boundright.value, PredefinedValueTypes.Integer)
+                    };
+                }
+            }
+        }
+
+        // just return what we were passed.
+        return { left, right };
+    }
+
+    private BindBinaryConversion(parent : AST.BinaryExpressionSyntax, leftExpression : Nodes.BoundExpression, rightExpression : Nodes.BoundExpression) : { left : Nodes.BoundExpression, right : Nodes.BoundExpression }
+    {
+        const operatorSpan = parent.operatorToken.span;
+
+        let { left, right } = this.SpecialiseLiterals(leftExpression, rightExpression);
+        const leftToRight = this.BindConversion(operatorSpan, left, right.type, false, false);
+
+        let boundOperator = Nodes.BoundBinaryOperator.Bind(parent.operatorToken.kind, left.type, right.type);
+
+        if(leftToRight.kind == Nodes.BoundNodeKind.ErrorExpression)
+        {            
+            const rightToLeft = this.BindConversion(operatorSpan, right, left.type, false, false);
+
+            if(rightToLeft.kind == Nodes.BoundNodeKind.ErrorExpression)
+            {
+                this.diagnostics.reportUndefinedBinaryOperator(operatorSpan, 
+                    parent.operatorToken.lexeme, left.type, right.type);                            
+                
+                return { left, right };
+            }
+            else
+            {
+                right = rightToLeft;
+            }
+        }
+        else
+        {                
+            left = leftToRight;
+        }
+
+        boundOperator = Nodes.BoundBinaryOperator.Bind(parent.operatorToken.kind, left.type, right.type);
+
+        if(boundOperator == null)
+        {
+            this.diagnostics.reportUndefinedBinaryOperator(parent.operatorToken.span, 
+                parent.operatorToken.lexeme, left.type, right.type);                            
+            
+            return { left, right };
+        }
+
+        return { left, right };
+    }
+
     private BindConversion(diagnosticSpan : TextSpan, expression : Nodes.BoundExpression, type : Type, allowExplicit : boolean = false, logDiagnostics : boolean = true) : Nodes.BoundExpression
     {
         // if we dont have a type at this point there is an error in the program.
@@ -1008,7 +1171,54 @@ export default class Binder
             return new Nodes.BoundErrorExpression();
         }
 
-        const conversion = Conversion.classifyConversion(expression.type, type);
+        let isLiteral : boolean = expression.kind === Nodes.BoundNodeKind.LiteralExpression;
+        let isConvertibleFromLiteral : boolean = false;
+        let literalValue : any = null;
+        if(!isLiteral)
+        {            
+            try
+            {
+                const optimiser = new ExpressionOptimiser();
+                const optimisedExpression = optimiser.transformExpression(expression);
+                
+                if(optimisedExpression.kind === Nodes.BoundNodeKind.LiteralExpression)
+                {
+                    isLiteral = true;
+                    isConvertibleFromLiteral = true;
+                    literalValue = (optimisedExpression as Nodes.BoundLiteralExpression).value;
+                }
+            }
+            catch(ex)
+            {
+                isLiteral = false;
+                isConvertibleFromLiteral = false;            
+            }
+        }
+        else
+        {
+            literalValue = (expression as Nodes.BoundLiteralExpression).value;
+        }
+
+        if(isConvertibleFromLiteral)
+        {
+            switch(type.type)
+            {
+                case ValueType.Byte:
+                {
+                    if(literalValue >= 256)                    
+                        this.diagnostics.reportCannotConvertConstant(literalValue, type, diagnosticSpan);
+                    break;
+                }
+                case ValueType.Int:
+                {
+                    if(literalValue >= Math.pow(2, 31)-1 || literalValue <= -Math.pow(2, 31))
+                        this.diagnostics.reportCannotConvertConstant(literalValue, type, diagnosticSpan);
+                    break;
+                }                                                              
+            }
+        }
+        
+        const conversion = Conversion.classifyConversion(isLiteral, expression.type, type);
 
         if (!conversion.Exists)
         {
@@ -1029,6 +1239,20 @@ export default class Binder
 
         if(conversion.IsImmediate)
         {
+            if(expression.type == PredefinedValueTypes.Null)
+            {
+                return new Nodes.BoundLiteralExpression(conversion.ConvertToValue, type);// PredefinedValueTypes.Null);
+            }
+            else if(isLiteral && !isConvertibleFromLiteral && expression.type != PredefinedValueTypes.Null)
+            {                
+                if(literalValue !== null)
+                    return new Nodes.BoundLiteralExpression(literalValue, type);
+            }
+            else if(isLiteral && isConvertibleFromLiteral)
+            {
+                return new Nodes.BoundConversionExpression(type, expression);        
+            }
+
             return new Nodes.BoundLiteralExpression(conversion.ConvertToValue, type);
         }
 
@@ -1044,6 +1268,8 @@ export default class Binder
     {
         switch(name)
         {
+            case "byte":
+                return PredefinedValueTypes.Byte;
             case "int":
                 return PredefinedValueTypes.Integer;
             case "float" : 

@@ -118,27 +118,34 @@ export class BoundBinaryOperator
     public readonly type : Type;
 
     private static _operators : BoundBinaryOperator[] = [
+        new BoundBinaryOperator(SyntaxType.Plus, BoundBinaryOperatorKind.Addition, PredefinedValueTypes.Byte),
         new BoundBinaryOperator(SyntaxType.Plus, BoundBinaryOperatorKind.Addition, PredefinedValueTypes.Integer),
         new BoundBinaryOperator(SyntaxType.Plus, BoundBinaryOperatorKind.Addition, PredefinedValueTypes.String),
         new BoundBinaryOperator(SyntaxType.Plus, BoundBinaryOperatorKind.Addition, PredefinedValueTypes.Float),
         
+        new BoundBinaryOperator(SyntaxType.Minus, BoundBinaryOperatorKind.Subtraction, PredefinedValueTypes.Byte),
         new BoundBinaryOperator(SyntaxType.Minus, BoundBinaryOperatorKind.Subtraction, PredefinedValueTypes.Integer),
         new BoundBinaryOperator(SyntaxType.Minus, BoundBinaryOperatorKind.Subtraction, PredefinedValueTypes.Float),
 
+        new BoundBinaryOperator(SyntaxType.Star, BoundBinaryOperatorKind.Multiplication, PredefinedValueTypes.Byte),
         new BoundBinaryOperator(SyntaxType.Star, BoundBinaryOperatorKind.Multiplication, PredefinedValueTypes.Integer),
         new BoundBinaryOperator(SyntaxType.Star, BoundBinaryOperatorKind.Multiplication, PredefinedValueTypes.Float),
 
+        new BoundBinaryOperator(SyntaxType.Slash, BoundBinaryOperatorKind.Division, PredefinedValueTypes.Byte),
         new BoundBinaryOperator(SyntaxType.Slash, BoundBinaryOperatorKind.Division, PredefinedValueTypes.Integer),
         new BoundBinaryOperator(SyntaxType.Slash, BoundBinaryOperatorKind.Division, PredefinedValueTypes.Float),
 
+        new BoundBinaryOperator(SyntaxType.Ampersand, BoundBinaryOperatorKind.BitwiseAnd, PredefinedValueTypes.Byte),
         new BoundBinaryOperator(SyntaxType.Ampersand, BoundBinaryOperatorKind.BitwiseAnd, PredefinedValueTypes.Integer),
         new BoundBinaryOperator(SyntaxType.Pipe, BoundBinaryOperatorKind.BitwiseOr, PredefinedValueTypes.Integer),
         new BoundBinaryOperator(SyntaxType.Hat, BoundBinaryOperatorKind.BitwiseXor, PredefinedValueTypes.Integer),
         
+        new BoundBinaryOperator(SyntaxType.EqualsEquals, BoundBinaryOperatorKind.Equals, PredefinedValueTypes.Byte, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.EqualsEquals, BoundBinaryOperatorKind.Equals, PredefinedValueTypes.Integer, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.EqualsEquals, BoundBinaryOperatorKind.Equals, PredefinedValueTypes.Float, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.EqualsEquals, BoundBinaryOperatorKind.Equals, PredefinedValueTypes.String, PredefinedValueTypes.Boolean),
 
+        new BoundBinaryOperator(SyntaxType.BangEquals, BoundBinaryOperatorKind.NotEquals, PredefinedValueTypes.Byte, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.BangEquals, BoundBinaryOperatorKind.NotEquals, PredefinedValueTypes.Integer, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.BangEquals, BoundBinaryOperatorKind.NotEquals, PredefinedValueTypes.Float, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.BangEquals, BoundBinaryOperatorKind.NotEquals, PredefinedValueTypes.String, PredefinedValueTypes.Boolean),
@@ -146,24 +153,27 @@ export class BoundBinaryOperator
         new BoundBinaryOperator(SyntaxType.EqualsEquals, BoundBinaryOperatorKind.Equals, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.BangEquals, BoundBinaryOperatorKind.NotEquals, PredefinedValueTypes.Boolean),
         
+        new BoundBinaryOperator(SyntaxType.LessThan, BoundBinaryOperatorKind.LessThan, PredefinedValueTypes.Byte, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.LessThan, BoundBinaryOperatorKind.LessThan, PredefinedValueTypes.Integer, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.LessThan, BoundBinaryOperatorKind.LessThan, PredefinedValueTypes.Float, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.LessThan, BoundBinaryOperatorKind.LessThan, PredefinedValueTypes.String, PredefinedValueTypes.Boolean),
 
+        new BoundBinaryOperator(SyntaxType.LessThanOrEqual, BoundBinaryOperatorKind.LessThanOrEquals, PredefinedValueTypes.Byte, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.LessThanOrEqual, BoundBinaryOperatorKind.LessThanOrEquals, PredefinedValueTypes.Integer, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.LessThanOrEqual, BoundBinaryOperatorKind.LessThanOrEquals, PredefinedValueTypes.Float, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.LessThanOrEqual, BoundBinaryOperatorKind.LessThanOrEquals, PredefinedValueTypes.String, PredefinedValueTypes.Boolean),
 
+        new BoundBinaryOperator(SyntaxType.GreaterThan, BoundBinaryOperatorKind.GreaterThan, PredefinedValueTypes.Byte, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.GreaterThan, BoundBinaryOperatorKind.GreaterThan, PredefinedValueTypes.Integer, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.GreaterThan, BoundBinaryOperatorKind.GreaterThan, PredefinedValueTypes.Float, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.GreaterThan, BoundBinaryOperatorKind.GreaterThan, PredefinedValueTypes.String, PredefinedValueTypes.Boolean),
 
+        new BoundBinaryOperator(SyntaxType.GreaterThanOrEqual, BoundBinaryOperatorKind.GreaterThanOrEquals, PredefinedValueTypes.Byte, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.GreaterThanOrEqual, BoundBinaryOperatorKind.GreaterThanOrEquals, PredefinedValueTypes.Integer, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.GreaterThanOrEqual, BoundBinaryOperatorKind.GreaterThanOrEquals, PredefinedValueTypes.Float, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.GreaterThanOrEqual, BoundBinaryOperatorKind.GreaterThanOrEquals, PredefinedValueTypes.String, PredefinedValueTypes.Boolean),
 
-        new BoundBinaryOperator(SyntaxType.Ampersand, BoundBinaryOperatorKind.BitwiseAnd, PredefinedValueTypes.Boolean),
-        new BoundBinaryOperator(SyntaxType.AmpersandAmpersand, BoundBinaryOperatorKind.LogicalAnd, PredefinedValueTypes.Boolean),
+        new BoundBinaryOperator(SyntaxType.AmpersandAmpersand, BoundBinaryOperatorKind.LogicalAnd, PredefinedValueTypes.Boolean),        
         new BoundBinaryOperator(SyntaxType.Pipe, BoundBinaryOperatorKind.BitwiseOr, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.PipePipe, BoundBinaryOperatorKind.LogicalOr, PredefinedValueTypes.Boolean),
         new BoundBinaryOperator(SyntaxType.Hat, BoundBinaryOperatorKind.BitwiseXor, PredefinedValueTypes.Boolean),        
@@ -236,7 +246,11 @@ export class BoundUnaryOperator
 
     private static _operators : BoundUnaryOperator[] = [    
         new BoundUnaryOperator(SyntaxType.Bang, BoundUnaryOperatorKind.LogicalNegation, PredefinedValueTypes.Boolean),
+        new BoundUnaryOperator(SyntaxType.Plus, BoundUnaryOperatorKind.Identity, PredefinedValueTypes.Float),
+        new BoundUnaryOperator(SyntaxType.Plus, BoundUnaryOperatorKind.Identity, PredefinedValueTypes.Byte),
         new BoundUnaryOperator(SyntaxType.Plus, BoundUnaryOperatorKind.Identity, PredefinedValueTypes.Integer),
+
+        new BoundUnaryOperator(SyntaxType.Minus, BoundUnaryOperatorKind.Negation, PredefinedValueTypes.Byte),
         new BoundUnaryOperator(SyntaxType.Minus, BoundUnaryOperatorKind.Negation, PredefinedValueTypes.Integer),
         new BoundUnaryOperator(SyntaxType.Minus, BoundUnaryOperatorKind.Negation, PredefinedValueTypes.Float),
     ];

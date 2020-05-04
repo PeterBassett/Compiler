@@ -1,9 +1,10 @@
 import Parser from "../../../Language/Compiler/Syntax/Parser";
 import SourceText from "../../../Language/Compiler/Syntax/Text/SourceText";
-import { DiagnosticType } from "../../../Language/Compiler/Diagnostics/Diagnostics";
+import { DiagnosticType, Diagnostics } from "../../../Language/Compiler/Diagnostics/Diagnostics";
 import { BoundGlobalScope, BoundNodeKind } from "../../../Language/Compiler/Binding/BoundNode";
 import Binder from "../../../Language/Compiler/Binding/Binder";
 import BoundTreeStructureVisitor from "../BoundTreeStructureVisitor";
+import StringDiagnosticsPrinter from "../../../Language/Compiler/Diagnostics/StringDiagnosticsPrinter";
 
 describe("A Binder object", () => {
 
@@ -22,9 +23,7 @@ describe("A Binder object", () => {
     {
         let scope : BoundGlobalScope = bind(text);
 
-        expect(scope.success).toEqual(true);
-        expect(scope.diagnostics).toBeTruthy();
-        expect(scope.diagnostics.length).toEqual(0);
+        assertNoError("Binding", scope.diagnostics);
 
         if(scope.success)
         {
@@ -59,6 +58,19 @@ describe("A Binder object", () => {
                 console.log("vs");
                 console.log("|" + bLines[i] + "|");    
             }
+        }
+    }
+
+    function assertNoError(source : string, diagnostics : Diagnostics) : void
+    {
+        if(diagnostics.length > 0)
+        {
+            const printer = new StringDiagnosticsPrinter();
+            diagnostics.map( (d, i) => {
+                const output = printer.printDiagnostic(diagnostics, d);
+                fail(`${source} : ${output}`);
+                return "";
+            });
         }
     }
 
@@ -460,6 +472,79 @@ func main() : int
                 ConversionExpression<string>
                     LiteralExpression<true:bool>
 `],
+[`func main() : byte {
+    return 1;
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:byte>
+        ParameterDeclarationList
+        BlockStatement
+            ReturnStatement
+                LiteralExpression<1:byte>
+`],
+[`func main() : byte {
+    let a : byte = 1;
+    return a;
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:byte>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<a:byte>
+                LiteralExpression<1:byte>
+            ReturnStatement
+                VariableExpression<a:byte>
+`],
+[`func main() : byte {
+    return byte(1+2);
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:byte>
+        ParameterDeclarationList
+        BlockStatement
+            ReturnStatement
+                ConversionExpression<byte>
+                    BinaryExpression<+>
+                        LiteralExpression<1:int>
+                        LiteralExpression<2:int>
+`],
+[`func main() : byte {
+    return 1+2;
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:byte>
+        ParameterDeclarationList
+        BlockStatement
+            ReturnStatement
+                ConversionExpression<byte>
+                    BinaryExpression<+>
+                        LiteralExpression<1:int>
+                        LiteralExpression<2:int>
+`],
+[
+`func main() : byte {
+    let b : byte = 1 + 2 + 3 + 4 / 2;
+    return b;
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:byte>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<b:byte>
+                ConversionExpression<byte>
+                    BinaryExpression<+>
+                        BinaryExpression<+>
+                            BinaryExpression<+>
+                                LiteralExpression<1:int>
+                                LiteralExpression<2:int>
+                            LiteralExpression<3:int>
+                        BinaryExpression</>
+                            LiteralExpression<4:int>
+                            LiteralExpression<2:int>
+            ReturnStatement
+                VariableExpression<b:byte>
+`                
+],
 [`func main() : string {
     return string(1==2);
 }`,
@@ -659,7 +744,7 @@ func main() : int
                 Condition
                     BinaryExpression<!=>
                         VariableExpression<ap:*int>
-                        LiteralExpression<0:null>
+                        LiteralExpression<0:*int>
                 TrueBranch
                     ReturnStatement
                         LiteralExpression<1:int>
@@ -687,7 +772,7 @@ func main() : int
                 Condition
                     BinaryExpression<==>
                         VariableExpression<ap:*int>
-                        LiteralExpression<0:null>
+                        LiteralExpression<0:*int>
                 TrueBranch
                     ReturnStatement
                         LiteralExpression<1:int>
@@ -854,7 +939,121 @@ func main() : int {
                     VariableExpression<arr:[2]int>
                     LiteralExpression<1:int>
 `
-]
+],
+[`func main() : byte
+{
+    let x : byte = 0;
+    while x < 10
+        x = byte(x + 1);
+        
+    return x;
+}`,
+`BoundGlobalScope
+    FunctionDefinition<main:byte>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<x:byte>
+                LiteralExpression<0:byte>
+            WhileStatement
+                BinaryExpression<<>
+                    ConversionExpression<int>
+                        VariableExpression<x:byte>
+                    LiteralExpression<10:int>
+                AssignmentStatement
+                    VariableExpression<x:byte>
+                    ConversionExpression<byte>
+                        BinaryExpression<+>
+                            ConversionExpression<int>
+                                VariableExpression<x:byte>
+                            LiteralExpression<1:int>
+            ReturnStatement
+                VariableExpression<x:byte>
+`],
+[`func main() : float
+{
+    let x : float = 0;
+    while x < 10
+        x = x + 1;
+        
+    return x;
+}`, 
+`BoundGlobalScope
+    FunctionDefinition<main:float>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<x:float>
+                ConversionExpression<float>
+                    LiteralExpression<0:int>
+            WhileStatement
+                BinaryExpression<<>
+                    VariableExpression<x:float>
+                    ConversionExpression<float>
+                        LiteralExpression<10:int>
+                AssignmentStatement
+                    VariableExpression<x:float>
+                    BinaryExpression<+>
+                        VariableExpression<x:float>
+                        ConversionExpression<float>
+                            LiteralExpression<1:int>
+            ReturnStatement
+                VariableExpression<x:float>
+`],
+[`func main() : byte
+{
+    let x : byte = 0;
+    while x < 10
+        x = 1 + x;
+        
+    return x;
+}`, 
+`BoundGlobalScope
+    FunctionDefinition<main:byte>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<x:byte>
+                LiteralExpression<0:byte>
+            WhileStatement
+                BinaryExpression<<>
+                    ConversionExpression<int>
+                        VariableExpression<x:byte>
+                    LiteralExpression<10:int>
+                AssignmentStatement
+                    VariableExpression<x:byte>
+                    BinaryExpression<+>
+                        LiteralExpression<1:byte>
+                        VariableExpression<x:byte>
+            ReturnStatement
+                VariableExpression<x:byte>
+`],
+[`func main() : float
+{
+    let x : float = 0;
+    while x < 10
+        x = 1 + x;
+        
+    return x;
+}`, 
+`BoundGlobalScope
+    FunctionDefinition<main:float>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<x:float>
+                ConversionExpression<float>
+                    LiteralExpression<0:int>
+            WhileStatement
+                BinaryExpression<<>
+                    VariableExpression<x:float>
+                    ConversionExpression<float>
+                        LiteralExpression<10:int>
+                AssignmentStatement
+                    VariableExpression<x:float>
+                    BinaryExpression<+>
+                        ConversionExpression<float>
+                            LiteralExpression<1:int>
+                        VariableExpression<x:float>
+            ReturnStatement
+                VariableExpression<x:float>
+`],
 /*,[`
 class test
 {

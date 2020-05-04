@@ -44,6 +44,7 @@ export enum SyntaxType {
     SemiColon,
     //keywords
     ReturnKeyword,
+    ByteKeyword,
     IntKeyword,
     FloatKeyword,
     StringKeyword,

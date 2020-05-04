@@ -17,6 +17,7 @@ export default class TypeQuery
             case ValueType.Pointer :
             case ValueType.Int :
             case ValueType.Float : 
+            case ValueType.Byte : 
                 return 0;                
             case ValueType.Boolean:
                 return false;

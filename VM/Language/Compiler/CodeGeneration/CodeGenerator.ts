@@ -650,6 +650,7 @@ export default class CodeGenerator
             case ValueType.Float :
                 return 8;
             case ValueType.Boolean :
+            case ValueType.Byte :
                 return 1;
             case ValueType.Struct :
             {
@@ -730,6 +731,7 @@ export default class CodeGenerator
             case ValueType.Class:
                 return "size"
             case ValueType.Boolean:
+            case ValueType.Byte:
                 return "byte";
             case ValueType.Pointer:
             case ValueType.Int:
@@ -748,7 +750,27 @@ export default class CodeGenerator
     {
         switch(type) {
             case ValueType.Boolean:
+            case ValueType.Byte:
                 return op + "b";
+            case ValueType.Pointer:
+            case ValueType.Null:
+            case ValueType.Struct:
+            case ValueType.Array:
+            case ValueType.Int:
+                return op;
+            case ValueType.Float:
+                return op + "f";
+            default                                     :
+                this.diagnostics.reportUnsupportedType(type);
+                return op;
+        }
+    }
+
+    typedMnemonicIntOrFloat(type: ValueType, op : string) : string
+    {
+        switch(type) {
+            case ValueType.Boolean:
+            case ValueType.Byte:
             case ValueType.Pointer:
             case ValueType.Null:
             case ValueType.Struct:
@@ -793,8 +815,13 @@ export default class CodeGenerator
                 switch(exp.type.type)
                 {
                     case ValueType.Pointer :
+                        this.instruction(`${mvi} R1 ${exp.value}`, "Loading literal pointer");
+                        break;
                     case ValueType.Int :
                         this.instruction(`${mvi} R1 ${exp.value}`, "Loading literal int");
+                        break;
+                    case ValueType.Byte :
+                        this.instruction(`${mvi} R1 ${exp.value}`, "Loading literal byte");
                         break;
                     case ValueType.Float :
                     {
@@ -1258,6 +1285,23 @@ export default class CodeGenerator
         // to type
         switch(expression.type.type)
         {
+            case ValueType.Byte:
+            {
+                // from type
+                if(expression.expression.type.type == ValueType.Float)                
+                    this.instruction("TRUNCf R1", "CONVERT FROM FLOAT TO int");
+
+                if(expression.expression.type.type == ValueType.Float ||
+                    expression.expression.type.type == ValueType.Int)
+                {
+                    this.instruction("PUSH R2", "store R2");
+                    this.instruction("MVI R2 255", "load 8 bits of 1s");
+                    this.instruction("AND R1 R2", "AND with R1 to remove all higher bits");
+                    this.instruction("POP R2", "restore R2");
+                    return;
+                }
+                break;
+            }
             case ValueType.Int:
             {
                 // from type
@@ -1266,6 +1310,14 @@ export default class CodeGenerator
                     this.instruction("TRUNCf R1", "CONVERT FROM FLOAT TO INT");
                     return;
                 }
+
+                if(expression.expression.type.type == ValueType.Byte)
+                {
+                    
+                    this.comment("CONVERT FROM BYTE TO INT");
+                    return;
+                }
+
                 break;
             }
             case ValueType.Float:
@@ -1291,6 +1343,12 @@ export default class CodeGenerator
                     this.comment("CONVERT FROM BOOL TO FLOAT");
                     return;
                 }     
+                else if(expression.expression.type.type == ValueType.Byte)
+                {
+                    this.comment("CONVERT FROM BOOL TO BYTE");
+                    return;
+                }     
+
                 break;                       
             }
         }
@@ -1315,7 +1373,7 @@ export default class CodeGenerator
 
         this.globalLiterals.push({
             name : label,
-            size : type === ValueType.Int ? 4 : (type === ValueType.Float ? 8 : 0),
+            size : type === ValueType.Byte ? 1 : (type === ValueType.Int ? 4 : (type === ValueType.Float ? 8 : 0)),
             type : type,
             value : value,
             index : this.sections[this.dataSection].length - 1
@@ -1375,7 +1433,7 @@ export default class CodeGenerator
             }
             case Nodes.BoundUnaryOperatorKind.LogicalNegation:
             {
-                this.instruction("NOT R1", "unary logical negation op");                                                
+                this.instruction("NOT R1", "unary logical negation op");      
                 break;
             }
             case Nodes.BoundUnaryOperatorKind.Negation:
@@ -1416,14 +1474,14 @@ export default class CodeGenerator
             case Nodes.BoundBinaryOperatorKind.Addition:
             {
                 const type = binpreamble();
-                const add = this.typedMnemonic(type, "ADD");
+                const add = this.typedMnemonicIntOrFloat(type, "ADD");
                 this.instruction(`${add} R1 R2`, "add r1 to r2, save results in r1");                
                 break;
             }   
             case Nodes.BoundBinaryOperatorKind.Subtraction:
             {
                 const type = binpreamble();
-                const sub = this.typedMnemonic(type, "SUB");
+                const sub = this.typedMnemonicIntOrFloat(type, "SUB");
                 this.instruction("SWAP R1 R2", "Subtraction requires the operand be int he oposite order");
                 this.instruction(`${sub} R1 R2`, "subtract r2 from r1, save results in r1");                
                 break;
@@ -1431,14 +1489,14 @@ export default class CodeGenerator
             case Nodes.BoundBinaryOperatorKind.Multiplication:
             {
                 const type = binpreamble();
-                const mul = this.typedMnemonic(type, "MUL");
+                const mul = this.typedMnemonicIntOrFloat(type, "MUL");
                 this.instruction(`${mul} R1 R2`, "multiple r1 by r2, save results in r1");                
                 break;
             }
             case Nodes.BoundBinaryOperatorKind.Division:
             {
                 const type = binpreamble();
-                const div = this.typedMnemonic(type, "DIV");
+                const div = this.typedMnemonicIntOrFloat(type, "DIV");
                 this.instruction("SWAP R1 R2", "requires the operand be in the oposite order");
                 this.instruction(`${div} R1 R2`, "divide r1 by r2, save results in r1");                
                 break;   

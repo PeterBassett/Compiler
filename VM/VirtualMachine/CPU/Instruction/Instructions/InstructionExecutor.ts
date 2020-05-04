@@ -363,19 +363,24 @@ export function DIVf(cpu : CPU, instruction:Instruction, memory: Memory, registe
     binaryMathOP(cpu, instruction, memory, registers, flags, (a, b) => b/a, DoubleMath);
 }
 
+const ByteMath :MathOptions = {
+    floorResults :true, 
+    size : 1
+};
+
 const IntegerMath :MathOptions = {
-    integerMath :true, 
+    floorResults :true, 
     size : 4
 };
 
 const DoubleMath :MathOptions = {
-    integerMath : false, 
+    floorResults : false, 
     size : 8
 };
 
 class MathOptions
 {
-    public integerMath : boolean = true;
+    public floorResults : boolean = true;
     public size : number = 0;
 }
 
@@ -393,7 +398,7 @@ function binaryMathOP(cpu : CPU,
 
     let result = op(a, b);
 
-    if(options.integerMath)
+    if(options.floorResults)
         result = Math.floor(result);
 
     storeValue(instruction, Endpoint.Destination, instruction.destinationRegister, memory, registers, result, size);

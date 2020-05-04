@@ -48,6 +48,7 @@ const lexemes : { lexeme : string, type : SyntaxType } [] = [
     { lexeme : "var", type : SyntaxType.VarKeyword },
     { lexeme : "let", type : SyntaxType.LetKeyword },
     { lexeme : "to", type : SyntaxType.ToKeyword },
+    { lexeme : "byte", type : SyntaxType.ByteKeyword },
     { lexeme : "int", type : SyntaxType.IntKeyword },
     { lexeme : "float", type : SyntaxType.FloatKeyword },
     { lexeme : "string", type : SyntaxType.StringKeyword },
@@ -98,6 +99,7 @@ export function GetKeywordType(lexeme : string) : SyntaxType
         case "var" : return SyntaxType.VarKeyword;
         case "let" : return SyntaxType.LetKeyword;
         case "to" : return SyntaxType.ToKeyword;
+        case "byte" : return SyntaxType.ByteKeyword;
         case "int" : return SyntaxType.IntKeyword;
         case "float" : return SyntaxType.FloatKeyword;
         case "string" : return SyntaxType.StringKeyword;
@@ -229,5 +231,6 @@ export function isPredefinedType(type : SyntaxType) : boolean
     return type == SyntaxType.StringKeyword ||
         type == SyntaxType.FloatKeyword ||
         type == SyntaxType.IntKeyword ||
-        type == SyntaxType.BoolKeyword;
+        type == SyntaxType.BoolKeyword ||
+        type == SyntaxType.ByteKeyword;
 }

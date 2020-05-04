@@ -148,7 +148,7 @@ const  InstructionSet : InstructionSpecification[] = [
 
     new InstructionSpecification("CALL",    OpCodes.CALL, [regOrPointer]),
     new InstructionSpecification("RET",     OpCodes.RET, []),
-    
+
     new InstructionSpecification("ADD",     OpCodes.ADD, [regOrPointer, regOrPointer]),
     new InstructionSpecification("SUB",     OpCodes.SUB, [regOrPointer, regOrPointer]),
     new InstructionSpecification("MUL",     OpCodes.MUL, [regOrPointer, regOrPointer]),

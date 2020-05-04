@@ -333,6 +333,7 @@ export default class Parser
             case SyntaxType.FloatKeyword:
             case SyntaxType.StringKeyword:
             case SyntaxType.BoolKeyword:
+            case SyntaxType.ByteKeyword:
                 this.next();
                 return AST.NamedTypeSyntax(token, true);
             case SyntaxType.Star:
@@ -707,6 +708,7 @@ export default class Parser
             case SyntaxType.IntKeyword:
             case SyntaxType.FloatKeyword:
             case SyntaxType.BoolKeyword:
+            case SyntaxType.ByteKeyword:
                 return this.parseCallExpression();
             default :
                 return this.parseNameExpression();
@@ -752,7 +754,8 @@ export default class Parser
             SyntaxType.IntKeyword,
             SyntaxType.FloatKeyword,
             SyntaxType.BoolKeyword,
-            SyntaxType.StringKeyword
+            SyntaxType.StringKeyword,
+            SyntaxType.ByteKeyword,
         );
 
         let expr : AST.ExpressionNode = AST.NameExpressionSyntax(identifier);

@@ -22,7 +22,7 @@ export default class Conversion
 
     public get IsExplicit() { return this.Exists && !this.IsImplicit && !this.IsImmediate; };
 
-    public static classifyConversion(from : Type, to : Type) : Conversion
+    public static classifyConversion(fromIsLiteral:boolean, from : Type, to : Type) : Conversion
     {
         if (from.equals(to))
             return Conversion.Identity;
@@ -47,10 +47,21 @@ export default class Conversion
              to.equals(PredefinedValueTypes.Float))
             return new Conversion(true, false, true, false, PredefinedValueTypes.Float);
 
+        if(from.equals(PredefinedValueTypes.Byte) && 
+            to.equals(PredefinedValueTypes.Integer))
+           return new Conversion(true, false, true, false, PredefinedValueTypes.Integer);
+
+        if(from.equals(PredefinedValueTypes.Integer) && to.equals(PredefinedValueTypes.Byte) && fromIsLiteral)
+            return new Conversion(true, false, true, true, PredefinedValueTypes.Byte);
+
+        if(from.equals(PredefinedValueTypes.Integer) && to.equals(PredefinedValueTypes.Byte) && !fromIsLiteral)
+            return Conversion.Explicit;
+
         if (from.equals(PredefinedValueTypes.Float))
         {
             if (to.equals(PredefinedValueTypes.Boolean) || 
                 to.equals(PredefinedValueTypes.Integer) ||
+                to.equals(PredefinedValueTypes.Byte) ||
                 to.equals(PredefinedValueTypes.String) )
                 return Conversion.Explicit;
         }
