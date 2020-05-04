@@ -24,6 +24,7 @@ primitives, it simulates a fairly restricted 16 bit computer.
 * Currently the code generator supports generating code for 
     * functions 
     * byte, integer, float, boolean primitive data types
+    * type coercion of numeric literals
     * structs    
     * arrays
     * pointer types for all of the above.
@@ -32,7 +33,5 @@ primitives, it simulates a fairly restricted 16 bit computer.
     * global variables of all types
 
 Next Steps
-* byte primitive data type
-* type coercion of numeric literals
 * unions
-* casting
+* better casting syntax
