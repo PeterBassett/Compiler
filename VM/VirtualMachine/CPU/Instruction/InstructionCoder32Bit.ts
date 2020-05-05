@@ -34,6 +34,13 @@ const MemoryAddress32BitMask = MemoryAddressMask << MemoryAddressOffset;
 
 export default class InstructionCoder32Bit implements InstructionCoder
 {
+    calculateInstructionLength(opcode: number): { isCertain: boolean; instructionLength: number; } {
+        return {
+            isCertain : true,
+            instructionLength : 4
+        };
+    }
+    
     encodeInstruction(opcode : number, 
         opcodeMode : OpcodeModes, 
         sourceRegister : number,

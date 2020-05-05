@@ -12,4 +12,6 @@ export default interface InstructionCoder
         sourceMemoryAddress : number): Uint8Array;
         
     decodeInstruction (memory : Memory, offset : number) : { instruction: Instruction, length:number }
+
+    calculateInstructionLength(opcode:number) : { isCertain :boolean, instructionLength : number }
 }

@@ -80,7 +80,8 @@ class EncoderDecoder
 {
     constructor(
         public readonly encoder : encoder,
-        public readonly decoder : decoder) 
+        public readonly decoder : decoder,
+        public readonly encodedInstructionLength :number) 
     {        
     }
 }
@@ -149,7 +150,7 @@ function encodeSingleByteMemoryAddress(opcode : number,
 
     return array;
 }
-const SingleByteMemoryAddressEncoder = new EncoderDecoder(encodeSingleByteMemoryAddress, decodeSingleByteMemoryAddress);
+const SingleByteMemoryAddressEncoder = new EncoderDecoder(encodeSingleByteMemoryAddress, decodeSingleByteMemoryAddress, 2);
 
 function encodeSingleRegisterInstruction(opcode : number, 
     opcodeMode : OpcodeModes, 
@@ -167,10 +168,8 @@ function encodeSingleRegisterInstruction(opcode : number,
  
 function decodeSingleRegisterInstruction(ram : RAM, offset : number) : { instruction: Instruction, length: number }
 {
-    const array = ram.blitReadBytes(offset, 2);
-
-    const opcode = array[0];
-    const destinationRegister = array[1];
+    const opcode = ram.readByte(offset);
+    const destinationRegister = ram.readByte(offset + 1);
 
     return { 
         instruction : new Instruction(opcode, 
@@ -179,7 +178,7 @@ function decodeSingleRegisterInstruction(ram : RAM, offset : number) : { instruc
         length : 2
     };
 }
-const SingleRegisterInstructionEncoder = new EncoderDecoder(encodeSingleRegisterInstruction, decodeSingleRegisterInstruction);
+const SingleRegisterInstructionEncoder = new EncoderDecoder(encodeSingleRegisterInstruction, decodeSingleRegisterInstruction, 2);
 
 function encodeDoubleRegisterInstruction(opcode : number, 
     opcodeMode : OpcodeModes, 
@@ -197,11 +196,9 @@ function encodeDoubleRegisterInstruction(opcode : number,
  
 function decodeDoubleRegisterInstruction(ram : RAM, offset : number) : { instruction: Instruction, length: number }
 {
-    const array = ram.blitReadBytes(offset, 2);
+    const opcode = ram.readByte(offset);
+    const registers = ram.readByte(offset + 1);
 
-    const opcode = array[0];
-
-    const registers = array[1];
     const destinationRegister = registers & 7;
     const sourceRegister = (registers >> 3) & 7;
 
@@ -212,7 +209,7 @@ function decodeDoubleRegisterInstruction(ram : RAM, offset : number) : { instruc
         length : 2
     };
 }
-const DoubleRegisterInstructionEncoder = new EncoderDecoder(encodeDoubleRegisterInstruction, decodeDoubleRegisterInstruction);
+const DoubleRegisterInstructionEncoder = new EncoderDecoder(encodeDoubleRegisterInstruction, decodeDoubleRegisterInstruction, 2);
 
 function encodeFourByteMemoryAddress(opcode : number, 
     opcodeMode : OpcodeModes, 
@@ -231,10 +228,8 @@ function encodeFourByteMemoryAddress(opcode : number,
     
 function decodeFourByteMemoryAddress(ram : RAM, offset : number) : { instruction: Instruction, length: number }
 {
-    const array = ram.blitReadBytes(offset, 10);
-
-    const opcode = array[0];
-    const memoryAddress = readInt32AtPosition(array, 1);
+    const opcode = ram.readByte(offset);
+    const memoryAddress = ram.readDWord(offset + 1);
 
     const mode = new OpcodeModes(
         OpcodeMode.Default,
@@ -248,7 +243,7 @@ function decodeFourByteMemoryAddress(ram : RAM, offset : number) : { instruction
         length : 5
     };
 }
-const FourByteMemoryAddressInstructionEncoder = new EncoderDecoder(encodeFourByteMemoryAddress, decodeFourByteMemoryAddress);
+const FourByteMemoryAddressInstructionEncoder = new EncoderDecoder(encodeFourByteMemoryAddress, decodeFourByteMemoryAddress, 5);
 
 function encodeRegisterAndEightByteMemoryAddress(opcode : number, 
     opcodeMode : OpcodeModes, 
@@ -270,9 +265,9 @@ function decodeRegisterAndEightByteMemoryAddress(ram : RAM, offset : number) : {
 {
     const array = ram.blitReadBytes(offset, 10);
 
-    const opcode = array[0];
-    const destinationRegister = array[1];
-    const memoryAddress = readFloatAtPosition(array, 2);
+    const opcode = ram.readByte(offset);
+    const destinationRegister = ram.readByte(offset + 1);
+    const memoryAddress = ram.readFloat64(offset + 2);
 
     const mode = new OpcodeModes(
         OpcodeMode.Register,
@@ -286,7 +281,7 @@ function decodeRegisterAndEightByteMemoryAddress(ram : RAM, offset : number) : {
         length : 10
     };
 }
-const RegisterAndEightByteMemoryAddressInstructionEncoder = new EncoderDecoder(encodeRegisterAndEightByteMemoryAddress, decodeRegisterAndEightByteMemoryAddress);
+const RegisterAndEightByteMemoryAddressInstructionEncoder = new EncoderDecoder(encodeRegisterAndEightByteMemoryAddress, decodeRegisterAndEightByteMemoryAddress, 10);
 
 function encodeRegisterAndFourByteMemoryAddress(opcode : number, 
     opcodeMode : OpcodeModes, 
@@ -306,11 +301,9 @@ function encodeRegisterAndFourByteMemoryAddress(opcode : number,
     
 function decodeRegisterAndFourByteMemoryAddress(ram : RAM, offset : number) : { instruction: Instruction, length: number }
 {
-    const array = ram.blitReadBytes(offset, 6);
-
-    const opcode = array[0];
-    const destinationRegister = array[1];
-    const memoryAddress = readInt32AtPosition(array, 2);
+    const opcode = ram.readByte(offset);
+    const destinationRegister = ram.readByte(offset + 1)
+    const memoryAddress = ram.readDWord(offset + 2);
 
     const mode = new OpcodeModes(
         OpcodeMode.Register,
@@ -324,7 +317,7 @@ function decodeRegisterAndFourByteMemoryAddress(ram : RAM, offset : number) : { 
         length : 6
     };
 }
-const RegisterAndFourByteMemoryAddressInstructionEncoder = new EncoderDecoder(encodeRegisterAndFourByteMemoryAddress, decodeRegisterAndFourByteMemoryAddress);
+const RegisterAndFourByteMemoryAddressInstructionEncoder = new EncoderDecoder(encodeRegisterAndFourByteMemoryAddress, decodeRegisterAndFourByteMemoryAddress, 6);
 
 function encodeRegisterAndTwoByteMemoryAddress(opcode : number, 
     opcodeMode : OpcodeModes, 
@@ -344,11 +337,9 @@ function encodeRegisterAndTwoByteMemoryAddress(opcode : number,
     
 function decodeRegisterAndTwoByteMemoryAddress(ram : RAM, offset : number) : { instruction: Instruction, length: number }
 {
-    const array = ram.blitReadBytes(offset, 4);
-
-    const opcode = array[0];
-    const destinationRegister = array[1];
-    const memoryAddress = readInt16AtPosition(array, 2);
+    const opcode = ram.readByte(offset);
+    const destinationRegister = ram.readByte(offset + 1);
+    const memoryAddress = ram.readWord(offset + 2);
 
     const mode = new OpcodeModes(
         OpcodeMode.Register,
@@ -362,7 +353,7 @@ function decodeRegisterAndTwoByteMemoryAddress(ram : RAM, offset : number) : { i
         length : 4
     };
 }
-const RegisterAndTwoByteMemoryAddressInstructionEncoder = new EncoderDecoder(encodeRegisterAndTwoByteMemoryAddress, decodeRegisterAndTwoByteMemoryAddress);
+const RegisterAndTwoByteMemoryAddressInstructionEncoder = new EncoderDecoder(encodeRegisterAndTwoByteMemoryAddress, decodeRegisterAndTwoByteMemoryAddress, 4);
 
 function encodeRegisterAndOneByteMemoryAddress(opcode : number, 
     opcodeMode : OpcodeModes, 
@@ -381,11 +372,9 @@ function encodeRegisterAndOneByteMemoryAddress(opcode : number,
     
 function decodeRegisterAndOneByteMemoryAddress(ram : RAM, offset : number) : { instruction: Instruction, length: number }
 {
-    const array = ram.blitReadBytes(offset, 3);
-
-    const opcode = array[0];
-    const destinationRegister = array[1];
-    const memoryAddress = array[2];
+    const opcode = ram.readByte(offset);
+    const destinationRegister = ram.readByte(offset + 1);
+    const memoryAddress = ram.readByte(offset + 2);
 
     const mode = new OpcodeModes(
         OpcodeMode.Register,
@@ -399,7 +388,7 @@ function decodeRegisterAndOneByteMemoryAddress(ram : RAM, offset : number) : { i
         length : 3
     };
 }
-const RegisterAndOneByteMemoryAddressInstructionEncoder = new EncoderDecoder(encodeRegisterAndOneByteMemoryAddress, decodeRegisterAndOneByteMemoryAddress);
+const RegisterAndOneByteMemoryAddressInstructionEncoder = new EncoderDecoder(encodeRegisterAndOneByteMemoryAddress, decodeRegisterAndOneByteMemoryAddress, 3);
 
 function encodeSingleByteInstruction(opcode : number, 
     opcodeMode : OpcodeModes, 
@@ -415,9 +404,7 @@ function encodeSingleByteInstruction(opcode : number,
 
 function decodeSingleByteInstruction(ram : RAM, offset : number) : { instruction: Instruction, length: number }
 {
-    const array = ram.blitReadBytes(offset, 1);
-
-    const opcode = array[0];
+    const opcode = ram.readByte(offset);
 
     return { 
         instruction : new Instruction(opcode, 
@@ -426,10 +413,11 @@ function decodeSingleByteInstruction(ram : RAM, offset : number) : { instruction
         length : 1
     };
 }
-const SingleByteInstructionEncoder = new EncoderDecoder(encodeSingleByteInstruction, decodeSingleByteInstruction);
+
+const SingleByteInstructionEncoder = new EncoderDecoder(encodeSingleByteInstruction, decodeSingleByteInstruction, 1);
 
 export default class InstructionCoderVariable implements InstructionCoder
-{
+{    
     static instructionEncoderList : InstructionSetCoder[] = [
         new InstructionSetCoder([Op.HALT, Op.RET, Op.INT], SingleByteInstructionEncoder),
         new InstructionSetCoder([Op.NEG, Op.NOT, Op.INC, Op.DEC, 
@@ -471,6 +459,30 @@ export default class InstructionCoderVariable implements InstructionCoder
             throw new RangeError(`Instruction part ${name} is outside range (${part}). Max is ${max}`);
     }
 
+    calculateInstructionLength(opcode: number): { isCertain: boolean; instructionLength: number; } {
+        const encoder = InstructionCoderVariable.instructionEncoderMap[opcode];
+        if(encoder)
+        {
+            if(!!encoder.encodedInstructionLength)
+                return {
+                    isCertain : true,
+                    instructionLength : encoder.encodedInstructionLength
+                };
+                
+            return {
+                isCertain : false,
+                instructionLength : -1
+            }
+        }
+        else
+        {
+            return {
+                isCertain : true,
+                instructionLength : 12
+            };
+        }
+    }
+
     encodeInstruction(opcode : number, 
         opcodeMode : OpcodeModes, 
         sourceRegister : number, 
@@ -495,9 +507,8 @@ export default class InstructionCoderVariable implements InstructionCoder
     }
 
     decodeInstruction (ram : RAM, offset : number) : { instruction: Instruction, length: number }
-    {
-        const array = ram.blitReadBytes(offset, 1);
-        var opcode = array[0];
+    {        
+        var opcode = ram.readByte(offset)
 
         if(InstructionCoderVariable.instructionEncoderMap[opcode])
             return InstructionCoderVariable.instructionEncoderMap[opcode].decoder(ram, offset);
@@ -513,14 +524,11 @@ export default class InstructionCoderVariable implements InstructionCoder
         sourceMemoryAddress : number): Uint8Array
     {
         InstructionCoderVariable.validateInstructionPart(opcode, OpCodeMask, "OpCode");
-        //InstructionCoderVariable.validateInstructionPart(opcodeMode, OpcodeModeMask, "OpcodeMode");
         InstructionCoderVariable.validateInstructionPart(sourceRegister, SourceRegisterMask, "SourceRegister");
         InstructionCoderVariable.validateInstructionPart(destinationRegister, DestinationRegisterMask, "DestinationRegister");        
 
         const encodedSourceAddress = encodeInstructionOperand(sourceMemoryAddress);
         const encodedDestAddress = encodeInstructionOperand(destinationMemoryAddress);        
-
-        //InstructionCoderVariable.validateInstructionPart(memoryAddress, MemoryAddressMask, "MemoryAddress");
 
         let mode = encodeOpCodeModes(opcodeMode);
 
@@ -545,23 +553,14 @@ export default class InstructionCoderVariable implements InstructionCoder
 
     static decodeDefaultInstruction (ram : RAM, offset : number) : { instruction: Instruction, length: number }
     {
-        const array = ram.blitReadBytes(offset, 12);
+        const opcode = ram.readByte(offset);
+        const opcodeMode = ram.readByte(offset + 1);
+        const sourceRegister = ram.readByte(offset + 2);
+        const destinationRegister = ram.readByte(offset + 3);
 
-        const opcode = array[0];
-        const opcodeMode = array[1];
-        const sourceRegister = array[2];
-        const destinationRegister = array[3];
-
-        const source = (array[4] << 0) |
-                                  (array[5] << 8 ) |
-                                  (array[6] << 16) |
-                                  (array[7] << 24);
-
-        const destination = (array[8] << 0) |
-                                  (array[9] << 8) |
-                                  (array[10] << 16) |
-                                  (array[11] << 24);
-
+        const source = ram.readDWord(offset + 4);
+        const destination = ram.readDWord(offset + 8);
+        
         const mode = new OpcodeModes(
             new OpcodeMode(
                 (opcodeMode & 0b0001) !== 0,

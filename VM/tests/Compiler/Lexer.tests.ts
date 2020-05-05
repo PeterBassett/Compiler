@@ -62,15 +62,20 @@ describe("A Lexer object", () => {
         });
     });
 
-    for(let combination of keywordCombinations)
+    for(let combination of keywordCombinations)    
         invalidCombinations = invalidCombinations.concat(combination);
+
+const invalidCombinationsLookup : { [index:string] : boolean } = {};
+
+    for(let combination of invalidCombinations)
+        invalidCombinationsLookup[combination[0] + "_" + combination[1]] = true; 
 
     function requiresSeparator(a : SyntaxType, b : SyntaxType) : boolean
     {
         if(SyntaxFacts.isKeyword(a) || SyntaxFacts.isKeyword(b))
             return true;
 
-        return invalidCombinations.filter( value => a == value[0] && b == value[1] ).length > 0;
+        return !!invalidCombinationsLookup[a + "_" + b];
     }
     
     getAllTokens().forEach( (syntaxType) => {

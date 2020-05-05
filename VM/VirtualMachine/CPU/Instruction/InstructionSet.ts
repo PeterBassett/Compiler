@@ -181,16 +181,23 @@ InstructionSet.forEach(instruction => {
    InstructionOpcodeToNames[instruction.opcode] = instruction.name;  
 });
 
+const ExecutorsByNameMap : { [name: string]: Executors.InstructionExecutor; } = {};
+const ExecutorsByOpCode : Executors.InstructionExecutor[] = [];
+
+const executorFunctionNames = Object.keys(Executors);
+InstructionOpcodeToNames.forEach( mnemonic => {           
+    const funcName = executorFunctionNames.filter(name => name.toLowerCase() === mnemonic.toLowerCase())[0];
+    const instruction = InstructionMap[mnemonic.toUpperCase()];
+
+    ExecutorsByNameMap[funcName] = (Executors as any)[funcName];
+    ExecutorsByOpCode[instruction.opcode] = (Executors as any)[funcName];
+});
+
 function MapOpCodeToExecutor(opcode : number) : Executors.InstructionExecutor {
-    const mnemonic = InstructionOpcodeToNames[opcode];
-    
-    const names = Object.keys(Executors);
+    const funcName = InstructionOpcodeToNames[opcode];
+    const executor = ExecutorsByOpCode[opcode];
 
-    const funcName = names.filter(name => name.toLowerCase() === mnemonic.toLowerCase())[0];
-
-    const executor = (Executors as any)[funcName];
-
-    if(typeof(executor) != "function")
+    if(!executor)
     {
         throw new Error(`${funcName} is not a valid instruction mnemonic`);
     }

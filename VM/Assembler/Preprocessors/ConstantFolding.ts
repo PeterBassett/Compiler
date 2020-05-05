@@ -4,8 +4,7 @@ import { AssemblyLineLexer, OperandToken, Token } from "../AssemblyLineLexer";
 
 export function performConstantFolding(text: AssemblyLine[]): AssemblyLine[] 
 {     
-    text.forEach((line) => {
-        
+    text.forEach((line) => {        
         line.source = foldConstants(line.source);            
     })
         
@@ -14,6 +13,9 @@ export function performConstantFolding(text: AssemblyLine[]): AssemblyLine[]
 
 function foldConstants(text: string): string
 {
+    if(text.indexOf("+") === -1)
+        return text;
+
     let foldedConstant :boolean;
     do
     {
@@ -26,7 +28,6 @@ function foldConstants(text: string): string
             tokens.push(lexer.current);
         
         let index = 0;
-
         while(index < tokens.length)
         {
             if(tokens[index].token === OperandToken.NUMBER && index + 2 < tokens.length)

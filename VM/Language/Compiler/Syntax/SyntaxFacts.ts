@@ -77,9 +77,16 @@ export function GetText(type : SyntaxType) : string
     return syntaxTypeToLexeme[type];
 }
 
+const syntaxTypeToKeywordLookup : boolean[] = [];
+
+syntaxTypes.forEach( syntaxType => {
+    const isKeyword = syntaxTypeKeys[syntaxType].match("Keyword$") != null;
+    syntaxTypeToKeywordLookup[syntaxType] = isKeyword;
+});
+
 export function isKeyword(type : SyntaxType) : boolean 
 {
-    return syntaxTypeKeys[type].match("Keyword$") != null;
+    return !!syntaxTypeToKeywordLookup[type];
 }
 
 export function GetKeywordType(lexeme : string) : SyntaxType 

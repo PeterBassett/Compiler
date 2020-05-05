@@ -1,6 +1,6 @@
 import { AssemblyLineLexer, Token, OperandToken } from "./AssemblyLineLexer";
 import Instruction, { OpcodeModes, OpcodeMode } from "../VirtualMachine/CPU/Instruction/Instruction";
-import { InstructionMap } from "../VirtualMachine/CPU/Instruction/InstructionSet";
+import { InstructionMap, OpCodes } from "../VirtualMachine/CPU/Instruction/InstructionSet";
 import ValueOrRegister from "./ValueOrRegister";
 
 export class AssemblyLineParser
@@ -16,8 +16,17 @@ export class AssemblyLineParser
         this.tokens = [];
         this.position = 0;
         this.labelsExpected = labelsExpected;
+    }
 
+    private readAllTokens() : void
+    {
         while(this.lexer.advance())
+            this.tokens.push(this.lexer.current);
+    }
+
+    private readNextToken() : void
+    {
+        if(this.lexer.advance())
             this.tokens.push(this.lexer.current);
     }
 
@@ -51,6 +60,22 @@ export class AssemblyLineParser
         return this.tokens[this.position];
     }
 
+    public parseForOpcode() : number
+    {
+        this.readNextToken();
+        
+        const identifier = this.match(OperandToken.IDENTIFIER);
+
+        const instruction = InstructionMap[identifier.lexeme.toUpperCase()];
+
+        if(!instruction)
+        {
+            throw RangeError("Invalid instruction " + identifier.lexeme.toUpperCase());
+        }
+
+        return instruction.opcode;
+    }
+
     public Parse() : Instruction
     {
         // MNEMONIC REG REG
@@ -60,6 +85,8 @@ export class AssemblyLineParser
         //generally, reg and const can be of the form
         // [X] // read memory at byte position X, X can be
         // REG, CONST, REG+CONST, REG-CONST but not yet CONST+CONST, CONST-CONST
+
+        this.readAllTokens();
 
         const identifier = this.match(OperandToken.IDENTIFIER);
 

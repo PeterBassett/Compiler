@@ -56,29 +56,40 @@ export function calculateTextSectionEncodedLength(lines: AssemblyLine[], instruc
 export function calculateInstructionSize(line : AssemblyLine, encoder : InstructionCoder) : number
 {
     const parser = new AssemblyLineParser(new AssemblyLineLexer(line.source), true);    
-    const instruction = parser.Parse();
 
-    const output = encoder.encodeInstruction(instruction.opcode, 
-        instruction.opcodeMode, 
-        instruction.sourceRegister, 
-        instruction.destinationRegister, 
-        instruction.destinationMemoryAddress, 
-        instruction.sourceMemoryAddress);
+    const opcode = parser.parseForOpcode();
 
-    return output.length;
+    const result = encoder.calculateInstructionLength(opcode);
+
+    if(result.isCertain)
+        return result.instructionLength; // if we are sure of the calculated length
+    else
+    {
+        // do a full parse to determine the encoded instruction length
+        const instruction = parser.Parse();
+
+        const output = encoder.encodeInstruction(instruction.opcode, 
+            instruction.opcodeMode, 
+            instruction.sourceRegister, 
+            instruction.destinationRegister, 
+            instruction.destinationMemoryAddress, 
+            instruction.sourceMemoryAddress);
+        return output.length;
+    }    
 }
 
 export function replaceLabels(memoryOffset : number, lines: AssemblyLine[], instructionEncoder : InstructionCoder) : AssemblyLine[] 
 {
     const map = buildDetailedLabelMap(lines, instructionEncoder);
-    
+
     const labels = Object.keys(map.labels);
     lines = map.lines;
 
-    labels.sort((a, b) => b.length - a.length).forEach((label) => {
-        lines.forEach((line, index) => {
-            let regEx = new RegExp(label, "ig");
-            let target = memoryOffset + map.labels[label].byteOffset;
+    labels.sort((a, b) => b.length - a.length);
+    labels.forEach((label) => {
+        const regEx = new RegExp(label, "ig");  
+        lines.forEach((line, index) => {          
+            let target = memoryOffset + map.labels[label].byteOffset;         
             line.source = line.source.replace(regEx, target.toString());            
         });
     });
