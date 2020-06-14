@@ -1,4 +1,4 @@
-import { char } from "../CharType";
+import { char } from "../../../../misc/CharType";
 import { SourceLine } from "./SourceLine";
 import { number } from "prop-types";
 import TextSpan from "./TextSpan";

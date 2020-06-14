@@ -183,10 +183,10 @@ export default class Binder
         if(syntax.expression)
         {
             expression = this.BindExpression(syntax.expression);
-            expression = this.BindConversion(syntax.expression.span(), expression, this._function!.returnType);
+            expression = this.BindConversion(() => syntax.expression!.span(), expression, this._function!.returnType);
         }
             
-        const rs = new Nodes.BoundReturnStatement(expression, syntax.span());
+        const rs = new Nodes.BoundReturnStatement(expression, () => syntax.span());
 
         this.returnStatementsInFunction.push(rs);
 
@@ -335,7 +335,7 @@ export default class Binder
             // if we have a declared type
             if(type)
                 // checkto make sure we can convert the initialiser to that type.
-                initialiser = this.BindConversion(syntax.initialiserExpression.span(), initialiser, type);
+                initialiser = this.BindConversion(() => syntax.initialiserExpression!.span(), initialiser, type);
         }
         else
             initialiser = this.BindDefaultExpressionForType(syntax.typeName!);            
@@ -489,7 +489,7 @@ export default class Binder
                 if(rs.expression == null)
                 {
                     if(returnType.type != ValueType.Unit)
-                        this.diagnostics.reportExpressionConvertableToTypeRequired(returnType, rs.span);
+                        this.diagnostics.reportExpressionConvertableToTypeRequired(returnType, rs.span());
                 }
                 else
                 {
@@ -498,9 +498,9 @@ export default class Binder
                         // already dealt with
                     }
                     else if(returnType.type == ValueType.Unit)
-                        this.diagnostics.reportFunctionReturnsVoid(identifier.lexeme, rs.span);
+                        this.diagnostics.reportFunctionReturnsVoid(identifier.lexeme, rs.span());
                     else if(!rs.expression.type.isAssignableTo(returnType))
-                        this.diagnostics.reportNotAssignableToType(rs.expression.type, returnType, rs.span);
+                        this.diagnostics.reportNotAssignableToType(rs.expression.type, returnType, rs.span());
                 }
             }); 
 
@@ -542,7 +542,7 @@ export default class Binder
             if(!body.type.isAssignableTo(returnType))
                 this.diagnostics.reportNotAssignableToType(body.type, returnType, node.body.span());
 
-            const returnStatement = new Nodes.BoundReturnStatement(body, node.body.span());
+            const returnStatement = new Nodes.BoundReturnStatement(body, () => node.body.span() );
             const block = new Nodes.BoundBlockStatement([returnStatement]);
             
             declaration.defineBody(block);            
@@ -577,7 +577,7 @@ export default class Binder
     private BindExpressionAndTypeCheck(syntax : AST.ExpressionNode, targetType : Type) : Nodes.BoundExpression
     {
         const exp = this.BindExpression(syntax);
-        const result = this.BindConversion(syntax.span(), exp, targetType);
+        const result = this.BindConversion(() => syntax.span(), exp, targetType);
         
         if (!result.type.isAssignableTo(targetType))
             this.diagnostics.reportCannotConvert(syntax.span(), result.type, targetType);
@@ -753,7 +753,7 @@ export default class Binder
         if (syntax.callArguments.length == 1 && typeConversionCall.type != ValueType.Unit && typeConversionCall.isPredefined)
         {
             const argument = this.BindExpression(syntax.callArguments[0]);
-            return this.BindConversion(syntax.callArguments[0].span(), argument, typeConversionCall, true);
+            return this.BindConversion(() => syntax.callArguments[0].span(), argument, typeConversionCall, true);
         }
 
         const variableFound = this.BindNameExpression(syntax.nameExpression, false) as Nodes.BoundVariableExpression;
@@ -818,18 +818,18 @@ export default class Binder
             const parameters = syntax.callArguments.map( node => {
                 return {
                     expression : this.BindExpression(node),
-                    span : node.span()
+                    span : node.span
                 };
             });        
 
             const boundParameters : Nodes.BoundExpression[] = [];
             for(let i = 0; i < Math.min(parameters.length, declaredParameters.length); i++)
             {
-                const convertedParameter = this.BindConversion(parameters[i].span, parameters[i].expression, declaredParameters[i]);
+                const convertedParameter = this.BindConversion(() => parameters[i].span(), parameters[i].expression, declaredParameters[i]);
                 
                 if(convertedParameter.kind == Nodes.BoundNodeKind.ErrorExpression)
                 {
-                    this.diagnostics.reportCannotConvertParameter(parameters[i].expression.type, declaredParameters[i], parameters[i].span);
+                    this.diagnostics.reportCannotConvertParameter(parameters[i].expression.type, declaredParameters[i], parameters[i].span());
                 }
 
                 boundParameters.push(convertedParameter);
@@ -910,7 +910,7 @@ export default class Binder
     private BindAssignToVariableStatement(target: AST.NameExpressionSyntax, source : AST.ExpressionNode, assignment : AST.AssignmentStatementSyntax): Nodes.BoundStatement {
         const identifier = this.BindNameExpression(target);
         const right = this.BindExpression(source);
-        const convertedExpression = this.BindConversion(assignment.span(), right, identifier.type);
+        const convertedExpression = this.BindConversion(() => assignment.span(), right, identifier.type);
 
         return new Nodes.BoundAssignmentStatement(identifier, convertedExpression);
     }
@@ -920,7 +920,7 @@ export default class Binder
         const left = this.BindGetExpression(target);
         const right = this.BindExpression(expression);
 
-        const convertedExpression = this.BindConversion(assignment.span(), right, left.type);
+        const convertedExpression = this.BindConversion(() => assignment.span(), right, left.type);
 
         return new Nodes.BoundAssignmentStatement(left, convertedExpression);
     }
@@ -930,7 +930,7 @@ export default class Binder
         const left = this.BindDereferenceExpression(target);
         const right = this.BindExpression(expression);
 
-        const convertedExpression = this.BindConversion(assignment.span(), right, left.type);
+        const convertedExpression = this.BindConversion(() => assignment.span(), right, left.type);
 
         return new Nodes.BoundAssignmentStatement(left, convertedExpression);
     }
@@ -940,7 +940,7 @@ export default class Binder
         const left = this.BindExpression(target);
         const right = this.BindExpression(expression);
         
-        const convertedExpression = this.BindConversion(assignment.span(), right, left.type);
+        const convertedExpression = this.BindConversion(() => assignment.span(), right, left.type);
 
         return new Nodes.BoundAssignmentStatement(left, convertedExpression);
     }
@@ -1123,13 +1123,13 @@ export default class Binder
         const operatorSpan = parent.operatorToken.span;
 
         let { left, right } = this.SpecialiseLiterals(leftExpression, rightExpression);
-        const leftToRight = this.BindConversion(operatorSpan, left, right.type, false, false);
+        const leftToRight = this.BindConversion(() => operatorSpan, left, right.type, false, false);
 
         let boundOperator = Nodes.BoundBinaryOperator.Bind(parent.operatorToken.kind, left.type, right.type);
 
         if(leftToRight.kind == Nodes.BoundNodeKind.ErrorExpression)
         {            
-            const rightToLeft = this.BindConversion(operatorSpan, right, left.type, false, false);
+            const rightToLeft = this.BindConversion(() => operatorSpan, right, left.type, false, false);
 
             if(rightToLeft.kind == Nodes.BoundNodeKind.ErrorExpression)
             {
@@ -1161,13 +1161,13 @@ export default class Binder
         return { left, right };
     }
 
-    private BindConversion(diagnosticSpan : TextSpan, expression : Nodes.BoundExpression, type : Type, allowExplicit : boolean = false, logDiagnostics : boolean = true) : Nodes.BoundExpression
+    private BindConversion(diagnosticSpan : () => TextSpan, expression : Nodes.BoundExpression, type : Type, allowExplicit : boolean = false, logDiagnostics : boolean = true) : Nodes.BoundExpression
     {
         // if we dont have a type at this point there is an error in the program.
         if(!expression.type)
         {
             if(logDiagnostics)
-                this.diagnostics.reportCannotConvert(diagnosticSpan, PredefinedValueTypes.Error, type);
+                this.diagnostics.reportCannotConvert(diagnosticSpan(), PredefinedValueTypes.Error, type);
             return new Nodes.BoundErrorExpression();
         }
 
@@ -1206,13 +1206,13 @@ export default class Binder
                 case ValueType.Byte:
                 {
                     if(literalValue >= 256)                    
-                        this.diagnostics.reportCannotConvertConstant(literalValue, type, diagnosticSpan);
+                        this.diagnostics.reportCannotConvertConstant(literalValue, type, diagnosticSpan());
                     break;
                 }
                 case ValueType.Int:
                 {
                     if(literalValue >= Math.pow(2, 31)-1 || literalValue <= -Math.pow(2, 31))
-                        this.diagnostics.reportCannotConvertConstant(literalValue, type, diagnosticSpan);
+                        this.diagnostics.reportCannotConvertConstant(literalValue, type, diagnosticSpan());
                     break;
                 }                                                              
             }
@@ -1223,14 +1223,14 @@ export default class Binder
         if (!conversion.Exists)
         {
             if(logDiagnostics)
-                this.diagnostics.reportCannotConvert(diagnosticSpan, expression.type, type);
+                this.diagnostics.reportCannotConvert(diagnosticSpan(), expression.type, type);
             return new Nodes.BoundErrorExpression();
         }
 
         if (!allowExplicit && conversion.IsExplicit)
         {
             if(logDiagnostics)
-                this.diagnostics.reportCannotConvertImplicitly(diagnosticSpan, expression.type, type);
+                this.diagnostics.reportCannotConvertImplicitly(diagnosticSpan(), expression.type, type);
             return new Nodes.BoundErrorExpression();
         }
 

@@ -1,1 +1,0 @@
-export type Logger = (lineNumber : number, characterNumber : number, message : string) => void; 

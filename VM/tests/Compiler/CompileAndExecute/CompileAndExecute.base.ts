@@ -3,13 +3,9 @@ import SourceText from "../../../Language/Compiler/Syntax/Text/SourceText";
 import Binder from "../../../Language/Compiler/Binding/Binder";
 import Lowerer from "../../../Language/Compiler/lowering/Lowerer";
 import CodeGenerator from "../../../Language/Compiler/CodeGeneration/CodeGenerator";
-import { Logger } from "../../../Assembler/interfaces/Logger";
 import Parser from "../../../Language/Compiler/Syntax/Parser";
 import Assembler from "../../../Assembler/Assembler";
-import AssemblyParser from "../../../Assembler/Parser";
-import defaultPreprocessor from "../../../Assembler/Preprocessors/DefaultPreprocessor";
 import InstructionCoder from "../../../VirtualMachine/CPU/Instruction/InstructionCoder";
-import InstructionCoder32Bit from "../../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
 import RAM from "../../../VirtualMachine/Memory/RAM";
 import Flags from "../../../VirtualMachine/CPU/Flags";
 import RegisterBank from "../../../VirtualMachine/CPU/RegisterBank";
@@ -18,14 +14,69 @@ import InstructionCoderVariable from "../../../VirtualMachine/CPU/Instruction/In
 import { AssembledOutput } from "../../../Assembler/AssembledOutput";
 import { Diagnostics } from "../../../Language/Compiler/Diagnostics/Diagnostics";
 import StringDiagnosticsPrinter from "../../../Language/Compiler/Diagnostics/StringDiagnosticsPrinter";
+import { AssemblyLexer } from "../../../Assembler/AssemblyLexer";
+import { AssemblyParser } from "../../../Assembler/AssemblyParser";
+import { printPerformanceMarks, resetPerformanceMarks } from "./CompileAndExecute.performance.tests";
+
+let compileTimes : number[] = [];
+let assembleTimes : number[] = [];
+let executeTimes : number[] = [];
 
 export default function run(text : string) : number 
 {
-    const code = compile(text);
-    const assemblyStream = assemble(code.text);
-    const result = execute(assemblyStream);
+    let t1 : number;
+    let t2 : number;
 
+    t1 = performance.now();
+    const code = compile(text);
+    t2 = performance.now();
+    compileTimes.push(t2-t1);
+
+    t1 = performance.now();
+    const assemblyStream = assemble(code.text);
+    t2 = performance.now();
+    assembleTimes.push(t2-t1);
+
+    t1 = performance.now();
+    const result = execute(assemblyStream);
+    t2 = performance.now();
+    executeTimes.push(t2-t1);
+    
     return result;
+}
+
+export function resetPerformance()
+{
+    compileTimes = [];
+    assembleTimes = [];
+    executeTimes = [];
+
+    resetPerformanceMarks();
+}
+
+export function printPerformance(description:string)
+{
+    const arrSum = (arr:number[]) : number => arr.reduce((a,b) => a + b, 0);
+    const arrAvg = (arr:number[]) : number => arr.reduce((a,b) => a + b, 0) / arr.length;
+    let t = {
+        "description" : description,
+        "compile" : {
+            "total" : arrSum(compileTimes),
+            "avg" : arrAvg(compileTimes)
+        },
+        "assemble" : {
+            "total" : arrSum(assembleTimes),
+            "avg" : arrAvg(assembleTimes)
+        },
+        "execute" : {
+            "total" : arrSum(executeTimes),
+            "avg" : arrAvg(executeTimes)
+        }             
+    }
+    
+    console.table(t);
+
+    printPerformanceMarks();
 }
 
 function assertNoError(source : string, diagnostics : Diagnostics) : void
@@ -78,11 +129,15 @@ function CreateInstructionCoder() : InstructionCoder
 
 function assemble(assemblyCode : string) : AssembledOutput
 {
-    const logger : Logger = () => {};
-    const instructionCoder = CreateInstructionCoder();        
-    const assembler = new Assembler(logger, AssemblyParser, defaultPreprocessor, instructionCoder, 0);
-
-    return assembler.assemble(assemblyCode)
+    const instructionCoder = new InstructionCoderVariable();
+    const source = new SourceText(assemblyCode);
+    const diagnostics = new Diagnostics(source);      
+    const newParser = (t:string) => {       
+        const lexer = new AssemblyLexer(source, diagnostics);
+        return new AssemblyParser(lexer, diagnostics);
+    };
+    const assembler = new Assembler(newParser, instructionCoder, diagnostics);
+    return assembler.assemble(assemblyCode);
 }
 
 function execute(output : AssembledOutput) : number

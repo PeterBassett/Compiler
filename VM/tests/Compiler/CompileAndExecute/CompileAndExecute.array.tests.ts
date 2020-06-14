@@ -1,6 +1,15 @@
-import run from "./CompileAndExecute.base";
+import run, { printPerformance, resetPerformance } from "./CompileAndExecute.base";
 
-describe("Complie Assemble and Execute arrays", () => {
+describe("Complie Assemble and Execute arrays", () => {  
+    beforeAll(() =>
+    {
+        resetPerformance();
+    });
+
+    afterAll(() => {
+        printPerformance("arrays");
+    });
+    
     [
 [`func main() : int
 {

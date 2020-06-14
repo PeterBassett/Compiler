@@ -4,6 +4,8 @@ import SourceText from "../Syntax/Text/SourceText";
 import { Type } from "../../Types/TypeInformation";
 import { ValueType } from "../../Types/ValueType";
 import Token from "../Syntax/Token";
+import {AssemblyToken} from "../../../Assembler/IAssemblyLineLexer";
+import {AssemblyLine} from "../../../Assembler/AssemblyParser";
 import { BoundFunctionDeclaration } from "../Binding/BoundNode";
 
 export enum DiagnosticType {
@@ -36,7 +38,10 @@ export enum DiagnosticType {
     InvalidIndexing,
     InvalidArrayIndexType,
     NegativeArrayIndex,
-    CannotConvertConstant
+    CannotConvertConstant,
+    InvalidAssemblyOperand,
+    AssemblyInvalidAtTopLevel,
+    AssemblyInvalidNestedDereference
 }
 
 export class Diagnostic
@@ -67,7 +72,25 @@ export class Diagnostic
 }
 
 export class Diagnostics
-{    
+{
+    reportAssemblyUnexpectedToken(arg0: AssemblyToken) {
+        throw new Error("Method not implemented.");
+    }
+    reportUnterminatedStringConstant() {
+        throw new Error("Method not implemented.");
+    }
+    reportAssemblyMultipleStartInstructionsDefined(startInstructionLines: AssemblyLine[]) {
+        throw new Error("Method not implemented.");
+    }
+    
+    reportAssemblyStartInstructionNotDefined() {
+        throw new Error("Method not implemented.");
+    }
+    
+    reportAssemblyInstructionInInvalidSection(line: AssemblyLine) {
+        throw new Error("Method not implemented.");
+    }
+
     private readonly _diagnostics : Diagnostic[];
     private readonly _source : SourceText;
 
@@ -227,7 +250,22 @@ export class Diagnostics
 
     public reportCannotConvertConstant(literalValue: any, type: Type, span : TextSpan) : void
     {
-        this.report(` Constant value '${literalValue}' cannot be converted to a '${type.name}'`, DiagnosticType.CannotConvertConstant, span);
+        this.report(`Constant value '${literalValue}' cannot be converted to a '${type.name}'`, DiagnosticType.CannotConvertConstant, span);
+    }
+
+    public reportAssemblyInvalidOperand(token : AssemblyToken, span:TextSpan) : void 
+    {
+        this.report(`Invalid Assembly Operand ${token.lexeme}`, DiagnosticType.InvalidAssemblyOperand, span);
+    }
+
+    public reportAssemblyInvalidAtTopLevel(token : AssemblyToken, span:TextSpan) : void 
+    {
+        this.report(`Assembly Invalid At tope Level ${token.lexeme}`, DiagnosticType.AssemblyInvalidAtTopLevel, span);
+    }    
+
+    public reportAssemblyInvalidNestedDereference(current: AssemblyToken, span: TextSpan) : void
+    {
+        this.report(`Assembly Invalid Nested Dereference ${current.lexeme}`, DiagnosticType.AssemblyInvalidNestedDereference, span);
     }
 
     public get text() : SourceText

@@ -2,20 +2,19 @@ import CPU from "../../VirtualMachine/CPU/CPU";
 import * as helpers from "../helpers";
 import RAM from "../../VirtualMachine/Memory/RAM";
 import RegisterBank from "../../VirtualMachine/CPU/RegisterBank";
-import Assembler from "../../Assembler/Assembler";
+import Assembler2 from "../../Assembler/Assembler";
 import { OpCodes as Op, Registers as Reg } from "../../VirtualMachine/CPU/Instruction/InstructionSet";
 import InstructionCoder from "../../VirtualMachine/CPU/Instruction/InstructionCoder";
 import InstructionCoder32Bit from "../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
 import Flags from "../../VirtualMachine/CPU/Flags";
 import InstructionCoderVariable from "../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
+import { AssemblyParser } from "../../Assembler/AssemblyParser";
+import { AssemblyLexer } from "../../Assembler/AssemblyLexer";
 import SourceText from "../../Language/Compiler/Syntax/Text/SourceText";
 import { Diagnostics } from "../../Language/Compiler/Diagnostics/Diagnostics";
-import { AssemblyLexer } from "../../Assembler/AssemblyLexer";
-import { AssemblyParser } from "../../Assembler/AssemblyParser";
-import Assembler2 from "../../Assembler/Assembler";
 
-describe("Assemble and execute", () => {
-    let assembler : Assembler;
+describe("Assemble and execute 2", () => {
+    let assembler : Assembler2;
     let ram : RAM;
     let flags : Flags;
     let registers : RegisterBank;
@@ -26,7 +25,7 @@ describe("Assemble and execute", () => {
 
     let loggerCallCount : number;
     let loggerMessages : string [];
-    
+
     function execute(assemblyCode : string, maximumSteps:number = 50, setup?:(cpu : CPU, ram:RAM, registers : RegisterBank, flags:Flags)=>void) : void
     {
         if(maximumSteps == null)
@@ -37,17 +36,16 @@ describe("Assemble and execute", () => {
         ram = new RAM(ramSize);
         registers = new RegisterBank(ramSize);
         flags = new Flags();
+        //instructionCoder = new InstructionCoderVariable();
         instructionCoder = new InstructionCoder32Bit();
         
-        instructionCoder = new InstructionCoder32Bit();
-
         const source = new SourceText(assemblyCode);
         const diagnostics = new Diagnostics(source);      
         const newParser = (t:string) => {       
             const lexer = new AssemblyLexer(source, diagnostics);
             return new AssemblyParser(lexer, diagnostics);
         };
-        const assembler = new Assembler2(newParser, instructionCoder, diagnostics);
+        assembler = new Assembler2(newParser, instructionCoder, diagnostics);
 
         const instructions = assembler.assemble(assemblyCode);
 

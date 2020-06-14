@@ -8,8 +8,8 @@ const b1010 = new OpcodeModes(new OpcodeMode(false, false), OpcodeMode.RegisterW
 const b0001 = new OpcodeModes(new OpcodeMode(true, false), new OpcodeMode(false, false));
 const b0000 = new OpcodeModes(new OpcodeMode(false, false), new OpcodeMode(false, false));
 
-describe("The variable length instruction encoder", () => {
 /*
+describe("The variable length instruction encoder", () => {
     const coder = new InstructionCoderVariable();
 
     function instruction(opcode : number, 
@@ -121,8 +121,5 @@ describe("The variable length instruction encoder", () => {
         it("mode which is encoded in the 17th to 32nd bits, 1010101010101010", () => {
             instruction(0, b0000, 0, 0, 0, 0b1010101010101010);
         });
-    });
-
-   
-*/    
-});
+    });   
+});*/

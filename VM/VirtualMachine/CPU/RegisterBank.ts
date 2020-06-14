@@ -1,45 +1,78 @@
-import Register from "./Register";
-
 export default class RegisterBank
 {        
-    public IP: number;
-    public SP: number;
+    public reg : number[];
 
-    public R0: number;
-    public R1: number;
-    public R2: number;
-    public R3: number;
-    public R4: number;
-    public R5: number;
-    public R6: number;
+    public get R0() : number {
+        return this.reg[0];
+    }
+    public get R1() : number {
+        return this.reg[1];
+    }
+    public get R2() : number {
+        return this.reg[2];
+    }
+    public get R3() : number {
+        return this.reg[3];
+    }
+    public get R4() : number {
+        return this.reg[4];
+    }
+    public get R5() : number {
+        return this.reg[5];
+    }
+    public get R6() : number {
+        return this.reg[6];
+    }
+    public get SP() : number {
+        return this.reg[7];
+    }
+    public get IP() : number {
+        return this.reg[8];
+    }    
+
+    public set R0(r:number) {
+        this.reg[0] = r;
+    }
+    public set R1(r:number) {
+        this.reg[1] = r;
+    }
+    public set R2(r:number) {
+        this.reg[2] = r;
+    }
+    public set R3(r:number) {
+        this.reg[3] = r;
+    }
+    public set R4(r:number) {
+        this.reg[4] = r;
+    }
+    public set R5(r:number) {
+        this.reg[5] = r;
+    }
+    public set R6(r:number) {
+        this.reg[6] = r;
+    }
+    public set SP(r:number) {
+        this.reg[7] = r;
+    }
+    public set IP(r:number) {
+        this.reg[8] = r;
+    }
    
     constructor(ramSize : number)
     {
-        this.IP = this.SP = this.R0 = this.R1 = this.R2 = this.R3 = this.R4 = this.R5 = this.R6 = 0;
-
+        this.reg = [0,0,0,0,0,0,0,0,0];
+        
         // stack starts at the top of memory and grows down.
         this.SP = ramSize - 4;         
     }
 
     public get(register : number) : number
     {
-        if(register == 7)
-            return this.SP;
-
-        if(register == 8)
-            return this.IP;
-
-        return (this as any)["R" + register] as number;
+        return this.reg[register];        
     }
 
-    public set(register : number, value : number) : void
+    public set(register : number, value : number)
     {
-        if(register == 7)
-        {
-            this.SP = value;
-            return;
-        }
-        
-        (this as any)["R" + register] = value;
+        this.reg[register] = value;
     }
 }

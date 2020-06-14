@@ -1,7 +1,14 @@
-import run from "./CompileAndExecute.base";
+import run, { printPerformance, resetPerformance } from "./CompileAndExecute.base";
 
 describe("Complie Assemble and Execute byte data type", () => {
-
+    beforeAll(() =>
+    {
+        resetPerformance();
+    });
+    
+    afterAll(() => {
+        printPerformance("byte");
+    });
 [
 [`func main() : byte
 {

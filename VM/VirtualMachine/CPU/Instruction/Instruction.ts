@@ -42,57 +42,15 @@ export class OpcodeModes
 
 export default class Instruction
 {
-    private _opcode : number;
-    private _opcodeMode : OpcodeModes;
-    private _sourceRegister : number;
-    private _destinationRegister : number;
-    private _destinationMemoryAddress : number;
-    private _sourceMemoryAddress : number;
     public encodedLength: number;
     
-    constructor(opcode : number,
-        opcodeMode : OpcodeModes, 
-        sourceRegister : number, 
-        destinationRegister : number, 
-        destinationMemoryAddress :number,
-        sourceMemoryAddress :number)
+    constructor(public readonly opcode : number,
+        public readonly opcodeMode : OpcodeModes, 
+        public readonly sourceRegister : number, 
+        public readonly destinationRegister : number, 
+        public readonly destinationMemoryAddress :number,
+        public readonly sourceMemoryAddress :number)
     {
-        this._opcode = opcode;
-        this._opcodeMode = opcodeMode;
-        this._sourceRegister = sourceRegister;
-        this._destinationRegister = destinationRegister;
-        this._destinationMemoryAddress = destinationMemoryAddress;
-        this._sourceMemoryAddress = sourceMemoryAddress;
         this.encodedLength = 0;
-    }
-
-    get opcode () : number
-    {
-        return this._opcode;
-    }
-
-    get opcodeMode () : OpcodeModes
-    {
-        return this._opcodeMode;
-    }
-
-    get sourceRegister () : number
-    {
-        return this._sourceRegister;
-    }
-
-    get destinationRegister () : number
-    {
-        return this._destinationRegister;
-    }
-
-    get destinationMemoryAddress () : number
-    {
-        return this._destinationMemoryAddress;
-    }
-
-    get sourceMemoryAddress () : number
-    {
-        return this._sourceMemoryAddress;
     }
 }

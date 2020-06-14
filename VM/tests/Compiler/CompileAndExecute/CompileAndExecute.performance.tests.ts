@@ -1,16 +1,201 @@
 import run, { printPerformance, resetPerformance } from "./CompileAndExecute.base";
+import { Diagnostics } from "../../../Language/Compiler/Diagnostics/Diagnostics";
+import StringDiagnosticsPrinter from "../../../Language/Compiler/Diagnostics/StringDiagnosticsPrinter";
+import GeneratedCode from "../../../Language/Compiler/CodeGeneration/GeneratedCode";
+import SourceText from "../../../Language/Compiler/Syntax/Text/SourceText";
+import Parser from "../../../Language/Compiler/Syntax/Parser";
+import Binder from "../../../Language/Compiler/Binding/Binder";
+import Lowerer from "../../../Language/Compiler/lowering/Lowerer";
+import CodeGenerator from "../../../Language/Compiler/CodeGeneration/CodeGenerator";
+import InstructionCoder from "../../../VirtualMachine/CPU/Instruction/InstructionCoder";
+import InstructionCoderVariable from "../../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
+import { AssembledOutput } from "../../../Assembler/AssembledOutput";
+import RAM from "../../../VirtualMachine/Memory/RAM";
+import Flags from "../../../VirtualMachine/CPU/Flags";
+import RegisterBank from "../../../VirtualMachine/CPU/RegisterBank";
+import CPU from "../../../VirtualMachine/CPU/CPU";
+import InstructionCoder32Bit from "../../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
+import Register from "../../../VirtualMachine/CPU/Register";
+import Assembler2 from "../../../Assembler/Assembler";
+import { AssemblyParser } from "../../../Assembler/AssemblyParser";
+import { AssemblyLexer } from "../../../Assembler/AssemblyLexer";
 
-describe("Complie Assemble and Execute structs", () => {
+let times : any = {};
+export function addPerformanceMark(t1 : number, t2 : number, name : string)
+{
+    times[name] = times[name] || [];
+    times[name].push(t2 - t1);
+}
+
+export function resetPerformanceMarks()
+{
+    times = {};
+}
+
+export function printPerformanceMarks()
+{
+    const arrSum = (arr:number[]) : number => arr.reduce((a,b) => a + b, 0);
+    const arrAvg = (arr:number[]) : number => arr.reduce((a,b) => a + b, 0) / arr.length;
+
+    let names = Object.keys(times);
+
+    let t : any = {};
+
+    let totalExecutionTime = 0;
+    for(let i = 0; i < names.length; i++)
+    {
+        t[names[i]] = {};
+        t[names[i]].total = arrSum(times[names[i]]);
+        t[names[i]].avg = arrAvg(times[names[i]]);
+        totalExecutionTime += t[names[i]].total; 
+    }
+
+    for(let i = 0; i < names.length; i++)
+    {
+        t[names[i]].percentage = ((t[names[i]].total / totalExecutionTime) * 100.0) + "%";
+    }
+
+    console.table(t);
+}
+
+describe("Complie Assemble and Execute multiple times for performance comparisons", () => {
     beforeAll(() =>
     {
         resetPerformance();
     });
     
     afterAll(() => {
-        printPerformance("structs");
+        printPerformance("performance");
     });
-    
-    [
+        
+    let instructionCoder : InstructionCoder;
+
+    function run(text : string, 
+        ic : InstructionCoder, 
+        assembler : (text:string) => AssembledOutput,
+        section : string) : number 
+    {
+        instructionCoder = ic;        
+
+        let t1 : number;
+        let t2 : number;
+
+        t1 = performance.now();
+        const code = compile(text);
+        t2 = performance.now();
+        addPerformanceMark(t1, t2, /*section +*/ " compile");
+
+        t1 = performance.now();
+        const assemblyStream = assembler(code.text);
+        t2 = performance.now();
+        addPerformanceMark(t1, t2, /*section +*/ " assemble");
+
+        t1 = performance.now();
+        const result = execute(assemblyStream);
+        t2 = performance.now();
+        addPerformanceMark(t1, t2, /*section +*/ " execute");
+        
+        return result;
+    }
+
+    function assertNoError(source : string, diagnostics : Diagnostics) : void
+    {
+        if(diagnostics.length > 0)
+        {
+            const printer = new StringDiagnosticsPrinter();
+            expect(diagnostics.length).toEqual(0);
+
+            diagnostics.map( (d, i) => {
+                const output = printer.printDiagnostic(diagnostics, d);
+                fail(`${source} : ${output}`);
+                return "";
+            });
+        }
+    }
+
+    function compile(text : string) : GeneratedCode
+    {
+        const source = new SourceText(text);        
+        
+        const parser = new Parser(source);
+        const compilationUnit = parser.parse();
+        assertNoError("Parsing", compilationUnit.diagnostics);
+        
+        const binder = new Binder();
+        const boundTree = binder.Bind(compilationUnit);
+        assertNoError("Binding", boundTree.diagnostics);
+        
+        const lowerer = new Lowerer();
+        const newBoundTree = lowerer.lower(boundTree);
+        assertNoError("Lowering", newBoundTree.diagnostics);
+
+        const codeGenerator = new CodeGenerator();
+        const result = codeGenerator.generate(newBoundTree);
+        assertNoError("CodeGen", result.diagnostics);
+
+        if(!result.success)
+            throw new Error(result.diagnostics.get(0).message);
+
+        return result;
+    }
+
+    function assembleV2(assemblyCode : string) : AssembledOutput
+    {
+        const source = new SourceText(assemblyCode);
+        const diagnostics = new Diagnostics(source);
+
+        const newParser = (t:string) => {
+            const lexer = new AssemblyLexer(source, diagnostics);
+            return new AssemblyParser(lexer, diagnostics);
+        };
+
+        const assembler = new Assembler2(newParser, instructionCoder, diagnostics);
+
+        return assembler.assemble(assemblyCode)
+    }
+
+    function execute(output : AssembledOutput) : number
+    {
+        let ram : RAM;
+        let flags : Flags;
+        let registers : RegisterBank;
+        const ramSize = 1 << 16;
+        let cpu : CPU;
+
+        const maximumSteps = 500000;
+        
+        ram = new RAM(ramSize);
+        registers = new RegisterBank(ramSize);
+        flags = new Flags();
+        
+        ram.blitStoreBytes(0, output.machineCode);
+        ram.setReadonlyRegions(output.regions);
+        
+        cpu = new CPU(ram, registers, flags, instructionCoder);
+
+        let stepCount = 0;
+        try
+        {
+            while(true)   
+            {                  
+                cpu.step();
+
+                stepCount++;
+
+                if(stepCount > maximumSteps)
+                    throw new Error("Step Count Exceeded.");
+            }
+        }
+        catch(e)
+        {
+            if(e.message != "HALT EXECUTION") 
+                throw e;
+        }
+
+        return registers.R1;
+    }
+
+let testCases = [
 [`struct root 
 {
     a1 : int;
@@ -723,28 +908,52 @@ func main() : int
 
     return a.b.la + a.b.lb;
 }`, 4],
-/*
-,
-[`func main() : string {
-    return string(3.14159);
-}`,
-`3.14159`],
-[`func main() : string {
-    return string(true);
-}`,
-`true`],
-[`func main() : string {
-    return string(1==2);
-}`,
-`false`]*/
-    ].forEach((item) => {
-        it(`should compile, assemble and execute to return the right value ` + item[0], () => {  
-            const text = item[0] as string;
-            const expected = item[1] as number;
+    ];
+   
+    // currently not required. this was used to prove that the new Assembler and new RegisterBank implemetations 
+    // gave a 4-5x speed inprovement.
 
-            const result = run(text);
-            
-            expect(result).toEqual(expected);
-        });
+    /*
+    const iterationCount = 50
+
+    const ic32 = new InstructionCoder32Bit();
+    const icV = new InstructionCoderVariable();
+
+    let t1 : number;
+    let t2 : number;
+    
+    it(`InstructionCoder32Bit & RegisterBank2 & New Assembler`, () => {      
+        t1 = performance.now();
+        for(let i = 0; i < iterationCount; i++)            
+        {
+            for(let i of testCases)
+            {
+                const text = i[0] as string;
+                const expected = i[1] as number;
+        
+                const result = run(text, ic32, (t) => assembleV2(t), `InstructionCoder32Bit & RegisterBank2 & New Assembler`);
+                expect(result).toEqual(expected);
+            }
+        }
+        t2 = performance.now();
+        addPerformanceMark(t1, t2, `InstructionCoder32Bit & RegisterBank2 & New Assembler`);
     });
+
+    it(`InstructionCoderVariable & RegisterBank2 & New Assembler`, () => {      
+        t1 = performance.now();
+        for(let i = 0; i < iterationCount; i++)            
+        {
+            for(let i of testCases)
+            {
+                const text = i[0] as string;
+                const expected = i[1] as number;
+        
+                const result = run(text, icV, (t) => assembleV2(t), `InstructionCoderVariable & RegisterBank2 & New Assembler`);            
+                expect(result).toEqual(expected);
+            }
+        }
+        t2 = performance.now();
+        addPerformanceMark(t1, t2, `InstructionCoderVariable & RegisterBank2 & New Assembler`);
+    });
+    */
 });

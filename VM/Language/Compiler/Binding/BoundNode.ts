@@ -447,7 +447,7 @@ export class BoundExpressionStatement extends BoundStatement
 
 export class BoundReturnStatement extends BoundStatement
 {
-    constructor(public readonly expression:BoundExpression | null, public readonly span:TextSpan)
+    constructor(public readonly expression:BoundExpression | null, public readonly span:()=>TextSpan)
     {
         super();
         this.expression = expression;

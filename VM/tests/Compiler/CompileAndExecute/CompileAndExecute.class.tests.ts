@@ -1,6 +1,15 @@
-import run from "./CompileAndExecute.base";
+import run, { printPerformance, resetPerformance } from "./CompileAndExecute.base";
 
 describe("Complie Assemble and Execute classes", () => {
+    beforeAll(() =>
+    {
+        resetPerformance();
+    });
+    
+    afterAll(() => {
+        printPerformance("class");
+    });
+    
     [
 /*[`
 class test

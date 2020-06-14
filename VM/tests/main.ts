@@ -27,24 +27,13 @@ require(["jasmine-boot"], () =>
             "./CPU/Instructions/InstructionCoder32Bit.tests",
             "./CPU/Instructions/InstructionCoderVariable.tests",
             "./CPU/CPU.tests",
-            "./Assembler/Parser.tests",
-            "./Assembler/Preprocessors/RemoveWhiteSpace.tests",
-            "./Assembler/Preprocessors/RemoveEmptyLines.tests",
-            "./Assembler/Preprocessors/RemoveComments.tests",
-            "./Assembler/Preprocessors/AggregatePreprocessor.tests",
-            "./Assembler/ValidateRequiredSections.tests",
-            "./Assembler/SectionExtraction.tests",
-            "./Assembler/Preprocessors/InjectEntryPoint.tests",
-            "./Assembler/Preprocessors/ReplaceLabels.tests",
-            "./Assembler/Preprocessors/ParseDataLabels.tests",
-            "./Assembler/Preprocessors/ReplaceDataLabels.tests",
-            "./Assembler/Preprocessors/ConstantFolding.tests",
-            "./Assembler/EncodeDataSection.tests",          
             "./CPU/AssembleAndExecute.tests",
+            "./CPU/AssembleAndExecute_Assembler2.tests",
             "./CPU/AssembleAndExecuteVariableLengthInstructions.tests",
-            "./Assembler/AssemblyLineLexer.tests",
-            "./Assembler/AssemblyLineParser.tests",
             "./Assembler/encodeInstructionOperand.tests",
+            // Second assembler tests
+            "./Assembler/AssemblyLexer.tests",
+            "./Assembler/AssemblyParser.tests",        
             // Compiler 
             "./Compiler/Lexer.tests",
             "./Compiler/Parser.tests",
@@ -65,6 +54,7 @@ require(["jasmine-boot"], () =>
             "./Compiler/CompileAndExecute/CompileAndExecute.byte.tests",
             "./Compiler/Optimisation/ExpressionOptimiser.tests",
             "./Compiler/Binding/ControlFlowAnalysis/ControlFlowAnalyser.tests",
+            "./Compiler/CompileAndExecute/CompileAndExecute.performance.tests",            
           ], () => {
             //trigger Jasmine
           (window as any).onload();

@@ -6,13 +6,13 @@ import Assembler from "../../Assembler/Assembler";
 import { OpCodes as Op, Registers as Reg } from "../../VirtualMachine/CPU/Instruction/InstructionSet";
 import InstructionCoder from "../../VirtualMachine/CPU/Instruction/InstructionCoder";
 import InstructionCoder32Bit from "../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
-//import InstructionCoderVariable from "../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
-import { Logger } from "../../Assembler/interfaces/Logger";
-import Parser from "../../Assembler/Parser";
-import defaultPreprocessor from "../../Assembler/Preprocessors/DefaultPreprocessor";
-import validator from "../../Assembler/Preprocessors/DefaultPreprocessor";
 import Flags from "../../VirtualMachine/CPU/Flags";
 import InstructionCoderVariable from "../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
+import SourceText from "../../Language/Compiler/Syntax/Text/SourceText";
+import { Diagnostics } from "../../Language/Compiler/Diagnostics/Diagnostics";
+import { AssemblyLexer } from "../../Assembler/AssemblyLexer";
+import { AssemblyParser } from "../../Assembler/AssemblyParser";
+import Assembler2 from "../../Assembler/Assembler";
 
 describe("Assemble and execute with Variable Length Instructions", () => {
     let assembler : Assembler;
@@ -27,11 +27,6 @@ describe("Assemble and execute with Variable Length Instructions", () => {
     let loggerCallCount : number;
     let loggerMessages : string [];
 
-    const logger : Logger = (lineNumber : number, characterNumber : number, message : string) => {
-        loggerCallCount++;
-        loggerMessages.push(message);
-    }
-
     function execute(assemblyCode : string, maximumSteps:number = 50, setup?:(cpu : CPU, ram:RAM, registers : RegisterBank, flags:Flags)=>void) : void
     {
         if(maximumSteps == null)
@@ -44,9 +39,16 @@ describe("Assemble and execute with Variable Length Instructions", () => {
         flags = new Flags();
         
         instructionCoder = new InstructionCoderVariable();
-        assembler = new Assembler(logger, Parser, defaultPreprocessor, instructionCoder, 0);
 
-        const instructions = assembler.assemble(assemblyCode)
+        const source = new SourceText(assemblyCode);
+        const diagnostics = new Diagnostics(source);      
+        const newParser = (t:string) => {       
+            const lexer = new AssemblyLexer(source, diagnostics);
+            return new AssemblyParser(lexer, diagnostics);
+        };
+        const assembler = new Assembler2(newParser, instructionCoder, diagnostics);
+
+        const instructions = assembler.assemble(assemblyCode);
 
         ram.blitStoreBytes(0, instructions.machineCode);
         ram.setReadonlyRegions(instructions.regions);

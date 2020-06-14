@@ -4,7 +4,7 @@ import { SyntaxType } from "./SyntaxType";
 import * as SyntaxFacts from "./SyntaxFacts";
 import { Diagnostics } from "../Diagnostics/Diagnostics";
 import TextSpan from "../Syntax/Text/TextSpan";
-import { char, Char } from "./CharType";
+import { char, Char } from "../../../misc/CharType";
 import SyntaxTreeVisitor from "../Binding/BindingVisitor";
 import SyntaxTrivia from "./SyntaxTrivia"; 
 import Token from "./Token";

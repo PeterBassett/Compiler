@@ -1,6 +1,14 @@
-import run from "./CompileAndExecute.base";
+import run, { printPerformance, resetPerformance } from "./CompileAndExecute.base";
 
 describe("Complie Assemble and Execute", () => {
+    beforeAll(() =>
+    {
+        resetPerformance();
+    });
+    
+    afterAll(() => {
+        printPerformance("general");
+    });
 
 [
 [`func main() : int

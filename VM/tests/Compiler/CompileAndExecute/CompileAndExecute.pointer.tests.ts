@@ -1,6 +1,15 @@
-import run from "./CompileAndExecute.base";
+import run, { printPerformance, resetPerformance } from "./CompileAndExecute.base";
 
 describe("Complie Assemble and Execute pointer", () => {
+    beforeAll(() =>
+    {
+        resetPerformance();
+    });
+    
+    afterAll(() => {
+        printPerformance("pointers");
+    });
+    
 [
 [
 `func main() : int

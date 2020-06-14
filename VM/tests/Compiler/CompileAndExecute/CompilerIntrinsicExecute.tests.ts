@@ -3,11 +3,8 @@ import SourceText from "../../../Language/Compiler/Syntax/Text/SourceText";
 import Binder from "../../../Language/Compiler/Binding/Binder";
 import Lowerer from "../../../Language/Compiler/lowering/Lowerer";
 import CodeGenerator from "../../../Language/Compiler/CodeGeneration/CodeGenerator";
-import { Logger } from "../../../Assembler/interfaces/Logger";
 import Parser from "../../../Language/Compiler/Syntax/Parser";
 import Assembler from "../../../Assembler/Assembler";
-import AssemblyParser from "../../../Assembler/Parser";
-import defaultPreprocessor from "../../../Assembler/Preprocessors/DefaultPreprocessor";
 import InstructionCoder from "../../../VirtualMachine/CPU/Instruction/InstructionCoder";
 import InstructionCoder32Bit from "../../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
 import RAM from "../../../VirtualMachine/Memory/RAM";
@@ -19,6 +16,11 @@ import BuiltinFunctions, { BuiltinFunction } from "../../../Language/Compiler/Bu
 import { FunctionDetails, FunctionType } from "../../../Language/Types/TypeInformation";
 import { PredefinedValueTypes } from "../../../Language/Types/PredefinedValueTypes";
 import { ValueType } from "../../../Language/Types/ValueType";
+import { printPerformance, resetPerformance } from "./CompileAndExecute.base";
+import InstructionCoderVariable from "../../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
+import { Diagnostics } from "../../../Language/Compiler/Diagnostics/Diagnostics";
+import { AssemblyLexer } from "../../../Assembler/AssemblyLexer";
+import { AssemblyParser } from "../../../Assembler/AssemblyParser";
 
 let canvas : HTMLCanvasElement;
 let context :CanvasRenderingContext2D;
@@ -27,6 +29,15 @@ let ramSize : number;
 
 describe("Compiler Intrinsic Execute", () => {
 
+    beforeAll(() =>
+    {
+        resetPerformance();
+    });
+    
+    afterAll(() => {
+        printPerformance("intrinsics");
+    });
+    
     const builtins = new BuiltinFunctions(
         [
             new BuiltinFunction("Math_Log", 
@@ -118,13 +129,24 @@ describe("Compiler Intrinsic Execute", () => {
         return result;
     }
 
+    function CreateInstructionCoder() : InstructionCoder
+    {
+        const instructionCoderVariable = new InstructionCoderVariable();
+
+        return instructionCoderVariable;
+    }
+
     function assemble(assemblyCode : string) : AssembledOutput
     {
-        let logger : Logger = () => {};
-        let instructionCoder = new InstructionCoder32Bit();
-        let assembler = new Assembler(logger, AssemblyParser, defaultPreprocessor, instructionCoder, 0);
-
-        return assembler.assemble(assemblyCode)
+        const instructionCoder = new InstructionCoderVariable();
+        const source = new SourceText(assemblyCode);
+        const diagnostics = new Diagnostics(source);      
+        const newParser = (t:string) => {       
+            const lexer = new AssemblyLexer(source, diagnostics);
+            return new AssemblyParser(lexer, diagnostics);
+        };
+        const assembler = new Assembler(newParser, instructionCoder, diagnostics);
+        return assembler.assemble(assemblyCode);
     }
 
     function execute(output : AssembledOutput) : number
@@ -142,7 +164,7 @@ describe("Compiler Intrinsic Execute", () => {
         ram.blitStoreBytes(0, output.machineCode);
         ram.setReadonlyRegions(output.regions);
 
-        instructionCoder = new InstructionCoder32Bit();
+        instructionCoder = CreateInstructionCoder();
         cpu = new CPU(ram, registers, flags, instructionCoder, builtins);
 
         let stepCount = 0;
@@ -506,7 +528,7 @@ func main() : int {
             let text = item[0] as string;
             let expected = item[1] as number;
             maximumStepCount = 500000;
-            ramSize = 1 << 16;
+            ramSize = 1 << 18;
 
             if(item.length >= 3)
                 maximumStepCount = item[2] as number;
