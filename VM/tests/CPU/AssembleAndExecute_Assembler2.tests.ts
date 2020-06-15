@@ -2,7 +2,6 @@ import CPU from "../../VirtualMachine/CPU/CPU";
 import * as helpers from "../helpers";
 import RAM from "../../VirtualMachine/Memory/RAM";
 import RegisterBank from "../../VirtualMachine/CPU/RegisterBank";
-import Assembler2 from "../../Assembler/Assembler";
 import { OpCodes as Op, Registers as Reg } from "../../VirtualMachine/CPU/Instruction/InstructionSet";
 import InstructionCoder from "../../VirtualMachine/CPU/Instruction/InstructionCoder";
 import InstructionCoder32Bit from "../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
@@ -12,9 +11,10 @@ import { AssemblyParser } from "../../Assembler/AssemblyParser";
 import { AssemblyLexer } from "../../Assembler/AssemblyLexer";
 import SourceText from "../../Language/Compiler/Syntax/Text/SourceText";
 import { Diagnostics } from "../../Language/Compiler/Diagnostics/Diagnostics";
+import Assembler from "../../Assembler/Assembler";
 
 describe("Assemble and execute 2", () => {
-    let assembler : Assembler2;
+    let assembler : Assembler;
     let ram : RAM;
     let flags : Flags;
     let registers : RegisterBank;
@@ -36,18 +36,20 @@ describe("Assemble and execute 2", () => {
         ram = new RAM(ramSize);
         registers = new RegisterBank(ramSize);
         flags = new Flags();
-        //instructionCoder = new InstructionCoderVariable();
+
+        // this is kept as the 32 bit instruction coder to 
+        // preserve the expected jump addresses used in the tests.
         instructionCoder = new InstructionCoder32Bit();
         
         const source = new SourceText(assemblyCode);
         const diagnostics = new Diagnostics(source);      
-        const newParser = (t:string) => {       
-            const lexer = new AssemblyLexer(source, diagnostics);
-            return new AssemblyParser(lexer, diagnostics);
-        };
-        assembler = new Assembler2(newParser, instructionCoder, diagnostics);
+        
+        const lexer = new AssemblyLexer(source, diagnostics);
+        const parser = new AssemblyParser(lexer, diagnostics);
+        
+        assembler = new Assembler(parser, instructionCoder, diagnostics);
 
-        const instructions = assembler.assemble(assemblyCode);
+        const instructions = assembler.assemble();
 
         ram.blitStoreBytes(0, instructions.machineCode);
         ram.setReadonlyRegions(instructions.regions);

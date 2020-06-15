@@ -1,4 +1,6 @@
-import { IAssemblyLineLexer, AssemblyToken, AssemblyTokenKind } from "../../Assembler/IAssemblyLineLexer";
+import { IAssemblyLexer } from "../../Assembler/IAssemblyLexer";
+import { AssemblyTokenKind } from "../../Assembler/AssemblyTokenKind";
+import { AssemblyToken } from "../../Assembler/AssemblyToken";
 import { AssemblyLexer } from "../../Assembler/AssemblyLexer";
 import SourceText from "../../Language/Compiler/Syntax/Text/SourceText";
 import { Diagnostics } from "../../Language/Compiler/Diagnostics/Diagnostics";
@@ -9,7 +11,7 @@ describe("The AssemblyLexer class ", () => {
     {
         const source = new SourceText(assembly);
         const diagnostics = new Diagnostics(source);        
-        let lexer : IAssemblyLineLexer = new AssemblyLexer(source, diagnostics);
+        let lexer : IAssemblyLexer = new AssemblyLexer(source, diagnostics);
 
         var tokens : AssemblyToken[] = [];
         while(lexer.advance())

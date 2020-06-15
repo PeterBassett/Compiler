@@ -1,9 +1,10 @@
-import { AssemblyParser, AssemblyLine, AssemblyLineKind, AssemblyLineSectionLabel, AssemblyLineLabel, AssemblyLineEntryPoint, AssemblyLineDataLabel, AssemblyLineInstruction, AssemblyLineInstructionOperand, AssemblyLineOperandKind, AssemblyLineInstructionOperandDereference, AssemblyLineInstructionOperandDataLabel, AssemblyLineInstructionOperandLabel, AssemblyLineInstructionOperandNumber, AssemblyLineInstructionOperandRegister, AssemblyLineInstructionOperandUnaryOperator, AssemblyLineInstructionOperandBinaryOperator, AssemblyLineError, AssemblyLineInstructionOperandError } from "../../Assembler/AssemblyParser";
+import { AssemblyLine, AssemblyLineKind, AssemblyLineSectionLabel, AssemblyLineLabel, AssemblyLineEntryPoint, AssemblyLineDataLabel, AssemblyLineInstruction, AssemblyLineInstructionOperand, AssemblyLineOperandKind, AssemblyLineInstructionOperandDereference, AssemblyLineInstructionOperandDataLabel, AssemblyLineInstructionOperandLabel, AssemblyLineInstructionOperandNumber, AssemblyLineInstructionOperandRegister, AssemblyLineInstructionOperandUnaryOperator, AssemblyLineInstructionOperandBinaryOperator, AssemblyLineError, AssemblyLineInstructionOperandError } from "../../Assembler/AST/AssemblyAstNodes";
 import { AssemblyLexer } from "../../Assembler/AssemblyLexer";
 import SourceText from "../../Language/Compiler/Syntax/Text/SourceText";
 import { Diagnostics, DiagnosticType } from "../../Language/Compiler/Diagnostics/Diagnostics";
-import { AssemblyTokenKind } from "../../Assembler/IAssemblyLineLexer";
+import { AssemblyTokenKind } from "../../Assembler/AssemblyTokenKind";
 import StringDiagnosticsPrinter from "../../Language/Compiler/Diagnostics/StringDiagnosticsPrinter";
+import { AssemblyParser } from "../../Assembler/AssemblyParser";
 
 describe("The AssemblyParser class ", () => {
     

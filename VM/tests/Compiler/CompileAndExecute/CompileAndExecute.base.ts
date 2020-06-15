@@ -128,16 +128,17 @@ function CreateInstructionCoder() : InstructionCoder
 }
 
 function assemble(assemblyCode : string) : AssembledOutput
-{
-    const instructionCoder = new InstructionCoderVariable();
+{    
     const source = new SourceText(assemblyCode);
     const diagnostics = new Diagnostics(source);      
-    const newParser = (t:string) => {       
-        const lexer = new AssemblyLexer(source, diagnostics);
-        return new AssemblyParser(lexer, diagnostics);
-    };
-    const assembler = new Assembler(newParser, instructionCoder, diagnostics);
-    return assembler.assemble(assemblyCode);
+    
+    const lexer = new AssemblyLexer(source, diagnostics);
+    const parser = new AssemblyParser(lexer, diagnostics);
+    const instructionCoder = new InstructionCoderVariable();
+    
+    const assembler = new Assembler(parser, instructionCoder, diagnostics);
+    
+    return assembler.assemble();
 }
 
 function execute(output : AssembledOutput) : number

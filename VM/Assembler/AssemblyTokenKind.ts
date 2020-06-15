@@ -1,0 +1,19 @@
+export enum AssemblyTokenKind {
+    IDENTIFIER,
+    LEFT_SQUARE_BRACKET,
+    RIGHT_SQUARE_BRACKET,
+    REGISTER,
+    NUMBER,
+    BINNUMBER,
+    HEXNUMBER,
+    PLUS,
+    MINUS,
+    LABEL,
+    DATALABEL,
+    COMMA,
+    NEWLINE,
+    EOF,
+    BAD_TOKEN,
+    FLOAT_NUMBER,
+    STRING
+}

@@ -42,13 +42,13 @@ describe("Assemble and execute with Variable Length Instructions", () => {
 
         const source = new SourceText(assemblyCode);
         const diagnostics = new Diagnostics(source);      
-        const newParser = (t:string) => {       
-            const lexer = new AssemblyLexer(source, diagnostics);
-            return new AssemblyParser(lexer, diagnostics);
-        };
-        const assembler = new Assembler2(newParser, instructionCoder, diagnostics);
+        
+        const lexer = new AssemblyLexer(source, diagnostics);
+        const parser = new AssemblyParser(lexer, diagnostics);
+        
+        const assembler = new Assembler(parser, instructionCoder, diagnostics);
 
-        const instructions = assembler.assemble(assemblyCode);
+        const instructions = assembler.assemble();
 
         ram.blitStoreBytes(0, instructions.machineCode);
         ram.setReadonlyRegions(instructions.regions);

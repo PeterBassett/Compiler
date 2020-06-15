@@ -1,16 +1,19 @@
 import { IAssembler } from "../Assembler/IAssembler";
 import { AssembledOutput } from "../Assembler/AssembledOutput";
 import { AssemblyLexer } from "./AssemblyLexer";
-import { AssemblyParser, AssemblyParserOutput, AssemblyLineKind, AssemblyLine, AssemblyLineSectionLabel, AssemblyLineEntryPoint, AssemblyLineDataLabel, IAssemblyParser, AssemblyLineInstruction, AssemblyLineLabel, AssemblyLineInstructionOperand, AssemblyLineInstructionOperandLabel, AssemblyLineInstructionOperandRegister, AssemblyLineOperandKind, AssemblyLineInstructionOperandNumber, AssemblyLineInstructionOperandDereference, AssemblyLineInstructionOperandBinaryOperator, AssemblyLineInstructionOperandUnaryOperator, AssemblyLineInstructionOperandDataLabel } from "./AssemblyParser";
+import { AssemblyLineKind, AssemblyLine, AssemblyLineSectionLabel, AssemblyLineEntryPoint, AssemblyLineDataLabel, AssemblyLineInstruction, AssemblyLineLabel, AssemblyLineInstructionOperand, AssemblyLineInstructionOperandLabel, AssemblyLineInstructionOperandRegister, AssemblyLineOperandKind, AssemblyLineInstructionOperandNumber, AssemblyLineInstructionOperandDereference, AssemblyLineInstructionOperandBinaryOperator, AssemblyLineInstructionOperandUnaryOperator, AssemblyLineInstructionOperandDataLabel } from "./AST/AssemblyAstNodes";
+import { IAssemblyParser } from "./IAssemblyParser";
 import Instruction, { OpcodeModes, OpcodeMode } from "../VirtualMachine/CPU/Instruction/Instruction";
 import SourceText from "../Language/Compiler/Syntax/Text/SourceText";
 import { Diagnostics } from "../Language/Compiler/Diagnostics/Diagnostics";
-import { AssemblyTokenKind, AssemblyToken } from "../Assembler/IAssemblyLineLexer";
+import { AssemblyTokenKind } from "./AssemblyTokenKind";
+import { AssemblyToken }  from "./AssemblyToken";
 import { DataLabel } from "../Assembler/DataLabel";
 import InstructionCoder from "../VirtualMachine/CPU/Instruction/InstructionCoder";
 import { InstructionMap, OpCodes } from "../VirtualMachine/CPU/Instruction/InstructionSet";
 import Region from "../Assembler/Region";
 import { DataLabelType } from "../Assembler/DataLabelType";
+import { AssemblyParserOutput } from "./AssemblyParser";
 
 class AssemblyInstructionData
 {
@@ -23,31 +26,23 @@ class AssemblyInstructionData
     }
 }
 
-export default class Assembler2 implements IAssembler
+export default class Assembler implements IAssembler
 {    
     private instructions : AssemblyInstructionData[] = [];
     private labelAddresssMap: { [index: string]: number; }
 
     constructor(
-        private readonly newParser : (t:string) => IAssemblyParser, 
+        private readonly parser : IAssemblyParser, 
         private readonly encoder : InstructionCoder, 
         private readonly diagnostics : Diagnostics)
     {
         this.labelAddresssMap = {};
     }
 
-    public assemble(assembly: string): AssembledOutput 
+    public assemble(): AssembledOutput 
     {
-       // const source = new SourceText(assembly);
-       // const diagnostics = new Diagnostics(source);
-
-       // const lexer = new AssemblyLexer(source, diagnostics);
-       // const parser = new AssemblyParser(lexer, diagnostics);
-
-        const parser = this.newParser(assembly);
-        const parsedInstructions = parser.parse();
-        //this.diagnostics = parsedInstructions.diagnostics;
-
+        const parsedInstructions = this.parser.parse();
+        
         let { startInstruction, dataLabels, instructions } = this.divideDataLabelsAndInstructions(parsedInstructions);
 
         const assemblyInstructions = this.injectEntryPoint(startInstruction, instructions);

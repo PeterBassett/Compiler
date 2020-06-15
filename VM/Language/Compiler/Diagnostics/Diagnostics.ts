@@ -4,8 +4,8 @@ import SourceText from "../Syntax/Text/SourceText";
 import { Type } from "../../Types/TypeInformation";
 import { ValueType } from "../../Types/ValueType";
 import Token from "../Syntax/Token";
-import {AssemblyToken} from "../../../Assembler/IAssemblyLineLexer";
-import {AssemblyLine} from "../../../Assembler/AssemblyParser";
+import { AssemblyToken } from "../../../Assembler/AssemblyToken";
+import { AssemblyLine } from "../../../Assembler/AST/AssemblyAstNodes";
 import { BoundFunctionDeclaration } from "../Binding/BoundNode";
 
 export enum DiagnosticType {

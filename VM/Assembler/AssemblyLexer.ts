@@ -1,9 +1,11 @@
-import { IAssemblyLineLexer, AssemblyToken, AssemblyTokenKind, } from "../Assembler/IAssemblyLineLexer";
+import { IAssemblyLexer, } from "./IAssemblyLexer";
+import { AssemblyTokenKind } from "./AssemblyTokenKind";
+import { AssemblyToken } from "./AssemblyToken";
 import { char, Char } from "../misc/CharType";
 import SourceText from "../Language/Compiler/Syntax/Text/SourceText";
 import { Diagnostics } from "../Language/Compiler/Diagnostics/Diagnostics";
 
-export class AssemblyLexer implements IAssemblyLineLexer 
+export class AssemblyLexer implements IAssemblyLexer 
 {
     private _source: string;
     private _position: number;

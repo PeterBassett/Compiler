@@ -1,4 +1,4 @@
-import run, { printPerformance, resetPerformance } from "./CompileAndExecute.base";
+import { printPerformance, resetPerformance } from "./CompileAndExecute.base";
 import { Diagnostics } from "../../../Language/Compiler/Diagnostics/Diagnostics";
 import StringDiagnosticsPrinter from "../../../Language/Compiler/Diagnostics/StringDiagnosticsPrinter";
 import GeneratedCode from "../../../Language/Compiler/CodeGeneration/GeneratedCode";
@@ -14,11 +14,9 @@ import RAM from "../../../VirtualMachine/Memory/RAM";
 import Flags from "../../../VirtualMachine/CPU/Flags";
 import RegisterBank from "../../../VirtualMachine/CPU/RegisterBank";
 import CPU from "../../../VirtualMachine/CPU/CPU";
-import InstructionCoder32Bit from "../../../VirtualMachine/CPU/Instruction/InstructionCoder32Bit";
-import Register from "../../../VirtualMachine/CPU/Register";
-import Assembler2 from "../../../Assembler/Assembler";
 import { AssemblyParser } from "../../../Assembler/AssemblyParser";
 import { AssemblyLexer } from "../../../Assembler/AssemblyLexer";
+import Assembler from "../../../Assembler/Assembler";
 
 let times : any = {};
 export function addPerformanceMark(t1 : number, t2 : number, name : string)
@@ -140,18 +138,17 @@ describe("Complie Assemble and Execute multiple times for performance comparison
     }
 
     function assembleV2(assemblyCode : string) : AssembledOutput
-    {
+    {        
         const source = new SourceText(assemblyCode);
-        const diagnostics = new Diagnostics(source);
-
-        const newParser = (t:string) => {
-            const lexer = new AssemblyLexer(source, diagnostics);
-            return new AssemblyParser(lexer, diagnostics);
-        };
-
-        const assembler = new Assembler2(newParser, instructionCoder, diagnostics);
-
-        return assembler.assemble(assemblyCode)
+        const diagnostics = new Diagnostics(source);      
+        
+        const lexer = new AssemblyLexer(source, diagnostics);
+        const parser = new AssemblyParser(lexer, diagnostics);
+        const instructionCoder = new InstructionCoderVariable();
+        
+        const assembler = new Assembler(parser, instructionCoder, diagnostics);
+        
+        return assembler.assemble();
     }
 
     function execute(output : AssembledOutput) : number
