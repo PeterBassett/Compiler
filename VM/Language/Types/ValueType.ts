@@ -10,6 +10,7 @@ export enum ValueType {
     String,
     Class,
     Struct,
+    Union,
     Pointer,
     Array
 }

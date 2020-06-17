@@ -55,6 +55,7 @@ const lexemes : { lexeme : string, type : SyntaxType } [] = [
     { lexeme : "bool", type : SyntaxType.BoolKeyword },
     { lexeme : "class", type : SyntaxType.ClassKeyword },
     { lexeme : "struct", type : SyntaxType.StructKeyword },    
+    { lexeme : "union", type : SyntaxType.UnionKeyword },    
     { lexeme : "break", type : SyntaxType.BreakKeyword },
     { lexeme : "continue", type : SyntaxType.ContinueKeyword },
     { lexeme : ".", type : SyntaxType.Dot },
@@ -113,6 +114,7 @@ export function GetKeywordType(lexeme : string) : SyntaxType
         case "bool" : return SyntaxType.BoolKeyword;
         case "class" : return SyntaxType.ClassKeyword;
         case "struct" : return SyntaxType.StructKeyword;
+        case "union" : return SyntaxType.UnionKeyword;
         case "break" : return SyntaxType.BreakKeyword;
         case "continue" : return SyntaxType.ContinueKeyword;
         case "public" : return SyntaxType.PublicKeyword;    

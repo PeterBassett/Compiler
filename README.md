@@ -27,11 +27,12 @@ primitives, it simulates a fairly restricted 16 bit computer.
     * type coercion of numeric literals
     * structs    
     * arrays
+    * untagged unions
     * pointer types for all of the above.
     * reference & and dereference * operators.
     * Mathematical, logical and bitwise operators        
     * global variables of all types
 
 Next Steps
-* unions
 * better casting syntax
+* a string type

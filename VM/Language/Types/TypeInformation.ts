@@ -4,6 +4,7 @@ import { GetKeywordType } from "../Compiler/Syntax/SyntaxFacts";
 import { ScopeInfo, Identifier } from "../Scope/DefinitionScope";
 import { PredefinedValueTypes } from "../Types/PredefinedValueTypes";
 import { ValueType } from "./ValueType";
+import { Value } from "../Scope/ExecutionScope";
 
 export class FunctionDetails
 {
@@ -123,12 +124,18 @@ export class Type
     public name : string;
     public isClass : boolean;    
     public isStruct : boolean;
+    public isUnion : boolean;
     public isArray: boolean;    
     public isPredefined : boolean;   
     
     public get isLarge() : boolean
     {
-        return this.isStruct || this.isArray || this.isClass;
+        return this.isStruct || this.isUnion || this.isArray || this.isClass;
+    }
+
+    public get isStructured() : boolean
+    {
+        return this.isStruct || this.isUnion || this.isClass;
     }
 
     public get isPointer() : boolean
@@ -151,6 +158,7 @@ export class Type
         this.name = name;
         this.isClass = type == ValueType.Class;
         this.isStruct = type == ValueType.Struct;
+        this.isUnion = type == ValueType.Union;
         this.isArray = type == ValueType.Array;
                 
         this.isPredefined = false;
@@ -171,6 +179,7 @@ export class Type
 
         a.isClass = this.isClass;
         a.isStruct = this.isStruct;        
+        a.isUnion = this.isUnion;        
         a.isArray = this.isArray;
         a.isPredefined = this.isPredefined;
         a.pointerToType = this.pointerToType;
@@ -197,6 +206,7 @@ export class Type
         this.name = t.name;
         this.isClass = t.isClass;
         this.isStruct = t.isStruct;
+        this.isUnion = t.isUnion;
         if(this.function) 
              this.function.returnType.setFunctionReturnType(t);                     
     }
@@ -219,10 +229,11 @@ export class ClassType extends Type
     }
 }
 
-export class StructType extends Type
+export class StructOrUnionType extends Type
 {
-    constructor(name:string) {
-        super(ValueType.Struct, name);
+    constructor(name:string, type:ValueType.Struct|ValueType.Union) 
+    {
+        super(type, name);
     }
 }
 

@@ -24,8 +24,8 @@ export default class TypeQuery
             case ValueType.String : 
                 return "";            
             case ValueType.Class:
-                return null;    
             case ValueType.Struct:
+            case ValueType.Union:
             case ValueType.Array:
                 return null;
         }

@@ -110,7 +110,7 @@ function compile(text : string) : GeneratedCode
     const newBoundTree = lowerer.lower(boundTree);
     assertNoError("Lowering", newBoundTree.diagnostics);
 
-    const codeGenerator = new CodeGenerator();
+    const codeGenerator = new CodeGenerator({comments:true, blankLines:true});
     const result = codeGenerator.generate(newBoundTree);
     assertNoError("CodeGen", result.diagnostics);
 

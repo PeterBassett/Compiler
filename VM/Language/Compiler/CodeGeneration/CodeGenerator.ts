@@ -1,7 +1,7 @@
 import * as Nodes from "../Binding/BoundNode";
 import { ValueType, ValueTypeNameMap } from "../../Types/ValueType";
 import { Diagnostics } from "../Diagnostics/Diagnostics";
-import { StructDeclarationStatementSyntax, IfStatementSyntax, ExpressionStatementSyntax } from "../Syntax/AST/ASTNode";
+import { StructOrUnionDeclarationStatementSyntax, IfStatementSyntax, ExpressionStatementSyntax } from "../Syntax/AST/ASTNode";
 import GeneratedCode from "./GeneratedCode";
 import Stack from "../../../misc/Stack";
 import BuiltinFunctions from "../BuiltinFunctions";
@@ -349,15 +349,6 @@ export default class CodeGenerator
             const source = (i: number, _: number) => `[R2+${i}]`;
             const dest = (i: number, _: number) => `[R1+${i}]`;
             this.emitStackCopy(dest, source, size);
-
-            /*const source = this.getLargeDataReference(statement.expression);
-
-            this.writeAddressExpression(statement.target);
-            
-            const size = this.typeSize(statement.target.type);
-
-            const dest = (i: number, _: number) => `[R1+${i}]`;
-            this.emitStackCopy(dest, source, size);*/
         }
         else
         {            
@@ -372,72 +363,14 @@ export default class CodeGenerator
             this.instruction(`${pop} R2`, "Pop value to assign to R2");
 
             const mov = this.typedMnemonic(statement.target.type.type, "MOV");
-            //if(!statement.expression.type.isPointer)
-                this.instruction(`${mov} [R1] R2`, "Copy value in R2 to address in R1");
-            //else
-            //    this.instruction(`${mov} [R1] [R2]`, "Copy value at address in R2 to address in R1");
+            
+            this.instruction(`${mov} [R1] R2`, "Copy value in R2 to address in R1");            
         }
 
         this.comment("Assignment Complete");
         this.comment("-----------------------------");
     }
-   /* private writeAssignmentStatement(statement: Nodes.BoundAssignmentStatement) 
-    {
-        if(statement.target.type.isLarge && statement.expression.kind === Nodes.BoundNodeKind.LiteralExpression)
-        {
-            const literal = statement.expression as Nodes.BoundLiteralExpression;
-
-            if(literal.value !== null)
-            {
-                throw new Error("Large type literals not yet implemented");                
-            }
-
-            // we are assigning to a large type and currently we only allow null.
-            this.writeAddressExpression(statement.target);
-
-            this.comment("Assign a large type");
-            const size = this.typeSize(statement.target.type);
-            const source = (i: number, _: number) => `0`; // copy null value
-            const dest =   (i: number, _: number) => `[R1+${i}]`;
-            this.emitStackCopy(dest, source, size);
-
-            return;
-        }
-
-        this.comment("-----------------------------");
-            
-        if(statement.target.type.isLarge)
-        {
-            console.log("test");
-        }
-
-        this.comment("Assignment a non struct value");
-        this.writeExpression(statement.expression);
-        
-        const push = this.typedMnemonic(statement.target.type.type, "PUSH");
-        this.instruction(`${push} R1`, "Push value to assign to stack");
-        this.writeAddressExpression(statement.target);
-
-        const pop = this.typedMnemonic(statement.target.type.type, "POP");
-        this.instruction(`${pop} R2`, "Pop value to assign to R2");
-
-        if(!statement.target.type.isLarge)
-        {
-            const mov = this.typedMnemonic(statement.target.type.type, "MOV");        
-            this.instruction(`${mov} [R1] R2`, "Copy value in R2 to address in R1");
-        }
-        else
-        {
-            this.comment("Assign a large type");
-            const size = this.typeSize(statement.target.type);
-            const source = (i: number, _: number) => `[R2+${i}]`;
-            const dest =   (i: number, _: number) => `[R1+${i}]`;
-            this.emitStackCopy(dest, source, size);
-        }
-
-        this.comment("Assignment Complete");
-        this.comment("-----------------------------");
-    }*/
+   
 
     // move the address of some lvalue into R1
     writeAddressExpression(expression: Nodes.BoundExpression) 
@@ -465,11 +398,10 @@ export default class CodeGenerator
                 const target = expression as Nodes.BoundGetExpression;
                 this.writeAddressExpression(target.left);
                                 
-                const member = this.structMember(target.left.type, [target.member]);
+                const member = this.structMember(target.left.type, target.member);
 
                 if(member.offset > 0)
-                {
-                    //
+                {                    
                     this.comment(`Reference struct member ${target.member}`);
                     this.instruction(`MVI R2 ${member.offset}`, `Member at ${member.offset} bytes`);
                     this.instruction(`ADD R1 R2`, "add offset");
@@ -541,7 +473,7 @@ export default class CodeGenerator
             this.comment("struct " + stmt.variable.type.name);
             this.comment("{");
             for (let field of stmt.variable.type.structDetails!.fields) {
-                const member = this.structMember(stmt.variable.type, [field.name]);
+                const member = this.structMember(stmt.variable.type, field.name);
                 const memberSize = this.typeSize(member.type);
                 this.comment("\t" + field.name + " : " + field.type.name + "; \t // at [R6-" + member.offset + "]");
             }
@@ -659,6 +591,13 @@ export default class CodeGenerator
                 
                 return this.typeSizeCache[type.typeid];
             }
+            case ValueType.Union :
+            {
+                if(!this.typeSizeCache[type.typeid])
+                    this.typeSizeCache[type.typeid] = this.unionSize(type);
+                
+                return this.typeSizeCache[type.typeid];
+            }            
             case ValueType.Array:
             {
                 if(this.typeSizeCache[type.typeid])
@@ -691,7 +630,21 @@ export default class CodeGenerator
         return size;
     }
 
-    structMember(type:Type, memberPath:string[]) : { type: Type, offset : number} {
+    unionSize(type: Type): number 
+    {
+        let size = 0;
+
+        let fields = type.structDetails!.fields;
+
+        for(let field of fields)
+        {
+            size = Math.max(size, this.typeSize(field.type));
+        }
+
+        return size;
+    }
+
+    structMember(type:Type, memberPath:string) : { type: Type, offset : number} {
         let offset = 0;
 
         while(type.pointerToType)
@@ -699,25 +652,15 @@ export default class CodeGenerator
 
         for(let field of type.structDetails!.fields)
         {
-            if(field.name == memberPath[0])
-            {
-                if(field.type.isStruct && memberPath.length > 1)                 
-                {
-                    const result = this.structMember(field.type, memberPath.slice(1));
-
-                    return {
-                        type : result.type,
-                        offset : offset + result.offset
-                    };
-                }
-
+            if(field.name == memberPath)
+            {                        
                 return {
                     type : field.type,
                     offset
                 };
             }
 
-            offset += this.typeSize(field.type);
+            offset += type.isUnion ? 0 : this.typeSize(field.type);
         }
     
         throw new Error(`Member not found on struct ${type.name}`);
@@ -727,6 +670,7 @@ export default class CodeGenerator
     {
         switch(type) {
             case ValueType.Array:
+            case ValueType.Union:
             case ValueType.Struct:
             case ValueType.Class:
                 return "size"
@@ -755,6 +699,7 @@ export default class CodeGenerator
             case ValueType.Pointer:
             case ValueType.Null:
             case ValueType.Struct:
+            case ValueType.Union:
             case ValueType.Array:
             case ValueType.Int:
                 return op;
@@ -774,6 +719,7 @@ export default class CodeGenerator
             case ValueType.Pointer:
             case ValueType.Null:
             case ValueType.Struct:
+            case ValueType.Union:
             case ValueType.Array:
             case ValueType.Int:
                 return op;
@@ -794,7 +740,7 @@ export default class CodeGenerator
 
                 this.writeAddressExpression(expression);
                 
-                if(exp.type.type != ValueType.Struct)
+                if(!exp.type.isStructured)
                 {                    
                     const mov = this.typedMnemonic(exp.type.type, "MOV");
                     this.instruction(`${mov} R1 [R1]`, "dereference struct member");
@@ -835,6 +781,7 @@ export default class CodeGenerator
                         this.instruction(`${mvi} R1 ${ (exp.value ? "1" : "0") }`, "Loading literal boolean");                    
                         break;
                     case ValueType.Struct :
+                    case ValueType.Union :
                     case ValueType.Array :
                     {
                         // until we implement struct or array literals
@@ -1066,7 +1013,7 @@ export default class CodeGenerator
             this.comment(`Removing arguments from stack`);
 
             args.forEach( arg => {
-                if(arg.type.type != ValueType.Struct)
+                if(!arg.type.isStructured)
                 {
                     const pop = this.typedMnemonic(arg.type.type, "POP");
                     this.instruction(`${pop} R0`);
@@ -1112,39 +1059,7 @@ export default class CodeGenerator
                     return (i, _c) => `[R3+${i}]`;
                 }
                 throw new Error("Expected Large Type");
-            }
-            /*case Nodes.BoundNodeKind.GetExpression:
-            {
-                const exp = expression as Nodes.BoundGetExpression;
-                
-                this.comment("------------------------------------------");
-                this.comment("GetExpression");
-                const target = expression as Nodes.BoundGetExpression;
-                this.writeAddressExpression(target.left);
-                                
-                const member = this.structMember(target.left.type, [target.member]);
-
-                if(member.offset > 0)
-                {
-                    //
-                    this.comment(`Reference struct member ${target.member}`);
-                    this.instruction(`MVI R2 ${member.offset}`, `Member at ${member.offset} bytes`);
-                    this.instruction(`ADD R1 R2`, "add offset");
-                }
-                this.comment("------------------------------------------");                
-                break;
-
-                if(exp.returnType.isLarge)
-                {
-                    // We have a call returning a large type.
-                    // once the call is done the returned data will be on the stack
-                    // and its address will be in R3
-                    this.writeExpression(exp);
-
-                    // now R3 holds the address of the data!
-                    return (i, _c) => `[R3+${i}]`;
-                }
-            }  */          
+            }        
             default:
             {
                 throw new Error("Unhandled expression type");

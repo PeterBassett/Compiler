@@ -2,7 +2,7 @@ import { Diagnostics, DiagnosticType } from "../Diagnostics/Diagnostics";
 import CompilationUnit from "../Syntax/CompilationUnit";
 import * as AST from "../Syntax/AST/ASTNode";
 import { SyntaxType } from "../Syntax/SyntaxType";
-import { Type, FunctionDetails, StructDetails, ClassType, StructType, ClassDetails, PointerType, ArrayType } from "../../Types/TypeInformation";
+import { Type, FunctionDetails, StructDetails, ClassType, ClassDetails, PointerType, ArrayType, StructOrUnionType } from "../../Types/TypeInformation";
 import { ValueType } from "../../Types/ValueType";
 import { PredefinedValueTypes } from "../../Types/PredefinedValueTypes";
 import { using } from "../../../misc/disposable";
@@ -66,8 +66,8 @@ export default class Binder
         
         const structs : Nodes.BoundStructDeclaration[] = this.BindStructDeclarations(
             declarations.filter(d => {
-                return d.kind == "StructDeclarationStatementSyntax"
-            } ) as AST.StructDeclarationStatementSyntax[]
+                return d.kind == "StructOrUnionDeclarationStatementSyntax"
+            } ) as AST.StructOrUnionDeclarationStatementSyntax[]
         );
 
         const variables : Nodes.BoundVariableDeclaration[] = this.BindGlobalVariableDeclarations(
@@ -157,7 +157,7 @@ export default class Binder
                 return this.BindExpressionStatement(syntax);
             case "ReturnStatementSyntax" : 
                 return this.BindReturnStatement(syntax); 
-            case "StructDeclarationStatementSyntax" :     
+            case "StructOrUnionDeclarationStatementSyntax" :     
                 return this.BindStructDeclarationStatement(syntax);             
             case "AssignmentStatementSyntax":               
                 return this.BindAssignmentStatement(syntax);                                
@@ -355,15 +355,27 @@ export default class Binder
         return node;
     }
     
-    private BindStructDeclarations(declarations: AST.StructDeclarationStatementSyntax[]): Nodes.BoundStructDeclaration[] {
+    private BindStructDeclarations(declarations: AST.StructOrUnionDeclarationStatementSyntax[]): Nodes.BoundStructDeclaration[] {
         return declarations.map(d => this.BindStructDeclarationStatement(d));
     }    
 
-    private BindStructDeclarationStatement(syntax : AST.StructDeclarationStatementSyntax) : Nodes.BoundStructDeclaration
+    private BindStructDeclarationStatement(syntax : AST.StructOrUnionDeclarationStatementSyntax) : Nodes.BoundStructDeclaration
     {
         const name = syntax.identifier.lexeme;
 
-        const type = new StructType(name);
+        let valueType : ValueType.Struct | ValueType.Union;
+
+        if(syntax.keyword.kind === SyntaxType.StructKeyword)
+             valueType = ValueType.Struct;
+        else if(syntax.keyword.kind === SyntaxType.UnionKeyword)
+            valueType = ValueType.Union;
+        else
+        {
+            this.diagnostics.reportUnexpectedToken([SyntaxType.StructKeyword, SyntaxType.UnionKeyword], syntax.keyword.kind, syntax.keyword.span);
+            valueType = ValueType.Struct;
+        }
+
+        const type = new StructOrUnionType(name, valueType);
         this.scope.DefineType(name, type);
         
         const boundDeclarations = this.BindStructMemberDeclarations(syntax, syntax.declarations);
@@ -373,7 +385,7 @@ export default class Binder
         return new Nodes.BoundStructDeclaration(name, boundDeclarations);
     }
 
-    private BindStructMemberDeclarations(structSyntax : AST.StructDeclarationStatementSyntax, declarations: AST.StructMemberDeclarationStatementSyntax[]) : Nodes.BoundStructMemberDeclaration[]
+    private BindStructMemberDeclarations(structSyntax : AST.StructOrUnionDeclarationStatementSyntax, declarations: AST.StructMemberDeclarationStatementSyntax[]) : Nodes.BoundStructMemberDeclaration[]
     {
         let names = declarations.map ( d => d.identifier.lexeme );
         let nameToDeclaration : { [index:string] : AST.StructMemberDeclarationStatementSyntax } = {};        
@@ -703,7 +715,7 @@ export default class Binder
             left = new Nodes.BoundDereferenceExpression(operand, left.type.pointerToType);            
         }
 
-        if(!left.type.isStruct)
+        if(!left.type.isStructured)
         {
             this.diagnostics.reportExpectedClass(syntax.left.span(), syntax.name.lexeme);
             return new Nodes.BoundErrorExpression();
@@ -1288,7 +1300,7 @@ export default class Binder
                     else
                         throw new Error("Undefined Type");
 
-                if(!identifier.type.isClass && !identifier.type.isStruct)
+                if(!identifier.type.isStructured)
                     if(returnUnitOnFailure)
                         return PredefinedValueTypes.Unit;
                     else

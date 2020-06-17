@@ -20,7 +20,6 @@ describe("A Parser object", () => {
     function testParsedAstStructure(text : string, structure : string) : void
     {
         let compilationUnit = parse(text);
-
         expect(compilationUnit.success).toEqual(true);
         expect(compilationUnit.diagnostics).toBeTruthy();
         expect(compilationUnit.diagnostics.length).toEqual(0);
@@ -33,8 +32,8 @@ describe("A Parser object", () => {
             
             visitor.Visit(compilationUnit.compilationUnit);
             
-            //if(visitor.structure != structure)
-             //   printDiff(visitor.structure, structure);
+            if(visitor.structure != structure)
+               printDiff(visitor.structure, structure);
 
             expect(visitor.structure).toEqual(structure);
         }
@@ -1195,6 +1194,24 @@ func main() : int {
                 ArrayIndexExpressionSyntax
                     NameExpressionSyntax<arr>
                     IntegerLiteralExpressionSyntax<1>
+`],
+[`
+union test 
+{
+    first : int;
+    second : int;
+}
+
+let root : test;
+`, 
+`CompilationUnitSyntax
+    UnionDeclarationStatementSyntax<test>
+        StructMemberDeclarationStatementSyntax<first:int>
+            NamedTypeSyntax<int>
+        StructMemberDeclarationStatementSyntax<second:int>
+            NamedTypeSyntax<int>
+    VariableDeclarationSyntax<root>
+        NamedTypeSyntax<test>
 `],
 /*[
 `class test 

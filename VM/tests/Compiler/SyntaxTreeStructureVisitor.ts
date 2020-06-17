@@ -1,5 +1,6 @@
 import * as AST from "../../Language/Compiler/Syntax/AST/ASTNode";
 import { exhaustiveCheck } from "../../misc/exhaustive";
+import { SyntaxType } from "../../Language/Compiler/Syntax/SyntaxType";
 
 export default class SyntaxTreeStructureVisitor
 {
@@ -29,9 +30,12 @@ export default class SyntaxTreeStructureVisitor
             case "LambdaDeclarationStatementSyntax":
             case "VariableDeclarationSyntax":
             case "ClassDeclarationStatementSyntax":
-            case "StructDeclarationStatementSyntax":            
                 value = "<" + node.identifier.lexeme + ">";
-                break;                
+                break;  
+            case "StructOrUnionDeclarationStatementSyntax":
+                let type = node.keyword.kind === SyntaxType.StructKeyword ? "StructDeclarationStatementSyntax" : "UnionDeclarationStatementSyntax";
+                this.structure += Array(this.indent+1).join("    ") + type + "<" + node.identifier.lexeme + ">" + "\n";
+                return;              
             case "ParameterDeclarationSyntax":
             case "StructMemberDeclarationStatementSyntax" :            
                 value = "<" + node.identifier.lexeme + ":" + (!!node.typeName ? node.typeName.rootIdentifier().lexeme : "INFERED") + ">";

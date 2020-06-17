@@ -124,7 +124,7 @@ export default class Interpreter
                 return this.VisitFunctionDeclarationStatementSyntax(node);
             case "LambdaDeclarationStatementSyntax":
                 return this.VisitLambdaDeclarationStatementSyntax(node);
-            case "StructDeclarationStatementSyntax" :
+            case "StructOrUnionDeclarationStatementSyntax" :
             case "ClassDeclarationStatementSyntax" :
                 throw new Error("Class execution not impletmented yet");
             default: 
@@ -193,7 +193,7 @@ export default class Interpreter
                 return this.VisitTypeSyntax(node);
             case "AssignmentStatementSyntax":                       
                 return this.VisitAssignmentStatementSyntax(node);                
-            case "StructDeclarationStatementSyntax" :   
+            case "StructOrUnionDeclarationStatementSyntax" :   
             case "StructMemberDeclarationStatementSyntax" :             
             case "ClassDeclarationStatementSyntax" :           
             case "GetExpressionSyntax":                    

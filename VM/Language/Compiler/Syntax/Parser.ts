@@ -223,7 +223,7 @@ export default class Parser
                 throw new Error("NO PROGRESS");   
             lastTokenPosition = d.newPosition;
 
-            const expectedTokens = [SyntaxType.Eof, SyntaxType.StructKeyword, SyntaxType.ClassKeyword, SyntaxType.FuncKeyword, SyntaxType.LetKeyword, SyntaxType.VarKeyword];
+            const expectedTokens = [SyntaxType.Eof, SyntaxType.StructKeyword, SyntaxType.UnionKeyword, SyntaxType.ClassKeyword, SyntaxType.FuncKeyword, SyntaxType.LetKeyword, SyntaxType.VarKeyword];
             if(insideClass)
                 expectedTokens.push(SyntaxType.RightBrace);
             this.synchronise(...expectedTokens);
@@ -234,7 +234,8 @@ export default class Parser
                     declarations.push( this.parseClassDeclaration() );
                     break;
                 case SyntaxType.StructKeyword:
-                    declarations.push( this.parseStructDeclaration() );
+                case SyntaxType.UnionKeyword:
+                    declarations.push( this.parseStructOrUnionDeclaration() );
                 break;                
                 case SyntaxType.FuncKeyword:
                     declarations.push( this.parseFunctionDeclaration() );
@@ -262,9 +263,10 @@ export default class Parser
         return AST.ClassDeclarationStatementSyntax(classKeyword, name, leftBrace, declarations, rightBrace);
     }
 
-    parseStructDeclaration(): AST.StructDeclarationStatementSyntax
+    parseStructOrUnionDeclaration(): AST.StructOrUnionDeclarationStatementSyntax
     {
-        const structKeyword = this.match(SyntaxType.StructKeyword);
+        const keyword = this.matchAny(SyntaxType.StructKeyword, SyntaxType.UnionKeyword);
+
         const name = this.match(SyntaxType.Identifier);
         const leftBrace = this.match(SyntaxType.LeftBrace);
         
@@ -272,7 +274,7 @@ export default class Parser
         
         const rightBrace = this.match(SyntaxType.RightBrace);
         
-        return AST.StructDeclarationStatementSyntax(structKeyword, name, leftBrace, declarations, rightBrace);
+        return AST.StructOrUnionDeclarationStatementSyntax(keyword, name, leftBrace, declarations, rightBrace);
     }
 
     private parseFunctionDeclaration() : AST.DeclarationSyntax

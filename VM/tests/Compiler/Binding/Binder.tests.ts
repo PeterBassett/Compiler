@@ -628,6 +628,40 @@ func main() : int
                                 VariableExpression<l3:leaf3>
 `
 ],
+[
+`union test 
+{
+    first : int;
+    second : int;
+}
+
+func main() : int
+{
+    let root : test;
+
+    root.first = 1;
+
+    return root.second;
+}
+`,
+`BoundGlobalScope
+    StructDeclaration<test>
+        StructMemberDeclaration<first:int>
+        StructMemberDeclaration<second:int>
+    FunctionDefinition<main:int>
+        ParameterDeclarationList
+        BlockStatement
+            VariableDeclaration<root:test>
+                LiteralExpression<null:test>
+            AssignmentStatement
+                GetExpression<first:int>
+                    VariableExpression<root:test>
+                LiteralExpression<1:int>
+            ReturnStatement
+                GetExpression<second:int>
+                    VariableExpression<root:test>
+`
+],
 [`func main() : int
 {
     let ap : *int = null;
