@@ -1,12 +1,12 @@
 import { printPerformance, resetPerformance } from "./CompileAndExecute.base";
 import { Diagnostics } from "../../../Language/Compiler/Diagnostics/Diagnostics";
 import StringDiagnosticsPrinter from "../../../Language/Compiler/Diagnostics/StringDiagnosticsPrinter";
-import GeneratedCode from "../../../Language/Compiler/CodeGeneration/GeneratedCode";
+import GeneratedCode from "../../../Language/Compiler/CodeGeneration/AssemblyLanguage/GeneratedCode";
 import SourceText from "../../../Language/Compiler/Syntax/Text/SourceText";
 import Parser from "../../../Language/Compiler/Syntax/Parser";
 import Binder from "../../../Language/Compiler/Binding/Binder";
 import Lowerer from "../../../Language/Compiler/lowering/Lowerer";
-import CodeGenerator from "../../../Language/Compiler/CodeGeneration/CodeGenerator";
+import CodeGenerator from "../../../Language/Compiler/CodeGeneration/AssemblyLanguage/CodeGenerator";
 import InstructionCoder from "../../../VirtualMachine/CPU/Instruction/InstructionCoder";
 import InstructionCoderVariable from "../../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
 import { AssembledOutput } from "../../../Assembler/AssembledOutput";

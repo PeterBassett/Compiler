@@ -44,7 +44,7 @@ require(["jasmine-boot"], () =>
             "./Compiler/Binding/Binder.tests",
             "./Compiler/Lowering/Lowerer.tests",
             "./Compiler/LoweredBoundTreeInterpreter.tests",
-            "./Compiler/CodeGenerator/CodeGenerator.tests",
+            "./Compiler/CodeGenerator/AssemblyLanguage/AssemblyCodeGenerator.tests",
             "./Compiler/CompileAndExecute/CompileAndExecute.tests",
             "./Compiler/CompileAndExecute/CompilerIntrinsicExecute.tests",
             "./Compiler/CompileAndExecute/CompileAndExecute.struct.tests",

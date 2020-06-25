@@ -1,15 +1,15 @@
-import * as Nodes from "../Binding/BoundNode";
-import { ValueType, ValueTypeNameMap } from "../../Types/ValueType";
-import { Diagnostics } from "../Diagnostics/Diagnostics";
-import { StructOrUnionDeclarationStatementSyntax, IfStatementSyntax, ExpressionStatementSyntax } from "../Syntax/AST/ASTNode";
+import * as Nodes from "../../Binding/BoundNode";
+import { ValueType, ValueTypeNameMap } from "../../../Types/ValueType";
+import { Diagnostics } from "../../Diagnostics/Diagnostics";
+import { StructOrUnionDeclarationStatementSyntax, IfStatementSyntax, ExpressionStatementSyntax } from "../../Syntax/AST/ASTNode";
 import GeneratedCode from "./GeneratedCode";
-import Stack from "../../../misc/Stack";
-import BuiltinFunctions from "../BuiltinFunctions";
-import { Type } from "../../Types/TypeInformation";
-import { Value } from "../../Scope/ExecutionScope";
-import { Identifier } from "../../Scope/DefinitionScope";
-import { isPredefinedType } from "../Syntax/SyntaxFacts";
-import TextSpan from "../Syntax/Text/TextSpan";
+import Stack from "../../../../misc/Stack";
+import BuiltinFunctions from "../../BuiltinFunctions";
+import { Type } from "../../../Types/TypeInformation";
+import { Value } from "../../../Scope/ExecutionScope";
+import { Identifier } from "../../../Scope/DefinitionScope";
+import { isPredefinedType } from "../../Syntax/SyntaxFacts";
+import TextSpan from "../../Syntax/Text/TextSpan";
 
 enum VarOrParam
 {

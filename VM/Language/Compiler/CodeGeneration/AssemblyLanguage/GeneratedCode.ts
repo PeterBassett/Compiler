@@ -1,4 +1,4 @@
-import { Diagnostics } from "../Diagnostics/Diagnostics";
+import { Diagnostics } from "../../Diagnostics/Diagnostics";
 
 export default class GeneratedCode
 {

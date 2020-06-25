@@ -1,12 +1,12 @@
-import Parser from "../../../Language/Compiler/Syntax/Parser";
-import SourceText from "../../../Language/Compiler/Syntax/Text/SourceText";
-import { DiagnosticType } from "../../../Language/Compiler/Diagnostics/Diagnostics";
-import { BoundGlobalScope, BoundNodeKind } from "../../../Language/Compiler/Binding/BoundNode";
-import Binder from "../../../Language/Compiler/Binding/Binder";
-import Lowerer from "../../../Language/Compiler/lowering/Lowerer";
-import BoundTreeStructureVisitor from "../BoundTreeStructureVisitor";
-import CodeGenerator from "../../../Language/Compiler/CodeGeneration/CodeGenerator";
-import GeneratedCode from "../../../Language/Compiler/CodeGeneration/GeneratedCode";
+import Parser from "../../../../Language/Compiler/Syntax/Parser";
+import SourceText from "../../../../Language/Compiler/Syntax/Text/SourceText";
+import { DiagnosticType } from "../../../../Language/Compiler/Diagnostics/Diagnostics";
+import { BoundGlobalScope, BoundNodeKind } from "../../../../Language/Compiler/Binding/BoundNode";
+import Binder from "../../../../Language/Compiler/Binding/Binder";
+import Lowerer from "../../../../Language/Compiler/lowering/Lowerer";
+import BoundTreeStructureVisitor from "../../BoundTreeStructureVisitor";
+import CodeGenerator from "../../../../Language/Compiler/CodeGeneration/AssemblyLanguage/CodeGenerator";
+import GeneratedCode from "../../../../Language/Compiler/CodeGeneration/AssemblyLanguage/GeneratedCode";
 
 describe("A CodeGenerator object", () => {
 
