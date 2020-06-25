@@ -5,10 +5,10 @@ import { BoundGlobalScope, BoundNodeKind } from "../../../../Language/Compiler/B
 import Binder from "../../../../Language/Compiler/Binding/Binder";
 import Lowerer from "../../../../Language/Compiler/lowering/Lowerer";
 import BoundTreeStructureVisitor from "../../BoundTreeStructureVisitor";
-import CodeGenerator from "../../../../Language/Compiler/CodeGeneration/AssemblyLanguage/CodeGenerator";
+import AssemblyCodeGenerator from "../../../../Language/Compiler/CodeGeneration/AssemblyLanguage/CodeGenerator";
 import GeneratedCode from "../../../../Language/Compiler/CodeGeneration/AssemblyLanguage/GeneratedCode";
 
-describe("A CodeGenerator object", () => {
+describe("A AssemblyCodeGenerator object", () => {
 
     function codeGen(text : string) : GeneratedCode
     {
@@ -19,7 +19,7 @@ describe("A CodeGenerator object", () => {
         let boundTree = binder.Bind(compilationUnit);
         let lowerer = new Lowerer();
         let newBoundTree = lowerer.lower(boundTree);
-        let codeGenerator = new CodeGenerator({
+        let codeGenerator = new AssemblyCodeGenerator({
             comments:false,
             blankLines:false,
             optimiseForSize:false

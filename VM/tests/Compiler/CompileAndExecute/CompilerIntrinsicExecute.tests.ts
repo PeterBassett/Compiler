@@ -2,7 +2,7 @@ import GeneratedCode from "../../../Language/Compiler/CodeGeneration/AssemblyLan
 import SourceText from "../../../Language/Compiler/Syntax/Text/SourceText";
 import Binder from "../../../Language/Compiler/Binding/Binder";
 import Lowerer from "../../../Language/Compiler/lowering/Lowerer";
-import CodeGenerator from "../../../Language/Compiler/CodeGeneration/AssemblyLanguage/CodeGenerator";
+import AssemblyCodeGenerator from "../../../Language/Compiler/CodeGeneration/AssemblyLanguage/CodeGenerator";
 import Parser from "../../../Language/Compiler/Syntax/Parser";
 import Assembler from "../../../Assembler/Assembler";
 import InstructionCoder from "../../../VirtualMachine/CPU/Instruction/InstructionCoder";
@@ -120,7 +120,7 @@ describe("Compiler Intrinsic Execute", () => {
         let boundTree = binder.Bind(compilationUnit);
         let lowerer = new Lowerer();
         let newBoundTree = lowerer.lower(boundTree);
-        let codeGenerator = new CodeGenerator({ builtins,  });
+        let codeGenerator = new AssemblyCodeGenerator({ builtins,  });
         let result = codeGenerator.generate(newBoundTree);
         
         if(!result.success)

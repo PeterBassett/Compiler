@@ -5,8 +5,8 @@ import { BoundGlobalScope, BoundNodeKind } from "../../../../Language/Compiler/B
 import Binder from "../../../../Language/Compiler/Binding/Binder";
 import Lowerer from "../../../../Language/Compiler/lowering/Lowerer";
 import BoundTreeStructureVisitor from "../../BoundTreeStructureVisitor";
-import CodeGenerator from "../../../../Language/Compiler/CodeGeneration/AssemblyLanguage/CodeGenerator";
 import GeneratedCode from "../../../../Language/Compiler/CodeGeneration/AssemblyLanguage/GeneratedCode";
+import WasmCodeGenerator from "../../../../Language/Compiler/CodeGeneration/WASM/WasmCodeGenerator";
 
 describe("A WasmCodeGenerator object", () => {
 
@@ -19,11 +19,7 @@ describe("A WasmCodeGenerator object", () => {
         let boundTree = binder.Bind(compilationUnit);
         let lowerer = new Lowerer();
         let newBoundTree = lowerer.lower(boundTree);
-        let codeGenerator = new CodeGenerator({
-            comments:false,
-            blankLines:false,
-            optimiseForSize:false
-        });
+        let codeGenerator = new WasmCodeGenerator();
         let result = codeGenerator.generate(newBoundTree);
         
         return result;

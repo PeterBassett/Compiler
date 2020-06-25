@@ -6,7 +6,7 @@ import SourceText from "../../../Language/Compiler/Syntax/Text/SourceText";
 import Parser from "../../../Language/Compiler/Syntax/Parser";
 import Binder from "../../../Language/Compiler/Binding/Binder";
 import Lowerer from "../../../Language/Compiler/lowering/Lowerer";
-import CodeGenerator from "../../../Language/Compiler/CodeGeneration/AssemblyLanguage/CodeGenerator";
+import AssemblyCodeGenerator from "../../../Language/Compiler/CodeGeneration/AssemblyLanguage/CodeGenerator";
 import InstructionCoder from "../../../VirtualMachine/CPU/Instruction/InstructionCoder";
 import InstructionCoderVariable from "../../../VirtualMachine/CPU/Instruction/InstructionCoderVariable";
 import { AssembledOutput } from "../../../Assembler/AssembledOutput";
@@ -127,7 +127,7 @@ describe("Complie Assemble and Execute multiple times for performance comparison
         const newBoundTree = lowerer.lower(boundTree);
         assertNoError("Lowering", newBoundTree.diagnostics);
 
-        const codeGenerator = new CodeGenerator();
+        const codeGenerator = new AssemblyCodeGenerator();
         const result = codeGenerator.generate(newBoundTree);
         assertNoError("CodeGen", result.diagnostics);
 

@@ -17,7 +17,7 @@ enum VarOrParam
     Parameter
 }
 
-export default class CodeGenerator
+export default class AssemblyCodeGenerator
 {
     private functionName! : string;
     private diagnostics! : Diagnostics;    
