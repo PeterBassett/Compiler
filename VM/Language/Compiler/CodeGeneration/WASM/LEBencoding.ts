@@ -12,6 +12,9 @@
 → 0xE5 0x8E 0x26            Output stream (LSB to MSB)
 */
 
+import { encodeStringAsUint8Array } from "./stringEncoding";
+import { encodeFloat32, encodeFloat64 } from "./ieeeEncoding";
+
 export function encodeUnsignedLEB128(value:number) : number[]
 {
     const bytes :number[] = [];
@@ -54,13 +57,13 @@ export function encodeSignedLEB128(value:number) : number[]
     while (true) 
     {
         let byte = value & 0x7F;
-        value >>= 7;
+        value >>= 7; // note the use of signed shift
           
         // sign bit of byte is second high order bit (0x40)
         if ((value === 0 && (byte & 0x40) === 0) || (value === -1 && (byte & 0x40) !== 0))
         {
             bytes.push(byte);
-            return bytes
+            return bytes;
         }
         
         byte = byte | 0x80;
@@ -68,3 +71,37 @@ export function encodeSignedLEB128(value:number) : number[]
         bytes.push(byte);
     }
 }
+
+// https://webassembly.github.io/spec/core/binary/conventions.html#binary-vec
+// Vectors are encoded as a length and then the elements
+export function encodeVector(data: number[]) : number[]
+{
+    const len = encodeUnsignedLEB128(data.length);
+
+    return [
+        ...len,
+        ...data.map(b => b & 255)
+    ];
+}
+
+export function flatten(data:any[]) : any[] 
+{
+    return [].concat(...data);
+}
+
+// https://webassembly.github.io/spec/core/binary/conventions.html#binary-vec
+// Encoded an array of vectors into one vector with prefixed length
+export function encodeArrays(data: any[][]) : number[]
+{    
+    const len = encodeUnsignedLEB128(data.length);
+    return [
+        ...len,
+        ...flatten(data).map(b => b & 255)
+    ];
+}
+
+// the encoding of an empty array. Just a length stated as zero.
+export const EmptyArray = [];// [0x0];
+
+export { encodeStringAsUint8Array as encodeString };
+export { encodeFloat32, encodeFloat64 };

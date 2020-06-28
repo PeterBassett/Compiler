@@ -9,11 +9,12 @@
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
     "sourceMap": true,
-    "target": "es5",
+    "target": "ES6",
     "module": "amd",
     "outDir": "../js/compiler",
     "moduleResolution": "node",
-    "incremental": false
+    "incremental": false,
+    "lib": ["ES6"]
   },
   "include": [
       "./**/*.ts" //, "../misc/StringWriter.ts", "../misc/TextWriter.ts"

@@ -7,7 +7,7 @@
     "noImplicitReturns": true,
     "strict": true,    
     "sourceMap": true,
-    "target": "es5",
+    "target": "es6",
     "module": "amd",
     "typeRoots" : ["../node_modules/@types"],
     "outDir": "../js/tests",
